@@ -92,8 +92,9 @@ class ThemeExtractor:
             orig = item.get("originalAnswer") or ""
             stage = item.get("stage", "")
 
-            # If Stage 7, store as therapy goals
-            if "7_therapy_hopes" in stage:
+            # If Stage 7 or matching therapy goals, store as therapy hopes
+            stage_str = str(stage).lower()
+            if any(k in stage_str for k in ["therapy", "hope", "goal", "7"]):
                 therapy_hopes = {
                     "raw_quote": ans,
                     "question": item.get("question"),

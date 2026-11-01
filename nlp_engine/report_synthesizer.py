@@ -36,13 +36,51 @@ class ReportSynthesizer:
     def generate_full_report(self, session_data: Dict[str, Any]) -> Dict[str, Any]:
         """
         Processes a completed session JSON and constructs the 6-section report.
+        Accepts both native transcript format and teammate's responses format.
         """
-        session_id = session_data.get("sessionId", "session_unknown")
-        client_name = session_data.get("clientPseudonym", "Client")
-        started_at = session_data.get("startedAt", "")
-        completed_at = session_data.get("completedAt", "")
-        transcript = session_data.get("transcript", [])
-        crisis_triggered = session_data.get("crisisTriggered", False)
+        session_id = session_data.get("sessionId") or session_data.get("session_id", "session_unknown")
+        client_name = (
+            session_data.get("clientPseudonym") or
+            session_data.get("patient_name") or
+            session_data.get("client_name") or
+            "Client"
+        )
+        started_at = (
+            session_data.get("startedAt") or
+            session_data.get("session_date") or
+            session_data.get("started_at") or
+            ""
+        )
+        completed_at = (
+            session_data.get("completedAt") or
+            session_data.get("completed_at") or
+            started_at or
+            datetime.datetime.now().isoformat()
+        )
+        crisis_triggered = session_data.get("crisisTriggered") or session_data.get("crisis_triggered", False)
+
+        # Normalize transcript if 'responses' was supplied instead
+        transcript = session_data.get("transcript")
+        if not transcript and "responses" in session_data:
+            transcript = []
+            for i, item in enumerate(session_data["responses"], 1):
+                was_edited = item.get("was_edited", False) or bool(item.get("edit_history"))
+                skipped = item.get("skipped", False) or (item.get("status") == "skipped")
+                final_ans = item.get("edited_answer") or item.get("finalAnswer") or item.get("original_answer") or ""
+                orig_ans = item.get("original_answer") or item.get("originalAnswer") or final_ans
+                stg = item.get("stage_name") or str(item.get("stage", f"step_{i}"))
+                transcript.append({
+                    "step": i,
+                    "stage": stg,
+                    "question": item.get("question", ""),
+                    "finalAnswer": final_ans,
+                    "originalAnswer": orig_ans,
+                    "isEdited": was_edited,
+                    "isSkipped": skipped,
+                    "timestamp": item.get("timestamp", "")
+                })
+        elif transcript is None:
+            transcript = []
 
         # 1. Run all individual NLP extractors
         hedging_res = self.hedging_detector.analyze_transcript(transcript)

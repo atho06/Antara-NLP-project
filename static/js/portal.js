@@ -8,8 +8,16 @@ let currentFilter = "all";
 
 document.addEventListener("DOMContentLoaded", () => {
   setupEventListeners();
-  // Load initial default persona
-  loadPersona("persona_minimizer");
+  
+  // Check if loaded with a specific session ID (e.g. from live intake)
+  const urlParams = new URLSearchParams(window.location.search);
+  const sessionId = urlParams.get("session_id");
+  if (sessionId) {
+    loadLiveSession(sessionId);
+  } else {
+    // Load initial default persona
+    loadPersona("persona_minimizer");
+  }
 });
 
 function setupEventListeners() {
@@ -94,6 +102,20 @@ function setupEventListeners() {
       renderTranscriptTable();
     });
   });
+}
+
+async function loadLiveSession(sessionId) {
+  try {
+    const res = await fetch(`/api/report/${encodeURIComponent(sessionId)}`);
+    if (!res.ok) throw new Error("Could not fetch session report");
+    currentReportData = await res.json();
+    currentSessionId = currentReportData.metadata.sessionId;
+    document.querySelectorAll(".persona-btn").forEach(b => b.classList.remove("active"));
+    renderFullDashboard(currentReportData);
+  } catch (err) {
+    console.warn("Live session lookup failed, falling back to default persona:", err);
+    loadPersona("persona_minimizer");
+  }
 }
 
 async function loadPersona(personaId) {

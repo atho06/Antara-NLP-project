@@ -192,10 +192,10 @@ async def analyze_session(session_data: Dict[str, Any]):
     Ingests conversation transcript, executes hedging, emotion trajectory,
     inconsistency, edit-diff, and theme extraction, and stores transiently.
     """
-    if "transcript" not in session_data:
-        raise HTTPException(status_code=400, detail="Missing required 'transcript' field in session JSON")
+    if "transcript" not in session_data and "responses" not in session_data:
+        raise HTTPException(status_code=400, detail="Missing required 'transcript' or 'responses' field in session JSON")
 
-    session_id = session_data.get("sessionId", "session_unnamed")
+    session_id = session_data.get("sessionId") or session_data.get("session_id", "session_unnamed")
     report = synthesizer.generate_full_report(session_data)
     vault.store_session(session_id, session_data, report)
     return report

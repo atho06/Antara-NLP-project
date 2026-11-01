@@ -355,6 +355,10 @@ async function finishIntakeSession() {
 
     switchScreen("screenEnd");
     document.getElementById("endAuditHash").textContent = res.erasure_receipt.auditProofHash || "Verified";
+    const reportLink = document.querySelector(".btn-view-report");
+    if (reportLink) {
+      reportLink.href = `/therapist?session_id=${encodeURIComponent(sessionPayload.sessionId)}`;
+    }
   } catch (err) {
     console.error("Error finalizing session:", err);
     switchScreen("screenEnd");

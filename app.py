@@ -1350,10 +1350,13 @@ elif st.session_state.submitted:
 
     st.markdown("### 🩷 Therapist Portal")
 
-    st.info(
-        "Your therapist portal integration is currently pending. "
-        "Once connected, your session data can be transferred "
-        "for therapist review."
+    st.success(
+        "Your clinical report is ready for therapist review in the Antara Clinical Intelligence Portal. "
+        "You can import your downloaded session JSON there or view case studies."
+    )
+    st.markdown(
+        '<a href="http://127.0.0.1:8000/therapist" target="_blank" style="display:inline-block;padding:10px 20px;background:#6d28d9;color:white;text-decoration:none;border-radius:8px;font-weight:600;">🌸 Open Therapist Intelligence Portal</a>',
+        unsafe_allow_html=True
     )
 
     # START NEW SESSION
