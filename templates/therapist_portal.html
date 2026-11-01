@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Antara — Pre-Therapy Clinical Intelligence Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/portal.css">
+</head>
+<body>
+  <!-- Header / Navigation -->
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="brand">
+        <div class="brand-symbol">अ</div>
+        <div class="brand-text">
+          <span class="brand-name">Antara</span>
+          <span class="brand-subtitle">Pre-Therapy Intake Intelligence • Therapist Portal</span>
+        </div>
+      </div>
+      <div class="header-actions">
+        <span class="badge badge-confidential">🔒 Strictly Confidential</span>
+        <button id="btnDownloadPdf" class="btn btn-primary" title="Download Clinical PDF Report">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export Clinical PDF
+        </button>
+        <button id="btnEraseData" class="btn btn-outline-danger" title="Purge client session data from memory">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          Execute Data Erasure
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-container">
+    <!-- Persona Selector & Upload Bar -->
+    <section class="persona-bar">
+      <div class="persona-label">
+        <span class="pulse-indicator"></span>
+        <strong>Case Study Personas:</strong>
+      </div>
+      <div class="persona-pills" id="personaPills">
+        <button class="persona-btn active" data-id="persona_minimizer">
+          <strong>Maya</strong> <span>(The Minimizer)</span>
+        </button>
+        <button class="persona-btn" data-id="persona_self_editor">
+          <strong>Ananya</strong> <span>(The Self-Editor)</span>
+        </button>
+        <button class="persona-btn" data-id="persona_contradictory">
+          <strong>Pooja</strong> <span>(Contradictory / Masking)</span>
+        </button>
+        <button class="persona-btn" data-id="persona_burnout">
+          <strong>Rhea</strong> <span>(Somatic Burnout)</span>
+        </button>
+        <button class="persona-btn" data-id="persona_avoidant">
+          <strong>Meera</strong> <span>(Avoidant / Skips)</span>
+        </button>
+      </div>
+      <div class="upload-wrapper">
+        <label for="jsonFileInput" class="btn btn-sm btn-secondary" title="Upload real session JSON from Person 1">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Import Session JSON
+        </label>
+        <input type="file" id="jsonFileInput" accept=".json" style="display:none">
+      </div>
+    </section>
+
+    <!-- Ethical Disclaimer Callout -->
+    <div class="disclaimer-banner">
+      <div class="disclaimer-icon">⚖️</div>
+      <div class="disclaimer-body">
+        <strong>CLINICAL ETHICS NOTICE:</strong>
+        <span id="disclaimerText">AI-generated observations from self-reported intake data. For clinical reference only. Not a medical or psychological diagnosis.</span>
+      </div>
+      <div class="disclaimer-status">
+        <span class="status-pill status-healthy" id="erasureStatusPill">Active Transient Session</span>
+      </div>
+    </div>
+
+    <!-- Executive Overview Card -->
+    <section class="client-summary-card">
+      <div class="client-meta-col">
+        <div class="avatar-circle" id="clientAvatar">M</div>
+        <div>
+          <h1 class="client-name" id="clientPseudonym">Maya (Client Pseudonym)</h1>
+          <p class="session-meta">
+            Session ID: <code id="lblSessionId">antara_session_maya_001</code> &nbsp;•&nbsp; 
+            Intake Completed: <span id="lblCompletedAt">2026-10-23 09:22 UTC</span>
+          </p>
+        </div>
+      </div>
+      <div class="metrics-grid">
+        <div class="metric-box">
+          <span class="metric-title">Hedging Level</span>
+          <span class="metric-val text-warning" id="valHedgingLevel">High</span>
+          <span class="metric-sub" id="subHedgingStats">21 minimizing cues</span>
+        </div>
+        <div class="metric-box">
+          <span class="metric-title">Inconsistencies</span>
+          <span class="metric-val text-accent" id="valInconsistencies">None</span>
+          <span class="metric-sub" id="subInconsistencyCount">0 flags</span>
+        </div>
+        <div class="metric-box">
+          <span class="metric-title">Self-Edits</span>
+          <span class="metric-val text-info" id="valEdits">0</span>
+          <span class="metric-sub" id="subSanitizationCount">0 sanitizations</span>
+        </div>
+        <div class="metric-box">
+          <span class="metric-title">Avoided Questions</span>
+          <span class="metric-val text-muted" id="valSkips">0</span>
+          <span class="metric-sub" id="subSkipCount">0 skipped</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 1: Main Concerns in Her Own Stated Words -->
+    <section class="report-section">
+      <div class="section-header">
+        <div class="section-title-wrap">
+          <span class="section-num">1</span>
+          <h2>Main Concerns in Her Own Stated Words</h2>
+        </div>
+        <span class="section-badge">Direct Verbatim Quotes</span>
+      </div>
+      <div class="concerns-grid" id="concernsContainer">
+        <!-- Injected via JS -->
+      </div>
+    </section>
+
+    <!-- Section 2: Emotional Trajectory Across Session -->
+    <section class="report-section">
+      <div class="section-header">
+        <div class="section-title-wrap">
+          <span class="section-num">2</span>
+          <h2>Emotional Trajectory Across the Session</h2>
+        </div>
+        <span class="section-badge">Stage-by-Stage NLP Valence Arc</span>
+      </div>
+
+      <div class="trajectory-card">
+        <div class="trajectory-arc-box">
+          <div class="arc-icon">📈</div>
+          <div>
+            <div class="arc-title">Intake Emotional Arc Summary</div>
+            <p class="arc-desc" id="arcNarrative">Conversation opened with neutral subdued...</p>
+          </div>
+        </div>
+
+        <div class="timeline-stepper" id="timelineStepper">
+          <!-- Injected via JS -->
+        </div>
+
+        <div class="trajectory-stats-row">
+          <div class="stat-item">
+            <span class="stat-label">Initial Check-in Mood:</span>
+            <span class="stat-value" id="statStartEmotion">Guarded</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Peak Distress Phase:</span>
+            <span class="stat-value text-danger" id="statPeakDistress">Daily Rhythms & Physiology</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Concluding Therapy Mood:</span>
+            <span class="stat-value text-success" id="statEndEmotion">Hope & Readiness</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 3 & 4 Grid: Themes/Triggers and Clinical Observations -->
+    <div class="two-col-grid">
+      <!-- Section 3: Themes & Triggers -->
+      <section class="report-section">
+        <div class="section-header">
+          <div class="section-title-wrap">
+            <span class="section-num">3</span>
+            <h2>Themes & Situational Triggers</h2>
+          </div>
+        </div>
+        <div class="themes-card">
+          <h3 class="subsection-title">Recurring Life Domains</h3>
+          <div class="theme-tags-wrap" id="themeTagsContainer">
+            <!-- Injected via JS -->
+          </div>
+
+          <h3 class="subsection-title mt-4">Identified Situational Triggers</h3>
+          <ul class="trigger-list" id="triggerListContainer">
+            <!-- Injected via JS -->
+          </ul>
+        </div>
+      </section>
+
+      <!-- Section 5: What She Wants from Therapy -->
+      <section class="report-section">
+        <div class="section-header">
+          <div class="section-title-wrap">
+            <span class="section-num">5</span>
+            <h2>What She Hopes to Gain From Therapy</h2>
+          </div>
+          <span class="section-badge">Client Aspirations</span>
+        </div>
+        <div class="therapy-goal-card">
+          <div class="goal-quote-mark">“</div>
+          <blockquote class="therapy-verbatim-goal" id="therapyGoalText">
+            "I guess I just want to stop feeling like an imposter who is constantly on the verge of cracking..."
+          </blockquote>
+          <div class="goal-subtext">Stated during Stage 7 (Therapy Hopes & Intentions)</div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Section 4: Clinical NLP Observations (Inconsistencies, Hedging, Edits, Avoidance) -->
+    <section class="report-section">
+      <div class="section-header">
+        <div class="section-title-wrap">
+          <span class="section-num">4</span>
+          <h2>Clinical Observations (Hedging, Inconsistencies, Edits & Avoidance)</h2>
+        </div>
+        <span class="section-badge">Linguistic Diagnostics</span>
+      </div>
+
+      <div class="observations-layout">
+        <!-- Inconsistency Alerts -->
+        <div class="observation-block" id="inconsistencyBlock">
+          <div class="obs-header">
+            <h3>⚠️ Affective & Factual Inconsistencies</h3>
+            <span class="badge" id="badgeInconsistencySev">None</span>
+          </div>
+          <div class="obs-content" id="inconsistencyContent">
+            <!-- Injected via JS -->
+          </div>
+        </div>
+
+        <!-- Edit & Sanitization Inspector -->
+        <div class="observation-block" id="editsBlock">
+          <div class="obs-header">
+            <h3>✏️ Answer Revisions & Vulnerability Retractions</h3>
+            <span class="badge" id="badgeEditCount">0 Edits</span>
+          </div>
+          <div class="obs-content" id="editsContent">
+            <!-- Injected via JS -->
+          </div>
+        </div>
+
+        <!-- Hedging Breakdown -->
+        <div class="observation-block">
+          <div class="obs-header">
+            <h3>🔍 Minimization & Hedging Analysis</h3>
+            <span class="badge" id="badgeHedgingLevel">High</span>
+          </div>
+          <div class="obs-content">
+            <p class="obs-interpretation" id="hedgingInterpretation">Pervasive minimization across responses.</p>
+            <div class="hedging-samples-list" id="hedgingSamplesList">
+              <!-- Injected via JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 6: Attached Full Unfiltered Conversation -->
+    <section class="report-section">
+      <div class="section-header">
+        <div class="section-title-wrap">
+          <span class="section-num">6</span>
+          <h2>Attached Full Conversation Transcript (Unfiltered)</h2>
+        </div>
+        <div class="transcript-filters">
+          <button class="filter-btn active" data-filter="all">All Steps</button>
+          <button class="filter-btn" data-filter="edited">Edited Only</button>
+          <button class="filter-btn" data-filter="skipped">Skipped Only</button>
+        </div>
+      </div>
+
+      <div class="transcript-table-card">
+        <div class="transcript-table-header">
+          <div class="col-step">Step</div>
+          <div class="col-stage">Stage Focus</div>
+          <div class="col-content">Dialogue & Response (Original / Revision Diffs)</div>
+          <div class="col-marker">Marker</div>
+        </div>
+        <div class="transcript-table-body" id="transcriptTableBody">
+          <!-- Injected via JS -->
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Erasure Confirmation Modal -->
+  <div class="modal-backdrop" id="erasureModal">
+    <div class="modal-card">
+      <div class="modal-icon-wrap">🛡️</div>
+      <h3 class="modal-title">Cryptographic Data Erasure Executed</h3>
+      <p class="modal-desc">
+        In strict compliance with Antara's ethical protocol, all client responses,
+        edit revisions, and pseudonyms have been permanently zeroed and purged from active memory.
+      </p>
+      <div class="audit-proof-box">
+        <div class="audit-row">
+          <span>Session ID:</span>
+          <strong id="auditSessionId">antara_session_maya_001</strong>
+        </div>
+        <div class="audit-row">
+          <span>Erasure Timestamp:</span>
+          <strong id="auditTimestamp">2026-10-23T08:50:00Z</strong>
+        </div>
+        <div class="audit-row">
+          <span>Method:</span>
+          <strong>Cryptographic Memory Zeroing (SHA-256 Verified)</strong>
+        </div>
+        <div class="audit-row">
+          <span>Audit Proof Token:</span>
+          <code id="auditProofHash">7f8c9a0...3b1d4e</code>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="btnCloseModal">Close & Refresh</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/js/portal.js"></script>
+</body>
+</html>

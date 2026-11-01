@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Antara — A Quiet Space Before Your Session</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,400&family=Outfit:wght@300;400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/intake.css">
+</head>
+<body>
+  <div class="ambient-glow glow-top"></div>
+  <div class="ambient-glow glow-bottom"></div>
+
+  <!-- Top Minimalist Bar -->
+  <header class="chat-header">
+    <div class="header-content">
+      <div class="brand-minimal">
+        <span class="brand-glyph">अ</span>
+        <span class="brand-title">Antara</span>
+      </div>
+      <div class="header-right">
+        <a href="/therapist" class="link-therapist-portal" target="_blank" title="Open Clinical Dashboard for Doctors">
+          Therapist Portal ↗
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="app-stage-container">
+    <!-- SCREEN 1: WELCOME & CONSENT -->
+    <section class="screen-view active" id="screenConsent">
+      <div class="consent-card">
+        <div class="lotus-motif">
+          <div class="breathing-ring"></div>
+          <div class="lotus-core"></div>
+        </div>
+
+        <h1 class="consent-title">A quiet space before you meet your therapist</h1>
+        
+        <div class="consent-quote-box">
+          <p class="consent-mandatory-text">
+            “You just need to be completely honest throughout this session. No one is going to judge you. 
+            The whole session is encrypted and confidential, and the report will be sent only to your doctor, 
+            to help them understand you better. Your doctor will also receive a full copy of this conversation. 
+            Once the report has been sent, your information will be erased.”
+          </p>
+        </div>
+
+        <div class="privacy-guarantees">
+          <div class="guarantee-item">
+            <span class="guarantee-icon">🛡️</span>
+            <div>
+              <strong>End-to-End Encrypted</strong>
+              <p>Your dialogue is protected and only shared with your licensed healthcare provider.</p>
+            </div>
+          </div>
+          <div class="guarantee-item">
+            <span class="guarantee-icon">✏️</span>
+            <div>
+              <strong>Full Control to Edit or Skip</strong>
+              <p>You can skip any question or update your responses at any point without pressure.</p>
+            </div>
+          </div>
+          <div class="guarantee-item">
+            <span class="guarantee-icon">🌿</span>
+            <div>
+              <strong>Automatic Memory Erasure</strong>
+              <p>Following report generation, personal chat records are permanently purged.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="consent-actions">
+          <button id="btnStartIntake" class="btn btn-begin">
+            Begin Quiet Session
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+          </button>
+        </div>
+
+        <div class="consent-disclaimer">
+          Antara is an intake preparation tool, not therapy or emergency care.
+        </div>
+      </div>
+    </section>
+
+    <!-- SCREEN 2: CALM CHAT UI (ONE QUESTION AT A TIME) -->
+    <section class="screen-view" id="screenChat">
+      <!-- Progress Bar -->
+      <div class="session-progress-wrap">
+        <div class="stage-name-pill" id="stageNamePill">Initial Check-in</div>
+        <div class="step-dots-container" id="stageDots">
+          <!-- Injected via JS -->
+        </div>
+      </div>
+
+      <!-- Dialogue Thread -->
+      <div class="dialogue-scroll-area" id="dialogueContainer">
+        <!-- Messages appended here -->
+      </div>
+
+      <!-- Crisis Emergency Banner (Hidden by default) -->
+      <div class="crisis-card" id="crisisCard" style="display:none;">
+        <div class="crisis-icon">🕊️</div>
+        <div class="crisis-body" id="crisisContent">
+          <!-- Crisis text -->
+        </div>
+      </div>
+
+      <!-- Bottom Response Bar (One Question Interaction) -->
+      <div class="response-dock" id="responseDock">
+        <div class="dock-inner">
+          <textarea 
+            id="txtAnswer" 
+            class="answer-textarea" 
+            placeholder="Type how you are feeling in your own words... (take all the time you need)"
+            rows="3"
+          ></textarea>
+          
+          <div class="dock-actions">
+            <button id="btnSkipQuestion" class="btn btn-ghost" title="Skip this question with zero pressure">
+              Skip this question
+            </button>
+            <button id="btnSendAnswer" class="btn btn-send">
+              <span>Continue</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCREEN 3: END SCREEN & DATA ERASURE CONFIRMATION -->
+    <section class="screen-view" id="screenEnd">
+      <div class="end-card">
+        <div class="end-icon-bloom">✨</div>
+        <h2 class="end-title">Thank you for sharing with honesty</h2>
+        
+        <p class="end-lead">
+          Your thoughts and feelings have been securely compiled into a private clinical report 
+          for your therapist, helping them start from a more grounded and honest place.
+        </p>
+
+        <div class="erasure-confirmation-box">
+          <div class="erasure-stamp">
+            <span class="stamp-icon">🛡️</span>
+            <div>
+              <strong>Automatic Data Erasure Completed</strong>
+              <p>Your dialogue, edit history, and personal responses have been permanently wiped from client storage.</p>
+            </div>
+          </div>
+          <div class="audit-token-line">
+            Audit Proof: <code id="endAuditHash">7f8c9...3b1d4</code>
+          </div>
+        </div>
+
+        <div class="end-actions">
+          <a href="/therapist" class="btn btn-view-report" target="_blank">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            View Clinical Report in Therapist Portal
+          </a>
+          <button id="btnRestartSession" class="btn btn-secondary">
+            Start New Session
+          </button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Edit Previous Answer Modal -->
+  <div class="edit-modal-backdrop" id="editModal">
+    <div class="edit-modal-card">
+      <div class="modal-header-simple">
+        <h3>Edit Your Response</h3>
+        <button class="btn-close-modal" id="btnCloseEditModal">&times;</button>
+      </div>
+      <p class="edit-modal-note">
+        You are free to change your response. To keep the session honest for your therapist, 
+        your edit will be noted in the report.
+      </p>
+      <div class="modal-question-context" id="editModalQuestion">Question goes here</div>
+      <textarea id="txtModalEditAnswer" class="edit-modal-textarea" rows="4"></textarea>
+      <div class="modal-footer-actions">
+        <button class="btn btn-ghost" id="btnCancelEdit">Cancel</button>
+        <button class="btn btn-primary" id="btnSaveEdit">Save Revision</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/js/intake.js"></script>
+</body>
+</html>

@@ -1,0 +1,79 @@
+{
+  "sessionId": "antara_session_ananya_002",
+  "clientPseudonym": "Ananya",
+  "startedAt": "2026-10-23T10:15:00Z",
+  "completedAt": "2026-10-23T10:42:00Z",
+  "crisisTriggered": false,
+  "transcript": [
+    {
+      "step": 1,
+      "stage": "1_consent",
+      "question": "Welcome to Antara. Do you understand that this conversation is strictly confidential, encrypted, and that a clinical report and transcript will be provided only to your therapist before your session, after which your data is erased?",
+      "finalAnswer": "Understood and agreed.",
+      "originalAnswer": null,
+      "isEdited": false,
+      "isSkipped": false,
+      "timestamp": "2026-10-23T10:15:40Z"
+    },
+    {
+      "step": 2,
+      "stage": "2_easy_opening",
+      "question": "How are you feeling right now as you sit down for this conversation?",
+      "finalAnswer": "A bit weary, but managing okay today.",
+      "originalAnswer": "Honestly I feel like I'm drowning and completely suffocating every single hour of the day.",
+      "isEdited": true,
+      "isSkipped": false,
+      "timestamp": "2026-10-23T10:18:25Z"
+    },
+    {
+      "step": 3,
+      "stage": "3_current_feelings",
+      "question": "Where does that weariness sit in your body right now?",
+      "finalAnswer": "Just a general tightness across my temples and back.",
+      "originalAnswer": "My throat feels clamped shut like someone is physically choking me, and I keep breaking down in tears.",
+      "isEdited": true,
+      "isSkipped": false,
+      "timestamp": "2026-10-23T10:21:10Z"
+    },
+    {
+      "step": 4,
+      "stage": "4_situations_triggers",
+      "question": "What situations or thoughts seem to make this tightness flare up?",
+      "finalAnswer": "Whenever expectations at work pile up simultaneously.",
+      "originalAnswer": null,
+      "isEdited": false,
+      "isSkipped": false,
+      "timestamp": "2026-10-23T10:25:30Z"
+    },
+    {
+      "step": 5,
+      "stage": "5_daily_life_sleep",
+      "question": "How has your sleep and physical energy been supporting you through this?",
+      "finalAnswer": "Sleep could be better, I've had irregular sleep patterns recently.",
+      "originalAnswer": "I haven't slept properly in 3 months. I lie awake trembling and dreading daylight.",
+      "isEdited": true,
+      "isSkipped": false,
+      "timestamp": "2026-10-23T10:30:15Z"
+    },
+    {
+      "step": 6,
+      "stage": "6_relationships",
+      "question": "How do you feel around the people closest to you right now?",
+      "finalAnswer": "They are supportive, but I prefer to handle things independently.",
+      "originalAnswer": "I feel utterly alienated from my partner. I smile in front of him and cry silently in the shower so he won't think I'm broken.",
+      "isEdited": true,
+      "isSkipped": false,
+      "timestamp": "2026-10-23T10:35:40Z"
+    },
+    {
+      "step": 7,
+      "stage": "7_therapy_hopes",
+      "question": "What do you hope you and your therapist can work toward together?",
+      "finalAnswer": "I want tools to process stress more constructively and rebuild some emotional resilience.",
+      "originalAnswer": null,
+      "isEdited": false,
+      "isSkipped": false,
+      "timestamp": "2026-10-23T10:40:05Z"
+    }
+  ]
+}
