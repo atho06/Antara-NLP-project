@@ -347,6 +347,10 @@ async function finishIntakeSession() {
   };
 
   try {
+    try {
+      localStorage.setItem("antara_active_session", JSON.stringify(sessionPayload));
+    } catch(e) {}
+
     const res = await fetch("/api/chat/finish", {
       method: "POST",
       headers: { "Content-Type": "application/json" },

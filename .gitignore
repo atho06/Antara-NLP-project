@@ -47,3 +47,7 @@ antara_session_data.json
 
 # Generated PDFs
 *.pdf
+
+storage/.vault_cache.json
+storage/*.db
+antara.db

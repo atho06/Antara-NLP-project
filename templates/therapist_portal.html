@@ -22,11 +22,6 @@
       </div>
       <div class="header-actions">
         <span class="badge badge-confidential">🔒 Strictly Confidential</span>
-        <label for="jsonFileInput" class="btn btn-secondary" style="cursor:pointer; margin:0;" title="Upload session JSON file">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          Import Session JSON
-        </label>
-        <input type="file" id="jsonFileInput" accept=".json" style="display:none">
         <button id="btnDownloadPdf" class="btn btn-primary" title="Download Clinical PDF Report">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           Export Clinical PDF
@@ -41,17 +36,16 @@
 
   <main class="main-container">
     <!-- Empty State Notification if no session in memory -->
-    <div id="noSessionCard" style="display:none; padding:32px; background:white; border-radius:12px; margin-bottom:20px; border:1px dashed #cbd5e1; text-align:center;">
-      <h3 style="color:#1e293b; margin-bottom:8px;">No Active Patient Intake Loaded</h3>
-      <p style="color:#64748b; margin-bottom:16px;">Complete a patient intake chat at <a href="/" target="_blank" style="color:#0f766e; font-weight:600;">Patient Intake (/)</a> or click below to import a saved session JSON.</p>
-      <label for="jsonFileInputEmpty" class="btn btn-primary" style="cursor:pointer; display:inline-flex; align-items:center; gap:8px;">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        Upload Session JSON
-      </label>
-      <input type="file" id="jsonFileInputEmpty" accept=".json" style="display:none">
+    <div id="noSessionCard" style="display:none; padding:40px 24px; background:white; border-radius:12px; margin-bottom:24px; border:1px dashed #cbd5e1; text-align:center;">
+      <h3 style="color:#1e293b; margin-bottom:8px;">No Completed Patient Intake Found</h3>
+      <p style="color:#64748b; margin-bottom:16px;">The therapist report will automatically appear here once a patient completes their confidential intake conversation.</p>
+      <a href="/" target="_blank" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:8px;">
+        Open Patient Intake Chat (/)
+      </a>
     </div>
 
-    <!-- Ethical Disclaimer Callout -->
+    <div id="reportDashboardView">
+      <!-- Ethical Disclaimer Callout -->
     <div class="disclaimer-banner">
       <div class="disclaimer-icon">⚖️</div>
       <div class="disclaimer-body">
@@ -270,7 +264,8 @@
         </div>
       </div>
     </section>
-  </main>
+  </div>
+</main>
 
   <!-- Erasure Confirmation Modal -->
   <div class="modal-backdrop" id="erasureModal">

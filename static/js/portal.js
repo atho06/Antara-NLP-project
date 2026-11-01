@@ -21,35 +21,12 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function setupEventListeners() {
-  // Session JSON file import handler (header & empty-state buttons)
-  const handleFileUpload = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-      try {
-        const sessionObj = JSON.parse(event.target.result);
-        await analyzeAndRenderSession(sessionObj);
-      } catch (err) {
-        alert("Invalid JSON file uploaded: " + err.message);
-      }
-    };
-    reader.readAsText(file);
-  };
-
-  const fileInput = document.getElementById("jsonFileInput");
-  if (fileInput) fileInput.addEventListener("change", handleFileUpload);
-
-  const fileInputEmpty = document.getElementById("jsonFileInputEmpty");
-  if (fileInputEmpty) fileInputEmpty.addEventListener("change", handleFileUpload);
-
   // PDF Export
   const btnPdf = document.getElementById("btnDownloadPdf");
   if (btnPdf) {
     btnPdf.addEventListener("click", () => {
       if (!currentSessionId) {
-        alert("Please load or complete an intake session before exporting PDF.");
+        alert("No completed patient intake session found. Please complete an intake at / first.");
         return;
       }
       window.location.href = `/api/report/${encodeURIComponent(currentSessionId)}/pdf`;
@@ -61,7 +38,7 @@ function setupEventListeners() {
   if (btnErase) {
     btnErase.addEventListener("click", async () => {
       if (!currentSessionId) {
-        alert("No active session to erase.");
+        alert("No active patient intake session to erase.");
         return;
       }
       if (!confirm(`Are you sure you want to permanently erase session records for "${currentSessionId}" from active memory?`)) {
@@ -72,6 +49,9 @@ function setupEventListeners() {
           method: "POST"
         });
         const receipt = await res.json();
+        try {
+          localStorage.removeItem("antara_active_session");
+        } catch(e) {}
         showErasureModal(receipt);
       } catch (err) {
         alert("Erasure failed: " + err.message);
@@ -104,12 +84,16 @@ function setupEventListeners() {
 
 function showNoSessionCard() {
   const card = document.getElementById("noSessionCard");
+  const dash = document.getElementById("reportDashboardView");
   if (card) card.style.display = "block";
+  if (dash) dash.style.display = "none";
 }
 
 function hideNoSessionCard() {
   const card = document.getElementById("noSessionCard");
+  const dash = document.getElementById("reportDashboardView");
   if (card) card.style.display = "none";
+  if (dash) dash.style.display = "block";
 }
 
 async function loadLatestSession() {
@@ -121,7 +105,15 @@ async function loadLatestSession() {
     hideNoSessionCard();
     renderFullDashboard(currentReportData);
   } catch (err) {
-    console.log("No recent intake session in memory:", err);
+    // Check if browser has completed session in localStorage
+    const saved = localStorage.getItem("antara_active_session");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        await analyzeAndRenderSession(parsed);
+        return;
+      } catch (e) {}
+    }
     showNoSessionCard();
   }
 }

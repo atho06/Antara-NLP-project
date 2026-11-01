@@ -6,6 +6,7 @@ FastAPI Backend Server & Clinical Analytics Engine.
 import os
 import json
 import glob
+import hashlib
 from typing import Dict, Any, Optional
 from pydantic import BaseModel
 
@@ -118,23 +119,27 @@ async def finish_chat_intake(session_data: Dict[str, Any]):
     """
     Completes patient intake:
     1. Runs full NLP extraction pipeline.
-    2. Stores report in erasure vault.
-    3. Simulates automatic client memory erasure and returns cryptographic audit token.
+    2. Stores report in volatile memory vault for therapist review.
+    3. Issues verifiable cryptographic transmission proof for the patient.
     """
-    session_id = session_data.get("sessionId", "session_live")
+    session_id = session_data.get("sessionId") or session_data.get("session_id", "session_live")
     report = synthesizer.generate_full_report(session_data)
     vault.store_session(session_id, session_data, report)
 
-    # Execute data erasure protocol for the client
-    erasure_receipt = vault.erase_session(session_id)
+    serialized = json.dumps(session_data, sort_keys=True).encode('utf-8')
+    audit_hash = hashlib.sha256(serialized).hexdigest()
 
-    # Re-store report so therapist can review it immediately
-    vault.store_session(session_id, session_data, report)
+    client_receipt = {
+        "sessionId": session_id,
+        "status": "DELIVERED_TO_THERAPIST",
+        "auditProofHash": audit_hash[:16] + "..." + audit_hash[-16:],
+        "message": "Intake report successfully transmitted to attending therapist."
+    }
 
     return {
         "status": "COMPLETED",
         "sessionId": session_id,
-        "erasure_receipt": erasure_receipt,
+        "erasure_receipt": client_receipt,
         "report_preview": {
             "start_emotion": report["section2_emotions_and_trajectory"]["start_emotion"],
             "end_emotion": report["section2_emotions_and_trajectory"]["end_emotion"],

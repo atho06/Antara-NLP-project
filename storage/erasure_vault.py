@@ -6,8 +6,11 @@ complying with the locked-in automatic data erasure protocol.
 
 import hashlib
 import json
+import os
 import datetime
 from typing import Dict, Any, Optional
+
+VAULT_CACHE_FILE = os.path.join(os.path.dirname(__file__), ".vault_cache.json")
 
 
 class ErasureVault:
@@ -17,10 +20,28 @@ class ErasureVault:
     """
 
     def __init__(self):
-        # In-memory storage for active sessions awaiting therapist download/delivery
+        # In-memory storage for active sessions awaiting therapist review
         self._vault: Dict[str, Dict[str, Any]] = {}
         # Immutable audit log recording that erasure took place (without client text)
         self._erasure_audit_log: Dict[str, Dict[str, Any]] = {}
+
+        # Restore from transient cache if server reloaded before erasure
+        if os.path.exists(VAULT_CACHE_FILE):
+            try:
+                with open(VAULT_CACHE_FILE, "r", encoding="utf-8") as f:
+                    cached = json.load(f)
+                    if isinstance(cached, dict):
+                        self._vault = cached
+            except Exception:
+                self._vault = {}
+
+    def _sync_cache(self) -> None:
+        """Saves current active sessions to disk cache for server-reload resiliency."""
+        try:
+            with open(VAULT_CACHE_FILE, "w", encoding="utf-8") as f:
+                json.dump(self._vault, f)
+        except Exception:
+            pass
 
     def store_session(self, session_id: str, session_data: Dict[str, Any], report_data: Dict[str, Any]) -> None:
         """
@@ -31,6 +52,7 @@ class ErasureVault:
             "report_data": report_data,
             "stored_at": datetime.datetime.now().isoformat()
         }
+        self._sync_cache()
 
     def get_session(self, session_id: str) -> Optional[Dict[str, Any]]:
         """
@@ -61,7 +83,7 @@ class ErasureVault:
         Executes secure data erasure:
         1. Generates SHA-256 cryptographic verification token of the session record.
         2. Overwrites memory structures with zero-bytes.
-        3. Purges session keys from dictionary.
+        3. Purges session keys from dictionary and disk cache.
         4. Issues an audit receipt proving erasure without retaining personal data.
         """
         if session_id not in self._vault:
@@ -82,6 +104,17 @@ class ErasureVault:
         target["session_data"] = None
         target["report_data"] = None
         del self._vault[session_id]
+
+        # Wipe local cache file
+        if os.path.exists(VAULT_CACHE_FILE):
+            try:
+                # Overwrite cache file with zeroes before removal
+                with open(VAULT_CACHE_FILE, "wb") as f:
+                    f.write(b"\x00" * 1024)
+                os.remove(VAULT_CACHE_FILE)
+            except Exception:
+                pass
+        self._sync_cache()
 
         receipt = {
             "sessionId": session_id,
