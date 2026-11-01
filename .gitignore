@@ -1,8 +1,49 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg
+*.egg-info/
+.installed.cfg
+
+# Virtual Environments
 .venv/
 venv/
-__pycache__/
-*.pyc
+ENV/
+env/
+
+# Environment variables and secrets
 .env
-.DS_Store
 .streamlit/secrets.toml
+
+# IDE and OS
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Generated files
+build/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+develop-eggs/
+tmp/
+
+# Patient sessions and private data
 sessions/
+antara_session_data.json
+
+# Generated PDFs
+*.pdf

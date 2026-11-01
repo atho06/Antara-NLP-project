@@ -1,0 +1,89 @@
+{
+  "sessionId": "antara_session_maya_001",
+  "clientPseudonym": "Maya",
+  "startedAt": "2026-10-23T09:00:00Z",
+  "completedAt": "2026-10-23T09:22:00Z",
+  "crisisTriggered": false,
+  "transcript": [
+    {
+      "step": 1,
+      "stage": "1_consent",
+      "question": "Welcome to Antara. Do you understand that this conversation is strictly confidential, encrypted, and that a clinical report and transcript will be provided only to your therapist before your session, after which your data is erased?",
+      "finalAnswer": "Yes, I understand and consent to begin.",
+      "originalAnswer": null,
+      "isEdited": false,
+      "isSkipped": false,
+      "timestamp": "2026-10-23T09:01:10Z"
+    },
+    {
+      "step": 2,
+      "stage": "2_easy_opening",
+      "question": "How are you feeling right now as you sit down for this conversation?",
+      "finalAnswer": "I'm okay, I guess. Nothing too dramatic, just a bit tired.",
+      "originalAnswer": null,
+      "isEdited": false,
+      "isSkipped": false,
+      "timestamp": "2026-10-23T09:03:15Z"
+    },
+    {
+      "step": 3,
+      "stage": "3_current_feelings",
+      "question": "When you say 'a bit tired', if that feeling lived somewhere in your body, where do you notice it most?",
+      "finalAnswer": "It's probably just tension in my neck and shoulders. It's fine really, most people have sore shoulders from laptop use.",
+      "originalAnswer": null,
+      "isEdited": false,
+      "isSkipped": false,
+      "timestamp": "2026-10-23T09:06:20Z"
+    },
+    {
+      "step": 4,
+      "stage": "3_current_feelings",
+      "question": "If you had to give this tiredness or tension a weight or a color, what does it feel like?",
+      "finalAnswer": "Kind of a dull grey cement block sitting right on my chest. But sort of numb too.",
+      "originalAnswer": null,
+      "isEdited": false,
+      "isSkipped": false,
+      "timestamp": "2026-10-23T09:08:45Z"
+    },
+    {
+      "step": 5,
+      "stage": "4_situations_triggers",
+      "question": "Think of the past week. Are there particular moments or times of day when that grey weight feels heaviest?",
+      "finalAnswer": "Usually Sunday evenings or right before I have to speak in team presentations. My heart starts hammering, but I guess that's just normal stage fright. It's not a big deal.",
+      "originalAnswer": null,
+      "isEdited": false,
+      "isSkipped": false,
+      "timestamp": "2026-10-23T09:11:30Z"
+    },
+    {
+      "step": 6,
+      "stage": "5_daily_life_sleep",
+      "question": "How have your nights and mornings been feeling lately—your sleep, appetite, or energy?",
+      "finalAnswer": "I wake up at 3:30 AM almost every night with my mind racing about everything I haven't finished. I rarely eat lunch because my stomach feels knotted up. But it's whatever, I manage.",
+      "originalAnswer": null,
+      "isEdited": false,
+      "isSkipped": false,
+      "timestamp": "2026-10-23T09:14:10Z"
+    },
+    {
+      "step": 7,
+      "stage": "6_relationships",
+      "question": "When you feel that racing mind or stomach knot, is there someone you feel comfortable sharing it with?",
+      "finalAnswer": "Not really. Everyone has their own problems and I don't want to be a burden. I just tell my friends and parents that everything is fine.",
+      "originalAnswer": null,
+      "isEdited": false,
+      "isSkipped": false,
+      "timestamp": "2026-10-23T09:17:00Z"
+    },
+    {
+      "step": 8,
+      "stage": "7_therapy_hopes",
+      "question": "Looking ahead to speaking with the therapist, what do you hope might change or feel lighter for you?",
+      "finalAnswer": "I guess I just want to stop feeling like an imposter who is constantly on the verge of cracking. I want to learn to exhale without feeling guilty.",
+      "originalAnswer": null,
+      "isEdited": false,
+      "isSkipped": false,
+      "timestamp": "2026-10-23T09:20:15Z"
+    }
+  ]
+}
