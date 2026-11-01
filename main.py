@@ -39,7 +39,6 @@ app.add_middleware(
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_DIR = os.path.join(BASE_DIR, "static")
 TEMPLATES_DIR = os.path.join(BASE_DIR, "templates")
-PERSONAS_DIR = os.path.join(BASE_DIR, "mock_personas")
 
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
@@ -149,41 +148,6 @@ async def finish_chat_intake(session_data: Dict[str, Any]):
 # THERAPIST PORTAL & NLP ANALYTICS API
 # ==========================================
 
-@app.get("/api/personas")
-async def list_mock_personas():
-    """
-    Lists all pre-configured test personas available for evaluation and vivas.
-    """
-    files = glob.glob(os.path.join(PERSONAS_DIR, "*.json"))
-    persona_list = []
-    for fp in files:
-        base = os.path.basename(fp).replace(".json", "")
-        with open(fp, "r", encoding="utf-8") as f:
-            data = json.load(f)
-            persona_list.append({
-                "id": base,
-                "clientPseudonym": data.get("clientPseudonym", "Unknown"),
-                "sessionId": data.get("sessionId", "")
-            })
-    return persona_list
-
-
-@app.get("/api/personas/{persona_id}")
-async def get_mock_persona(persona_id: str):
-    """
-    Loads raw session JSON for a specific persona.
-    """
-    filepath = os.path.join(PERSONAS_DIR, f"{persona_id}.json")
-    if not os.path.exists(filepath):
-        matches = glob.glob(os.path.join(PERSONAS_DIR, f"*{persona_id}*.json"))
-        if matches:
-            filepath = matches[0]
-        else:
-            raise HTTPException(status_code=404, detail=f"Persona '{persona_id}' not found")
-
-    with open(filepath, "r", encoding="utf-8") as f:
-        return json.load(f)
-
 
 @app.post("/api/analyze")
 async def analyze_session(session_data: Dict[str, Any]):
@@ -198,6 +162,17 @@ async def analyze_session(session_data: Dict[str, Any]):
     session_id = session_data.get("sessionId") or session_data.get("session_id", "session_unnamed")
     report = synthesizer.generate_full_report(session_data)
     vault.store_session(session_id, session_data, report)
+    return report
+
+
+@app.get("/api/report/latest")
+async def get_latest_session_report():
+    """
+    Retrieves the most recent intake report stored in volatile memory.
+    """
+    report = vault.get_latest_report()
+    if not report:
+        raise HTTPException(status_code=404, detail="No active intake sessions found in memory.")
     return report
 
 
@@ -221,23 +196,7 @@ async def export_session_pdf(session_id: str):
     """
     report = vault.get_report(session_id)
     if not report:
-        # Check if matches mock persona
-        matches = glob.glob(os.path.join(PERSONAS_DIR, f"*{session_id}*.json"))
-        if not matches:
-            for fp in glob.glob(os.path.join(PERSONAS_DIR, "*.json")):
-                with open(fp, "r", encoding="utf-8") as f:
-                    d = json.load(f)
-                    if d.get("sessionId") == session_id:
-                        matches = [fp]
-                        break
-
-        if matches:
-            with open(matches[0], "r", encoding="utf-8") as f:
-                raw_session = json.load(f)
-                report = synthesizer.generate_full_report(raw_session)
-                vault.store_session(session_id, raw_session, report)
-        else:
-            raise HTTPException(status_code=404, detail="Session report not found or already purged")
+        raise HTTPException(status_code=404, detail="Session report not found or already purged")
 
     pdf_bytes = pdf_generator.generate_pdf_bytes(report)
     filename = f"Antara_Clinical_Report_{session_id}.pdf"

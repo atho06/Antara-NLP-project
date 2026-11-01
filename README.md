@@ -109,30 +109,10 @@ Mental health intake data demands the highest standard of ethical protection:
 
 ---
 
-## 🧪 Pre-Configured Test Personas (`mock_personas/`)
-
-Built-in test cases allow instant demonstration of the clinical NLP engines without manual chat entry:
-
-| Persona | Name | Clinical Profile & NLP Focus |
-| :--- | :--- | :--- |
-| **`persona_minimizer`** | **Maya** | High hedging density, chronic downplaying (*"it's fine"*, *"I guess"*). |
-| **`persona_self_editor`** | **Ananya** | Extensive self-censorship; retractions of emotional vulnerability tokens. |
-| **`persona_contradictory`**| **Pooja** | Strong facade masking; opens cheerful, reveals severe somatic panic later. |
-| **`persona_burnout`** | **Rhea** | Extreme physical exhaustion (*"wet cement"*, sleep disruption, caregiving strain). |
-| **`persona_avoidant`** | **Meera** | Relational detachment; deliberately skips intimate and somatic prompts. |
-
----
-
 ## 📁 Repository Structure
 
 ```
 Antara/
-├── mock_personas/               # Pre-configured clinical test scenarios (.json)
-│   ├── persona_avoidant.json
-│   ├── persona_burnout.json
-│   ├── persona_contradictory.json
-│   ├── persona_minimizer.json
-│   └── persona_self_editor.json
 ├── nlp_engine/                  # Core NLP & Computational Linguistics Modules
 │   ├── crisis_classifier.py     # Safety circuit-breaker & emergency triage
 │   ├── question_bank.py         # 8-stage calibrated conversational questions
@@ -149,10 +129,10 @@ Antara/
 ├── static/                      # Styling & Client-Side Scripts
 │   ├── css/
 │   │   ├── intake.css           # Calm, accessible patient chat interface
-│   │   └── therapist.css        # Professional clinical dashboard styling
+│   │   └── portal.css           # Professional clinical dashboard styling
 │   └── js/
 │       ├── intake.js            # Chatbot flow, micro-editing tracker, crisis handler
-│       └── therapist.js         # Persona switcher, analytics charts, PDF exporter
+│       └── portal.js            # Live session loader, analytics charts, PDF exporter
 ├── templates/                   # Frontend Views
 │   ├── intake.html              # Patient conversational intake portal (/)
 │   └── therapist_portal.html    # Therapist intelligence dashboard (/therapist)
@@ -213,8 +193,7 @@ python -m uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 * `POST /api/chat/check-crisis` — Scans input for acute self-harm signals and returns emergency triage helpline contacts.
 * `POST /api/chat/next-question` — Computes the next conversational prompt based on stage progression and reflections.
 * `POST /api/chat/finish` — Ingests a completed session, runs the full NLP pipeline, and executes client memory erasure.
-* `GET  /api/personas` — Lists available evaluation personas.
-* `GET  /api/personas/{id}` — Fetches raw transcript JSON for a specific persona.
+* `GET  /api/report/latest` — Retrieves the latest clinical report in volatile memory.
 * `POST /api/analyze` — Evaluates arbitrary session transcripts through all 5 NLP engines.
 * `GET  /api/report/{session_id}/pdf` — Generates and downloads the ReportLab clinical PDF.
 * `POST /api/erase/{session_id}` — Triggers buffer zeroization (`0x00`) and returns cryptographic SHA-256 destruction proof.

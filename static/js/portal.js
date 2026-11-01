@@ -2,62 +2,56 @@
  * Antara Clinical Intelligence Dashboard Controller
  */
 
-let currentSessionId = "antara_session_maya_001";
+let currentSessionId = "";
 let currentReportData = null;
 let currentFilter = "all";
 
 document.addEventListener("DOMContentLoaded", () => {
   setupEventListeners();
   
-  // Check if loaded with a specific session ID (e.g. from live intake)
+  // Check if loaded with a specific session ID (e.g. from live intake redirect)
   const urlParams = new URLSearchParams(window.location.search);
   const sessionId = urlParams.get("session_id");
   if (sessionId) {
     loadLiveSession(sessionId);
   } else {
-    // Load initial default persona
-    loadPersona("persona_minimizer");
+    // Automatically load the latest intake session stored in memory
+    loadLatestSession();
   }
 });
 
 function setupEventListeners() {
-  // Persona button clicks
-  const personaButtons = document.querySelectorAll(".persona-btn");
-  personaButtons.forEach(btn => {
-    btn.addEventListener("click", () => {
-      personaButtons.forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      const personaId = btn.getAttribute("data-id");
-      loadPersona(personaId);
-    });
-  });
+  // Session JSON file import handler (header & empty-state buttons)
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
 
-  // Custom JSON file import
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      try {
+        const sessionObj = JSON.parse(event.target.result);
+        await analyzeAndRenderSession(sessionObj);
+      } catch (err) {
+        alert("Invalid JSON file uploaded: " + err.message);
+      }
+    };
+    reader.readAsText(file);
+  };
+
   const fileInput = document.getElementById("jsonFileInput");
-  if (fileInput) {
-    fileInput.addEventListener("change", (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
+  if (fileInput) fileInput.addEventListener("change", handleFileUpload);
 
-      const reader = new FileReader();
-      reader.onload = async (event) => {
-        try {
-          const sessionObj = JSON.parse(event.target.result);
-          document.querySelectorAll(".persona-btn").forEach(b => b.classList.remove("active"));
-          await analyzeAndRenderSession(sessionObj);
-        } catch (err) {
-          alert("Invalid JSON file uploaded: " + err.message);
-        }
-      };
-      reader.readAsText(file);
-    });
-  }
+  const fileInputEmpty = document.getElementById("jsonFileInputEmpty");
+  if (fileInputEmpty) fileInputEmpty.addEventListener("change", handleFileUpload);
 
   // PDF Export
   const btnPdf = document.getElementById("btnDownloadPdf");
   if (btnPdf) {
     btnPdf.addEventListener("click", () => {
-      if (!currentSessionId) return;
+      if (!currentSessionId) {
+        alert("Please load or complete an intake session before exporting PDF.");
+        return;
+      }
       window.location.href = `/api/report/${encodeURIComponent(currentSessionId)}/pdf`;
     });
   }
@@ -66,6 +60,10 @@ function setupEventListeners() {
   const btnErase = document.getElementById("btnEraseData");
   if (btnErase) {
     btnErase.addEventListener("click", async () => {
+      if (!currentSessionId) {
+        alert("No active session to erase.");
+        return;
+      }
       if (!confirm(`Are you sure you want to permanently erase session records for "${currentSessionId}" from active memory?`)) {
         return;
       }
@@ -104,28 +102,41 @@ function setupEventListeners() {
   });
 }
 
+function showNoSessionCard() {
+  const card = document.getElementById("noSessionCard");
+  if (card) card.style.display = "block";
+}
+
+function hideNoSessionCard() {
+  const card = document.getElementById("noSessionCard");
+  if (card) card.style.display = "none";
+}
+
+async function loadLatestSession() {
+  try {
+    const res = await fetch("/api/report/latest");
+    if (!res.ok) throw new Error("No active session in memory");
+    currentReportData = await res.json();
+    currentSessionId = currentReportData.metadata.sessionId;
+    hideNoSessionCard();
+    renderFullDashboard(currentReportData);
+  } catch (err) {
+    console.log("No recent intake session in memory:", err);
+    showNoSessionCard();
+  }
+}
+
 async function loadLiveSession(sessionId) {
   try {
     const res = await fetch(`/api/report/${encodeURIComponent(sessionId)}`);
     if (!res.ok) throw new Error("Could not fetch session report");
     currentReportData = await res.json();
     currentSessionId = currentReportData.metadata.sessionId;
-    document.querySelectorAll(".persona-btn").forEach(b => b.classList.remove("active"));
+    hideNoSessionCard();
     renderFullDashboard(currentReportData);
   } catch (err) {
-    console.warn("Live session lookup failed, falling back to default persona:", err);
-    loadPersona("persona_minimizer");
-  }
-}
-
-async function loadPersona(personaId) {
-  try {
-    const res = await fetch(`/api/personas/${personaId}`);
-    if (!res.ok) throw new Error("Could not fetch persona data");
-    const sessionData = await res.json();
-    await analyzeAndRenderSession(sessionData);
-  } catch (err) {
-    console.error("Error loading persona:", err);
+    console.warn("Live session lookup failed:", err);
+    loadLatestSession();
   }
 }
 
@@ -136,7 +147,20 @@ async function analyzeAndRenderSession(sessionData) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(sessionData)
     });
-    if (!res.ok) throw new Error("Analysis request failed");
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || "Analysis request failed");
+    }
+
+    currentReportData = await res.json();
+    currentSessionId = currentReportData.metadata.sessionId;
+    hideNoSessionCard();
+    renderFullDashboard(currentReportData);
+  } catch (err) {
+    console.error("Analysis failed:", err);
+    alert("Analysis failed: " + err.message);
+  }
+}
 
     currentReportData = await res.json();
     currentSessionId = currentReportData.metadata.sessionId;

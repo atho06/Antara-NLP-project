@@ -22,6 +22,11 @@
       </div>
       <div class="header-actions">
         <span class="badge badge-confidential">🔒 Strictly Confidential</span>
+        <label for="jsonFileInput" class="btn btn-secondary" style="cursor:pointer; margin:0;" title="Upload session JSON file">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Import Session JSON
+        </label>
+        <input type="file" id="jsonFileInput" accept=".json" style="display:none">
         <button id="btnDownloadPdf" class="btn btn-primary" title="Download Clinical PDF Report">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           Export Clinical PDF
@@ -35,37 +40,16 @@
   </header>
 
   <main class="main-container">
-    <!-- Persona Selector & Upload Bar -->
-    <section class="persona-bar">
-      <div class="persona-label">
-        <span class="pulse-indicator"></span>
-        <strong>Case Study Personas:</strong>
-      </div>
-      <div class="persona-pills" id="personaPills">
-        <button class="persona-btn active" data-id="persona_minimizer">
-          <strong>Maya</strong> <span>(The Minimizer)</span>
-        </button>
-        <button class="persona-btn" data-id="persona_self_editor">
-          <strong>Ananya</strong> <span>(The Self-Editor)</span>
-        </button>
-        <button class="persona-btn" data-id="persona_contradictory">
-          <strong>Pooja</strong> <span>(Contradictory / Masking)</span>
-        </button>
-        <button class="persona-btn" data-id="persona_burnout">
-          <strong>Rhea</strong> <span>(Somatic Burnout)</span>
-        </button>
-        <button class="persona-btn" data-id="persona_avoidant">
-          <strong>Meera</strong> <span>(Avoidant / Skips)</span>
-        </button>
-      </div>
-      <div class="upload-wrapper">
-        <label for="jsonFileInput" class="btn btn-sm btn-secondary" title="Upload real session JSON from Person 1">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          Import Session JSON
-        </label>
-        <input type="file" id="jsonFileInput" accept=".json" style="display:none">
-      </div>
-    </section>
+    <!-- Empty State Notification if no session in memory -->
+    <div id="noSessionCard" style="display:none; padding:32px; background:white; border-radius:12px; margin-bottom:20px; border:1px dashed #cbd5e1; text-align:center;">
+      <h3 style="color:#1e293b; margin-bottom:8px;">No Active Patient Intake Loaded</h3>
+      <p style="color:#64748b; margin-bottom:16px;">Complete a patient intake chat at <a href="/" target="_blank" style="color:#0f766e; font-weight:600;">Patient Intake (/)</a> or click below to import a saved session JSON.</p>
+      <label for="jsonFileInputEmpty" class="btn btn-primary" style="cursor:pointer; display:inline-flex; align-items:center; gap:8px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Upload Session JSON
+      </label>
+      <input type="file" id="jsonFileInputEmpty" accept=".json" style="display:none">
+    </div>
 
     <!-- Ethical Disclaimer Callout -->
     <div class="disclaimer-banner">
@@ -82,12 +66,12 @@
     <!-- Executive Overview Card -->
     <section class="client-summary-card">
       <div class="client-meta-col">
-        <div class="avatar-circle" id="clientAvatar">M</div>
+        <div class="avatar-circle" id="clientAvatar">C</div>
         <div>
-          <h1 class="client-name" id="clientPseudonym">Maya (Client Pseudonym)</h1>
+          <h1 class="client-name" id="clientPseudonym">Client (Active Intake)</h1>
           <p class="session-meta">
-            Session ID: <code id="lblSessionId">antara_session_maya_001</code> &nbsp;•&nbsp; 
-            Intake Completed: <span id="lblCompletedAt">2026-10-23 09:22 UTC</span>
+            Session ID: <code id="lblSessionId">Waiting for intake session...</code> &nbsp;•&nbsp; 
+            Intake Completed: <span id="lblCompletedAt">—</span>
           </p>
         </div>
       </div>
@@ -204,7 +188,7 @@
         <div class="therapy-goal-card">
           <div class="goal-quote-mark">“</div>
           <blockquote class="therapy-verbatim-goal" id="therapyGoalText">
-            "I guess I just want to stop feeling like an imposter who is constantly on the verge of cracking..."
+            No explicit therapy goal recorded yet.
           </blockquote>
           <div class="goal-subtext">Stated during Stage 7 (Therapy Hopes & Intentions)</div>
         </div>

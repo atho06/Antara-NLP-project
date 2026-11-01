@@ -47,6 +47,15 @@ class ErasureVault:
             return entry.get("report_data")
         return None
 
+    def get_latest_report(self) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves the most recently stored clinical report in memory.
+        """
+        if not self._vault:
+            return None
+        latest_key = list(self._vault.keys())[-1]
+        return self._vault[latest_key].get("report_data")
+
     def erase_session(self, session_id: str) -> Dict[str, Any]:
         """
         Executes secure data erasure:
