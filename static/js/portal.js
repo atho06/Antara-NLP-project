@@ -154,15 +154,6 @@ async function analyzeAndRenderSession(sessionData) {
   }
 }
 
-    currentReportData = await res.json();
-    currentSessionId = currentReportData.metadata.sessionId;
-    renderFullDashboard(currentReportData);
-  } catch (err) {
-    console.error("Analysis failed:", err);
-    alert("Analysis failed: " + err.message);
-  }
-}
-
 function renderFullDashboard(report) {
   const meta = report.metadata;
   const s1 = report.section1_main_concerns;
