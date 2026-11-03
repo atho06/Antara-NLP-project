@@ -19,8 +19,8 @@ DATABASE_FILE = BASE_DIR / "antara.db"
 def get_connection():
 
     connection = sqlite3.connect(DATABASE_FILE)
-
     connection.row_factory = sqlite3.Row
+    connection.execute("PRAGMA foreign_keys = ON")
 
     return connection
 
@@ -31,62 +31,39 @@ def get_connection():
 
 def init_db():
 
-    connection = get_connection()
+    with get_connection() as connection:
 
-    cursor = connection.cursor()
+        connection.execute("""
+            CREATE TABLE IF NOT EXISTS patients (
+                patient_id TEXT PRIMARY KEY,
+                full_name TEXT NOT NULL,
+                email TEXT UNIQUE NOT NULL,
+                password_hash TEXT NOT NULL,
+                password_salt TEXT NOT NULL,
+                created_at TEXT NOT NULL
+            )
+        """)
 
-    # PATIENTS TABLE
+        connection.execute("""
+            CREATE TABLE IF NOT EXISTS patient_sessions (
+                session_id TEXT PRIMARY KEY,
+                patient_id TEXT NOT NULL,
+                session_data TEXT NOT NULL,
+                status TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
 
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS patients (
+                FOREIGN KEY (patient_id)
+                REFERENCES patients(patient_id)
+                ON DELETE CASCADE
+            )
+        """)
 
-            patient_id TEXT PRIMARY KEY,
-
-            full_name TEXT NOT NULL,
-
-            email TEXT UNIQUE NOT NULL,
-
-            password_hash TEXT NOT NULL,
-
-            password_salt TEXT NOT NULL,
-
-            created_at TEXT NOT NULL
-
-        )
-    """)
-
-    # PATIENT SESSIONS TABLE
-
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS patient_sessions (
-
-            session_id TEXT PRIMARY KEY,
-
-            patient_id TEXT NOT NULL,
-
-            session_data TEXT NOT NULL,
-
-            status TEXT NOT NULL,
-
-            created_at TEXT NOT NULL,
-
-            updated_at TEXT NOT NULL,
-
-            FOREIGN KEY (patient_id)
-            REFERENCES patients(patient_id)
-
-        )
-    """)
-
-    cursor.execute("""
-        CREATE INDEX IF NOT EXISTS
-        idx_patient_sessions_patient
-        ON patient_sessions(patient_id)
-    """)
-
-    connection.commit()
-
-    connection.close()
+        connection.execute("""
+            CREATE INDEX IF NOT EXISTS
+            idx_patient_sessions_patient
+            ON patient_sessions(patient_id)
+        """)
 
 
 # ==========================================
@@ -129,43 +106,36 @@ def register_patient(full_name, email, password):
     password_hash, password_salt = hash_password(password)
 
     patient_id = secrets.token_hex(16)
-
     created_at = datetime.now().isoformat()
-
-    connection = get_connection()
 
     try:
 
-        connection.execute("""
-            INSERT INTO patients (
+        with get_connection() as connection:
+
+            connection.execute("""
+                INSERT INTO patients (
+                    patient_id,
+                    full_name,
+                    email,
+                    password_hash,
+                    password_salt,
+                    created_at
+                )
+                VALUES (?, ?, ?, ?, ?, ?)
+            """, (
                 patient_id,
                 full_name,
                 email,
                 password_hash,
                 password_salt,
                 created_at
-            )
-            VALUES (?, ?, ?, ?, ?, ?)
-        """, (
-            patient_id,
-            full_name,
-            email,
-            password_hash,
-            password_salt,
-            created_at
-        ))
-
-        connection.commit()
+            ))
 
         return True, "Account created successfully."
 
     except sqlite3.IntegrityError:
 
         return False, "An account with this email already exists."
-
-    finally:
-
-        connection.close()
 
 
 # ==========================================
@@ -176,9 +146,7 @@ def authenticate_patient(email, password):
 
     email = email.strip().lower()
 
-    connection = get_connection()
-
-    try:
+    with get_connection() as connection:
 
         patient = connection.execute("""
             SELECT *
@@ -211,10 +179,6 @@ def authenticate_patient(email, password):
 
         return None
 
-    finally:
-
-        connection.close()
-
 
 # ==========================================
 # SAVE PATIENT SESSION
@@ -227,58 +191,62 @@ def save_patient_session(
     status="in_progress"
 ):
 
-    connection = get_connection()
-
-    now = datetime.now().isoformat()
+    if status not in {"in_progress", "completed", "crisis_paused"}:
+        raise ValueError("Invalid session status.")
 
     data = json.dumps(
         session_data,
         ensure_ascii=False
     )
 
-    connection.execute("""
-        INSERT INTO patient_sessions (
+    now = datetime.now().isoformat()
+
+    with get_connection() as connection:
+
+        existing = connection.execute("""
+            SELECT patient_id
+            FROM patient_sessions
+            WHERE session_id = ?
+        """, (session_id,)).fetchone()
+
+        if existing and existing["patient_id"] != patient_id:
+            raise PermissionError(
+                "This session does not belong to this patient."
+            )
+
+        connection.execute("""
+            INSERT INTO patient_sessions (
+                session_id,
+                patient_id,
+                session_data,
+                status,
+                created_at,
+                updated_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?)
+
+            ON CONFLICT(session_id)
+            DO UPDATE SET
+                session_data = excluded.session_data,
+                status = excluded.status,
+                updated_at = excluded.updated_at
+        """, (
             session_id,
             patient_id,
-            session_data,
+            data,
             status,
-            created_at,
-            updated_at
-        )
-        VALUES (?, ?, ?, ?, ?, ?)
-
-        ON CONFLICT(session_id)
-        DO UPDATE SET
-
-            session_data = excluded.session_data,
-            status = excluded.status,
-            updated_at = excluded.updated_at
-
-        WHERE patient_sessions.patient_id = excluded.patient_id
-
-    """, (
-        session_id,
-        patient_id,
-        data,
-        status,
-        now,
-        now
-    ))
-
-    connection.commit()
-
-    connection.close()
+            now,
+            now
+        ))
 
 
 # ==========================================
-# GET PATIENT SESSION
+# GET ONE PATIENT SESSION
 # ==========================================
 
 def get_patient_session(patient_id, session_id):
 
-    connection = get_connection()
-
-    try:
+    with get_connection() as connection:
 
         result = connection.execute("""
             SELECT session_data
@@ -291,14 +259,9 @@ def get_patient_session(patient_id, session_id):
         )).fetchone()
 
         if result:
-
             return json.loads(result["session_data"])
 
         return None
-
-    finally:
-
-        connection.close()
 
 
 # ==========================================
@@ -307,9 +270,7 @@ def get_patient_session(patient_id, session_id):
 
 def get_patient_sessions(patient_id):
 
-    connection = get_connection()
-
-    try:
+    with get_connection() as connection:
 
         results = connection.execute("""
             SELECT session_id, status, created_at, updated_at
@@ -320,9 +281,53 @@ def get_patient_sessions(patient_id):
 
         return [dict(row) for row in results]
 
-    finally:
 
-        connection.close()
+# ==========================================
+# GET LATEST UNFINISHED SESSION
+# ==========================================
+
+def get_unfinished_session(patient_id):
+
+    with get_connection() as connection:
+
+        result = connection.execute("""
+            SELECT session_id, session_data
+            FROM patient_sessions
+            WHERE patient_id = ?
+            AND status = 'in_progress'
+            ORDER BY updated_at DESC
+            LIMIT 1
+        """, (patient_id,)).fetchone()
+
+        if result:
+
+            return {
+                "session_id": result["session_id"],
+                "session_data": json.loads(result["session_data"])
+            }
+
+        return None
+
+
+# ==========================================
+# COMPLETE PATIENT SESSION
+# ==========================================
+
+def complete_patient_session(patient_id, session_id):
+
+    with get_connection() as connection:
+
+        connection.execute("""
+            UPDATE patient_sessions
+            SET status = 'completed',
+                updated_at = ?
+            WHERE patient_id = ?
+            AND session_id = ?
+        """, (
+            datetime.now().isoformat(),
+            patient_id,
+            session_id
+        ))
 
 
 # ==========================================
@@ -331,24 +336,20 @@ def get_patient_sessions(patient_id):
 
 def delete_patient_session(patient_id, session_id):
 
-    connection = get_connection()
+    with get_connection() as connection:
 
-    connection.execute("""
-        DELETE FROM patient_sessions
-        WHERE patient_id = ?
-        AND session_id = ?
-    """, (
-        patient_id,
-        session_id
-    ))
-
-    connection.commit()
-
-    connection.close()
+        connection.execute("""
+            DELETE FROM patient_sessions
+            WHERE patient_id = ?
+            AND session_id = ?
+        """, (
+            patient_id,
+            session_id
+        ))
 
 
 # ==========================================
-# INITIALIZE DATABASE AUTOMATICALLY
+# INITIALIZE DATABASE
 # ==========================================
 
 init_db()

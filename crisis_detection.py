@@ -17,6 +17,20 @@ CRISIS_PATTERNS = [
     r"\bwant to (?:hurt|harm) myself\b",
     r"\bi (?:might|may|could) hurt myself\b",
     r"\bi feel like (?:hurting|harming) myself\b",
+    # Threats towards other people
+r"\bkill people\b",
+r"\bwanna kill people\b",
+r"\bwant to kill people\b",
+r"\bwant to kill someone\b",
+r"\bwanna kill someone\b",
+r"\bthinking about killing someone\b",
+r"\bthinking about killing people\b",
+r"\bi might kill someone\b",
+r"\bi may kill someone\b",
+r"\bi want to kill\b",
+r"\bi wanna kill\b",
+r"\bgoing to kill someone\b",
+r"\bgoing to kill people\b",
 
     # Suicidal thoughts
     r"\bwant to die\b",

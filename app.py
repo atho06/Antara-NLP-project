@@ -5,11 +5,21 @@ import json
 import uuid
 
 from datetime import datetime
-from pathlib import Path
 
 from question_bank import QUESTION_BANK
 from llm_service import generate_followup
 from crisis_detection import detect_crisis
+
+from database import (
+    register_patient,
+    authenticate_patient,
+    save_patient_session,
+    get_patient_session,
+    get_patient_sessions,
+    delete_patient_session,
+    get_unfinished_session,
+    complete_patient_session
+)
 
 
 # ==================================================
@@ -19,7 +29,7 @@ from crisis_detection import detect_crisis
 st.set_page_config(
     page_title="Antara",
     page_icon="🌷",
-    layout="centered"
+    layout="wide"
 )
 
 
@@ -30,31 +40,142 @@ st.set_page_config(
 st.markdown("""
 <style>
 
+/* ================================================
+   MAIN BACKGROUND
+================================================ */
+
 .stApp {
     background: linear-gradient(
         120deg,
         #c9d8ff 0%,
         #ead5f5 50%,
         #ffcddd 100%
-    );
+    ) !important;
 }
+
+/* ================================================
+   GENERAL TEXT
+================================================ */
 
 .stApp p,
 .stApp li,
 .stApp label,
 .stApp h1,
 .stApp h2,
-.stApp h3 {
+.stApp h3,
+.stApp h4 {
     color: #000000;
 }
 
 .block-container {
-    max-width: 900px;
+    max-width: 1100px;
     padding-top: 2rem;
-    padding-bottom: 6rem;
+    padding-bottom: 5rem;
 }
 
-/* CHAT BUBBLES */
+/* ================================================
+   TOP TOOLBAR
+================================================ */
+
+header[data-testid="stHeader"],
+[data-testid="stToolbar"] {
+    background-color: #f3cce8 !important;
+}
+
+header[data-testid="stHeader"] *,
+[data-testid="stToolbar"] * {
+    color: #000000 !important;
+    fill: #000000 !important;
+}
+
+/* ================================================
+   SIDEBAR: KEEP LIGHT BLUE
+================================================ */
+
+section[data-testid="stSidebar"],
+section[data-testid="stSidebar"] > div {
+    background-color: #b9d8ff !important;
+}
+
+section[data-testid="stSidebar"] * {
+    color: #000000 !important;
+}
+
+section[data-testid="stSidebar"] .stButton > button {
+    background: #e8f2ff !important;
+    color: #253b5c !important;
+    border: 1px solid #91baf0 !important;
+    border-radius: 14px !important;
+    font-weight: 600 !important;
+    min-height: 45px;
+    box-shadow: none !important;
+}
+
+section[data-testid="stSidebar"] .stButton > button:hover {
+    background: #d5e7ff !important;
+}
+
+section[data-testid="stSidebar"] [data-testid="stExpander"] {
+    background: #e8f2ff !important;
+    border: 1px solid #b9cde8 !important;
+    border-radius: 12px !important;
+}
+
+/* ================================================
+   INPUT FIELDS
+================================================ */
+
+[data-testid="stTextInput"] [data-baseweb="input"],
+[data-testid="stTextInput"] [data-baseweb="base-input"],
+[data-testid="stTextArea"] [data-baseweb="textarea"] {
+    background: #e8f2ff !important;
+    background-color: #e8f2ff !important;
+    border: 1px solid #a9c9f5 !important;
+    border-radius: 14px !important;
+    box-shadow: none !important;
+}
+
+.stTextInput input,
+.stTextArea textarea,
+.stNumberInput input,
+.stDateInput input,
+.stTimeInput input {
+    background: transparent !important;
+    color: #000000 !important;
+    border: none !important;
+    box-shadow: none !important;
+    caret-color: #3979e8 !important;
+}
+
+[data-testid="stTextInput"] input[type="password"],
+[data-testid="stTextInput"] input[type="text"],
+[data-testid="stTextInput"] input[type="email"] {
+    background: transparent !important;
+    color: #000000 !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+[data-testid="stTextInput"] button {
+    background: #e8f2ff !important;
+    color: #385b89 !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+[data-testid="stTextInput"] button svg {
+    fill: #385b89 !important;
+}
+
+.stTextInput input::placeholder,
+.stTextArea textarea::placeholder {
+    color: #7186a5 !important;
+    opacity: 1 !important;
+}
+
+/* ================================================
+   CHAT BUBBLES
+================================================ */
 
 .bot-row {
     display: flex;
@@ -63,8 +184,8 @@ st.markdown("""
 }
 
 .bot-bubble {
-    background: #eeeaf1;
-    color: #292633;
+    background: #eeeaf1 !important;
+    color: #292633 !important;
     padding: 13px 17px;
     border-radius: 16px 16px 16px 5px;
     max-width: 75%;
@@ -80,8 +201,8 @@ st.markdown("""
 }
 
 .user-bubble {
-    background: #3979e8;
-    color: white;
+    background: #3979e8 !important;
+    color: #ffffff !important;
     padding: 13px 17px;
     border-radius: 16px 16px 5px 16px;
     max-width: 75%;
@@ -90,86 +211,288 @@ st.markdown("""
     overflow-wrap: anywhere;
 }
 
-/* CHAT INPUT */
-
-[data-testid="stChatInput"] {
-    background: white;
-    border-radius: 25px;
-    border: 1px solid #c8b5e5;
-}
-
-/* BUTTONS */
+/* ================================================
+   BUTTONS
+================================================ */
 
 .stButton > button,
-.stDownloadButton > button {
-    background: #ffffff !important;
-    color: #29243a !important;
-    border: 1px solid #d8b8e8 !important;
+.stDownloadButton > button,
+[data-testid="stFormSubmitButton"] button {
+    background: #b9d8ff !important;
+    color: #253b5c !important;
+    border: 1px solid #91baf0 !important;
     border-radius: 14px !important;
     font-weight: 600 !important;
     padding: 12px 18px !important;
-    transition: 0.3s ease;
+    box-shadow: none !important;
 }
 
 .stButton > button:hover,
-.stDownloadButton > button:hover {
-    background: #c9d8ff !important;
-    color: #29243a !important;
-    border: 1px solid #91b5f5 !important;
+.stDownloadButton > button:hover,
+[data-testid="stFormSubmitButton"] button:hover {
+    background: #9fc8ff !important;
+    color: #253b5c !important;
+    border-color: #78a9ed !important;
 }
 
 .stButton > button p,
-.stDownloadButton > button p {
-    color: #29243a !important;
+.stDownloadButton > button p,
+[data-testid="stFormSubmitButton"] button p {
+    color: #253b5c !important;
 }
 
-/* EXPANDER */
-
-[data-testid="stExpander"] {
-    background: rgba(255,255,255,0.35);
-    border-radius: 12px;
-}
-
-/* DELETE BUTTON */
-
-.st-key-delete-session-container .stButton > button:hover {
-    background: #ffd6d6 !important;
-    color: #a00000 !important;
-    border: 1px solid #ef7777 !important;
-}
-
-.st-key-delete-session-container .stButton > button:hover p {
-    color: #a00000 !important;
-}
-
-/* LOGIN CARD */
+/* ================================================
+   LOGIN CARD
+================================================ */
 
 .login-card {
-    background: rgba(255,255,255,0.75);
+    background: rgba(255,255,255,0.90) !important;
     padding: 35px;
     border-radius: 24px;
     text-align: center;
     box-shadow: 0 5px 20px rgba(0,0,0,0.06);
     margin-top: 35px;
+    border: 1px solid #d8c9ed !important;
 }
 
 .login-subtitle {
-    color: #55516a;
+    color: #55516a !important;
     font-size: 16px;
 }
 
-.consent-card {
-    background: rgba(255,255,255,0.75);
-    padding: 25px;
-    border-radius: 20px;
-    margin-top: 20px;
+/* ================================================
+   SECTION HEADINGS
+================================================ */
+
+.section-heading {
+    background: #b9d8ff !important;
+    color: #253b5c !important;
+    padding: 18px 22px;
+    border: 1px solid #91baf0 !important;
+    border-radius: 15px;
+    font-size: 22px;
+    font-weight: 700;
+    margin: 18px 0;
 }
 
-/* HIDE FOOTER */
+/* ================================================
+   REGISTRATION AND LOGIN FORM BOX
+================================================ */
+
+[data-testid="stForm"] {
+    background: rgba(255,255,255,0.35) !important;
+    border: 1px solid rgba(255,255,255,0.65) !important;
+    border-radius: 18px !important;
+    padding: 18px !important;
+    box-shadow: none !important;
+}
+
+/* ================================================
+   EXPANDERS
+================================================ */
+
+[data-testid="stExpander"] {
+    background: rgba(255,255,255,0.45) !important;
+    border: 1px solid #d8c9ed !important;
+    border-radius: 12px !important;
+}
+
+[data-testid="stExpander"] summary {
+    color: #000000 !important;
+}
+
+/* ================================================
+   TABS
+================================================ */
+
+.stTabs [data-baseweb="tab"],
+.stTabs [data-baseweb="tab"] p {
+    color: #000000 !important;
+}
+
+/* ================================================
+   CHECKBOX
+================================================ */
+
+.stCheckbox label {
+    color: #000000 !important;
+}
+
+/* ================================================
+   DROPDOWNS
+================================================ */
+
+.stSelectbox div[data-baseweb="select"] > div {
+    background: #e8f2ff !important;
+    color: #000000 !important;
+    border-color: #a9c9f5 !important;
+}
+
+/* ================================================
+   PROGRESS BAR
+================================================ */
+
+[data-testid="stProgress"] > div {
+    background-color: #f3cce8 !important;
+    border-radius: 20px !important;
+}
+
+[data-testid="stProgress"] div[role="progressbar"] {
+    background-color: #3979e8 !important;
+}
+
+/* ================================================
+   CHAT INPUT: REMOVE ALL BLACK INNER AREAS
+================================================ */
+
+/* Outer chat input */
+
+[data-testid="stChatInput"] {
+    background: #e8f2ff !important;
+    background-color: #e8f2ff !important;
+    border: 1px solid #a9c9f5 !important;
+    border-radius: 25px !important;
+    box-shadow: none !important;
+    overflow: hidden !important;
+}
+
+/* All inner chat input containers */
+
+[data-testid="stChatInput"] > div,
+[data-testid="stChatInput"] > div > div,
+[data-testid="stChatInput"] div[data-baseweb="textarea"],
+[data-testid="stChatInput"] div[data-baseweb="base-input"] {
+    background: #e8f2ff !important;
+    background-color: #e8f2ff !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+/* Actual textarea */
+
+[data-testid="stChatInput"] textarea {
+    background: #e8f2ff !important;
+    background-color: #e8f2ff !important;
+    color: #000000 !important;
+    caret-color: #3979e8 !important;
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+/* Placeholder */
+
+[data-testid="stChatInput"] textarea::placeholder {
+    color: #7186a5 !important;
+    opacity: 1 !important;
+}
+
+/* Remove dark pseudo elements */
+
+[data-testid="stChatInput"]::before,
+[data-testid="stChatInput"]::after,
+[data-testid="stChatInput"] div::before,
+[data-testid="stChatInput"] div::after {
+    background: #e8f2ff !important;
+    box-shadow: none !important;
+}
+
+/* Send button */
+
+[data-testid="stChatInput"] button {
+    background: #b9d8ff !important;
+    background-color: #b9d8ff !important;
+    color: #000000 !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 20px 20px 0 !important;
+}
+
+[data-testid="stChatInput"] button:hover {
+    background: #9fc8ff !important;
+}
+
+[data-testid="stChatInput"] button svg {
+    fill: #000000 !important;
+    color: #000000 !important;
+}
+
+/* ================================================
+   BOTTOM DASHBOARD: SAME PINK AS TOP
+================================================ */
+
+[data-testid="stBottom"] {
+    background: #f3cce8 !important;
+    background-color: #f3cce8 !important;
+    border-top: 1px solid #e6b9d8 !important;
+    box-shadow: none !important;
+}
+
+[data-testid="stBottom"] > div,
+[data-testid="stBottom"] > div > div,
+[data-testid="stBottom"] > div > div > div {
+    background: #f3cce8 !important;
+    background-color: #f3cce8 !important;
+    box-shadow: none !important;
+}
+
+/* Ensure chat input remains light blue */
+
+[data-testid="stBottom"] [data-testid="stChatInput"],
+[data-testid="stBottom"] [data-testid="stChatInput"] > div,
+[data-testid="stBottom"] [data-testid="stChatInput"] > div > div,
+[data-testid="stBottom"] [data-testid="stChatInput"] textarea {
+    background: #e8f2ff !important;
+    background-color: #e8f2ff !important;
+}
+
+/* ================================================
+   ALERTS
+================================================ */
+
+[data-testid="stAlert"] {
+    border-radius: 12px !important;
+}
+
+/* ================================================
+   REMOVE UNWANTED DEFAULT BACKGROUNDS
+================================================ */
+
+[data-testid="stAppViewContainer"],
+[data-testid="stMain"],
+[data-testid="stMainBlockContainer"] {
+    background: transparent !important;
+}
+
+/* ================================================
+   HIDE FOOTER
+================================================ */
 
 #MainMenu,
 footer {
     visibility: hidden;
+}
+
+/* ================================================
+   RESPONSIVE DESIGN
+================================================ */
+
+@media screen and (max-width: 768px) {
+
+    .block-container {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    .login-card {
+        padding: 22px;
+    }
+
+    .bot-bubble,
+    .user-bubble {
+        max-width: 90%;
+    }
+
 }
 
 </style>
@@ -177,89 +500,7 @@ footer {
 
 
 # ==================================================
-# 3. SESSION STORAGE
-# ==================================================
-
-BASE_DIR = Path(__file__).resolve().parent
-
-SESSION_FOLDER = BASE_DIR / "sessions"
-SESSION_FOLDER.mkdir(exist_ok=True)
-
-SESSION_FILE = SESSION_FOLDER / "antara_session.json"
-
-
-def save_session():
-
-    session_data = {
-        "application": "Antara",
-        "session_id": st.session_state.session_id,
-        "saved_at": datetime.now().isoformat(),
-        "started": st.session_state.started,
-        "consent_given": st.session_state.consent_given,
-        "current_question_index": st.session_state.current_question_index,
-        "responses": st.session_state.responses,
-        "submitted": st.session_state.submitted,
-        "pending_followup": st.session_state.pending_followup,
-        "pending_attempts": st.session_state.pending_attempts,
-        "unclear_message": st.session_state.unclear_message,
-        "crisis_triggered": st.session_state.crisis_triggered,
-        "crisis_acknowledged": st.session_state.crisis_acknowledged
-    }
-
-    temporary_file = SESSION_FILE.with_suffix(".tmp")
-
-    with open(temporary_file, "w", encoding="utf-8") as file:
-
-        json.dump(
-            session_data,
-            file,
-            indent=4,
-            ensure_ascii=False
-        )
-
-    temporary_file.replace(SESSION_FILE)
-
-
-def load_session():
-
-    if not SESSION_FILE.exists():
-        return None
-
-    try:
-
-        with open(SESSION_FILE, "r", encoding="utf-8") as file:
-            return json.load(file)
-
-    except (json.JSONDecodeError, OSError) as error:
-
-        print("Session loading error:", error)
-
-        return None
-
-
-def delete_saved_session():
-
-    if SESSION_FILE.exists():
-        SESSION_FILE.unlink()
-
-
-def auto_save():
-
-    try:
-        save_session()
-
-    except OSError as error:
-
-        st.error(
-            "Unable to save your session. "
-            "Please check your local storage."
-        )
-
-        print("Session saving error:", error)
-
-
-# ==================================================
-# 4. SESSION STATE
+# 3. SESSION STATE
 # ==================================================
 
 defaults = {
@@ -275,42 +516,182 @@ defaults = {
     "crisis_triggered": False,
     "crisis_acknowledged": False,
     "show_recovery": False,
-    "session_checked": False,
+    "recovery_session_id": None,
     "logged_in": False,
     "login_role": None,
+    "patient_id": None,
+    "patient_name": None,
+    "patient_email": None
 }
 
 for key, value in defaults.items():
-
     if key not in st.session_state:
         st.session_state[key] = value
 
 
 # ==================================================
-# 5. CHECK FOR PREVIOUS SESSION
+# 4. SESSION MANAGEMENT
 # ==================================================
 
-if not st.session_state.session_checked:
+def generate_session_id():
+    return (
+        "ANT-"
+        + datetime.now().strftime("%Y%m%d")
+        + "-"
+        + uuid.uuid4().hex[:6].upper()
+    )
 
-    saved_data = load_session()
 
-    if (
-        saved_data
-        and saved_data.get("started")
-        and not saved_data.get("submitted")
-    ):
+def get_session_data():
+    return {
+        "application": "Antara",
+        "session_id": st.session_state.session_id,
+        "saved_at": datetime.now().isoformat(),
+        "started": st.session_state.started,
+        "consent_given": st.session_state.consent_given,
+        "current_question_index": st.session_state.current_question_index,
+        "responses": st.session_state.responses,
+        "submitted": st.session_state.submitted,
+        "pending_followup": st.session_state.pending_followup,
+        "pending_attempts": st.session_state.pending_attempts,
+        "unclear_message": st.session_state.unclear_message,
+        "crisis_triggered": st.session_state.crisis_triggered,
+        "crisis_acknowledged": st.session_state.crisis_acknowledged
+    }
 
-        st.session_state.show_recovery = True
 
-    else:
+def auto_save():
 
-        st.session_state.show_recovery = False
+    patient_id = st.session_state.get("patient_id")
+    session_id = st.session_state.get("session_id")
 
-    st.session_state.session_checked = True
+    if not patient_id or not session_id:
+        return
+
+    try:
+        status = (
+            "completed"
+            if st.session_state.submitted
+            else "in_progress"
+        )
+
+        save_patient_session(
+            patient_id,
+            session_id,
+            get_session_data(),
+            status
+        )
+
+    except Exception as error:
+        st.error("Unable to save your session.")
+        print("Database saving error:", error)
+
+
+def restore_session(saved_data):
+
+    if not isinstance(saved_data, dict):
+        return False
+
+    try:
+        responses = saved_data.get("responses", [])
+
+        if not isinstance(responses, list):
+            return False
+
+        session_id = saved_data.get("session_id")
+
+        if not isinstance(session_id, str) or not session_id:
+            return False
+
+        st.session_state.session_id = session_id
+        st.session_state.started = saved_data.get("started", False)
+        st.session_state.consent_given = saved_data.get("consent_given", False)
+        st.session_state.current_question_index = saved_data.get(
+            "current_question_index", 0
+        )
+        st.session_state.responses = responses
+        st.session_state.submitted = saved_data.get("submitted", False)
+        st.session_state.pending_followup = saved_data.get("pending_followup")
+        st.session_state.pending_attempts = saved_data.get(
+            "pending_attempts", {}
+        )
+        st.session_state.unclear_message = saved_data.get("unclear_message")
+        st.session_state.crisis_triggered = saved_data.get(
+            "crisis_triggered", False
+        )
+        st.session_state.crisis_acknowledged = saved_data.get(
+            "crisis_acknowledged", False
+        )
+
+        return True
+
+    except (ValueError, TypeError, KeyError) as error:
+        print("Session restoration error:", error)
+        return False
+
+
+def reset_session():
+
+    patient_id = st.session_state.patient_id
+    patient_name = st.session_state.patient_name
+    patient_email = st.session_state.patient_email
+
+    for key, value in defaults.items():
+        st.session_state[key] = value
+
+    st.session_state.logged_in = True
+    st.session_state.login_role = "patient"
+    st.session_state.patient_id = patient_id
+    st.session_state.patient_name = patient_name
+    st.session_state.patient_email = patient_email
+
+
+def start_new_session():
+    reset_session()
+    st.session_state.show_recovery = False
+    st.session_state.recovery_session_id = None
+
+
+def logout():
+
+    auto_save()
+
+    for key in list(st.session_state.keys()):
+        del st.session_state[key]
+
+    st.rerun()
 
 
 # ==================================================
-# 6. COLLECT CORE QUESTIONS
+# 5. SESSION HISTORY
+# ==================================================
+
+def get_history():
+
+    patient_id = st.session_state.get("patient_id")
+
+    if not patient_id:
+        return []
+
+    try:
+        sessions = get_patient_sessions(patient_id)
+
+        if not isinstance(sessions, list):
+            return []
+
+        return sorted(
+            sessions,
+            key=lambda item: item.get("updated_at", ""),
+            reverse=True
+        )
+
+    except Exception as error:
+        print("History loading error:", error)
+        return []
+
+
+# ==================================================
+# 6. COLLECT QUESTIONS
 # ==================================================
 
 all_questions = []
@@ -335,9 +716,7 @@ for stage_number, stage_data in QUESTION_BANK.items():
 # ==================================================
 
 SKIP_WORDS = {
-    "skip",
-    "pass",
-    "skip this",
+    "skip", "pass", "skip this",
     "don't want to answer",
     "dont want to answer",
     "i don't want to answer",
@@ -355,20 +734,10 @@ VALID_SHORT_ANSWERS = {
 }
 
 KEYBOARD_PATTERNS = [
-    r"asdfgh",
-    r"asdfghjkl",
-    r"qwerty",
-    r"qwertyuiop",
-    r"zxcvbn",
-    r"zxcvbnm",
-    r"dfgh",
-    r"fghj",
-    r"ghjk",
-    r"hjkl",
-    r"kjhg",
-    r"lkjh",
-    r"poiuy",
-    r"mnbvc"
+    r"asdfgh", r"asdfghjkl", r"qwerty",
+    r"qwertyuiop", r"zxcvbn", r"zxcvbnm",
+    r"dfgh", r"fghj", r"ghjk", r"hjkl",
+    r"kjhg", r"lkjh", r"poiuy", r"mnbvc"
 ]
 
 
@@ -377,11 +746,7 @@ def classify_response(message):
     if not isinstance(message, str):
         return "unclear"
 
-    text = re.sub(
-        r"\s+",
-        " ",
-        message.strip().lower()
-    )
+    text = re.sub(r"\s+", " ", message.strip().lower())
 
     if not text:
         return "unclear"
@@ -396,7 +761,6 @@ def classify_response(message):
         return "unclear"
 
     for pattern in KEYBOARD_PATTERNS:
-
         if re.search(pattern, text):
             return "unclear"
 
@@ -414,7 +778,7 @@ def classify_response(message):
 
 
 # ==================================================
-# 8. DISPLAY CHAT MESSAGES
+# 8. CHAT MESSAGE DISPLAY
 # ==================================================
 
 def display_message(message, sender):
@@ -488,49 +852,152 @@ def show_crisis_screen():
     if st.button("End this session"):
 
         st.session_state.submitted = True
-
         auto_save()
+
+        try:
+            complete_patient_session(
+                st.session_state.patient_id,
+                st.session_state.session_id
+            )
+        except Exception as error:
+            print("Session completion error:", error)
+
         st.rerun()
 
 
 # ==================================================
-# 10. RESET SESSION
-# ==================================================
-
-def reset_session():
-
-    delete_saved_session()
-
-    logged_in = st.session_state.logged_in
-    login_role = st.session_state.login_role
-
-    for key, value in defaults.items():
-        st.session_state[key] = value
-
-    st.session_state.logged_in = logged_in
-    st.session_state.login_role = login_role
-
-    st.session_state.pop("antara_consent", None)
-
-    st.session_state.session_checked = True
-    st.session_state.show_recovery = False
-
-
-# ==================================================
-# 11. APPLICATION HEADER
+# 10. SIDEBAR
 # ==================================================
 
 if st.session_state.logged_in:
 
-    st.title("🌷 Antara")
+    with st.sidebar:
 
-    st.caption(
-        "A space for your feelings, before therapy."
-    )
+        st.markdown("### 🌷 Your Account")
+
+        st.write(
+            f"Welcome, **{st.session_state.patient_name}**"
+        )
+
+        st.caption(st.session_state.patient_email)
+
+        if st.button(
+            "Logout",
+            key="logout_button",
+            use_container_width=True
+        ):
+            logout()
+
+        st.divider()
+
+        st.markdown("### 📂 Session History")
+
+        history = get_history()
+
+        if not history:
+            st.caption("No previous sessions yet.")
+
+        else:
+
+            for session in history:
+
+                session_id = session["session_id"]
+                status = session["status"]
+
+                with st.expander(
+                    f"{session_id} | {status}"
+                ):
+
+                    st.caption(
+                        f"Created: {session.get('created_at', 'N/A')}"
+                    )
+
+                    st.caption(
+                        f"Last updated: {session.get('updated_at', 'N/A')}"
+                    )
+
+                    if status == "in_progress":
+
+                        if st.button(
+                            "Resume Session",
+                            key=f"history_resume_{session_id}",
+                            use_container_width=True
+                        ):
+
+                            saved_data = get_patient_session(
+                                st.session_state.patient_id,
+                                session_id
+                            )
+
+                            if saved_data and restore_session(saved_data):
+
+                                st.session_state.show_recovery = False
+                                st.session_state.recovery_session_id = None
+                                st.rerun()
+
+                            else:
+                                st.error(
+                                    "Unable to restore this session."
+                                )
+
+                    if st.button(
+                        "Delete Session",
+                        key=f"history_delete_{session_id}",
+                        use_container_width=True
+                    ):
+
+                        st.session_state[
+                            f"confirm_delete_{session_id}"
+                        ] = True
+
+                    if st.session_state.get(
+                        f"confirm_delete_{session_id}", False
+                    ):
+
+                        st.warning(
+                            "Are you sure you want to delete this session?"
+                        )
+
+                        confirm_col, cancel_col = st.columns(2)
+
+                        with confirm_col:
+
+                            if st.button(
+                                "Confirm",
+                                key=f"confirm_{session_id}"
+                            ):
+
+                                delete_patient_session(
+                                    st.session_state.patient_id,
+                                    session_id
+                                )
+
+                                if st.session_state.session_id == session_id:
+                                    reset_session()
+
+                                st.session_state[
+                                    f"confirm_delete_{session_id}"
+                                ] = False
+
+                                st.success("Session deleted.")
+                                st.rerun()
+
+                        with cancel_col:
+
+                            if st.button(
+                                "Cancel",
+                                key=f"cancel_{session_id}"
+                            ):
+
+                                st.session_state[
+                                    f"confirm_delete_{session_id}"
+                                ] = False
+
+                                st.rerun()
 
 
 # ==================================================
-# 12. LOGIN PAGE
+# 11. LOGIN PAGE
 # ==================================================
 
 if not st.session_state.logged_in:
@@ -556,69 +1023,164 @@ if not st.session_state.logged_in:
         "🩷 Therapist Login"
     ])
 
-    # PATIENT LOGIN
-
     with patient_tab:
 
-        st.markdown("### Welcome!")
+        register_tab, login_tab = st.tabs([
+            "Create Account",
+            "Login"
+        ])
 
-        st.write(
-            "Continue to your personal Antara conversation."
-        )
+        with register_tab:
 
-        st.info(
-            "You can start a new conversation or resume "
-            "a locally saved session using your Session ID."
-        )
+            st.markdown(
+                '<div class="section-heading">Create Your Account 🌷</div>',
+                unsafe_allow_html=True
+            )
 
-        session_id_input = st.text_input(
-            "Existing Session ID (optional)",
-            placeholder="Example: ANT-20261031-2ABA9F"
-        )
+            with st.form("patient_registration"):
 
-        if st.button(
-            "Continue as Patient",
-            use_container_width=True
-        ):
+                full_name = st.text_input(
+                    "Full Name",
+                    placeholder="Enter your full name"
+                )
 
-            entered_id = session_id_input.strip()
+                email = st.text_input(
+                    "Email Address",
+                    placeholder="example@gmail.com"
+                )
 
-            if entered_id:
+                password = st.text_input(
+                    "Create Password",
+                    type="password",
+                    placeholder="Create a strong password"
+                )
 
-                saved_data = load_session()
+                confirm_password = st.text_input(
+                    "Confirm Password",
+                    type="password",
+                    placeholder="Re-enter your password"
+                )
 
-                if (
-                    saved_data
-                    and saved_data.get("session_id") == entered_id
-                    and saved_data.get("started")
-                    and not saved_data.get("submitted")
-                ):
+                register_button = st.form_submit_button(
+                    "Create Account 🌷",
+                    use_container_width=True
+                )
 
-                    st.session_state.logged_in = True
-                    st.session_state.login_role = "patient"
-                    st.session_state.show_recovery = True
+                if register_button:
 
-                    st.rerun()
+                    if not all([
+                        full_name.strip(),
+                        email.strip(),
+                        password,
+                        confirm_password
+                    ]):
+                        st.error("Please fill in all fields.")
 
-                else:
+                    elif password != confirm_password:
+                        st.error("Passwords do not match.")
 
-                    st.error(
-                        "No matching unfinished session was found. "
-                        "Please check your Session ID."
-                    )
+                    else:
 
-            else:
+                        success, message = register_patient(
+                            full_name.strip(),
+                            email.strip(),
+                            password
+                        )
 
-                st.session_state.logged_in = True
-                st.session_state.login_role = "patient"
+                        if success:
+                            st.success(
+                                "Account created successfully! "
+                                "Please log in."
+                            )
+                        else:
+                            st.error(message)
 
-                st.rerun()
+        with login_tab:
 
-    # THERAPIST LOGIN
+            st.markdown(
+                '<div class="section-heading">Welcome Back 🌷</div>',
+                unsafe_allow_html=True
+            )
+
+            with st.form("patient_login"):
+
+                login_email = st.text_input(
+                    "Email Address",
+                    placeholder="Enter your registered email"
+                )
+
+                login_password = st.text_input(
+                    "Password",
+                    type="password",
+                    placeholder="Enter your password"
+                )
+
+                login_button = st.form_submit_button(
+                    "Login 🌷",
+                    use_container_width=True
+                )
+
+                if login_button:
+
+                    if not login_email.strip() or not login_password:
+                        st.error(
+                            "Please enter your email and password."
+                        )
+
+                    else:
+
+                        patient = authenticate_patient(
+                            login_email.strip(),
+                            login_password
+                        )
+
+                        if patient:
+
+                            st.session_state.logged_in = True
+                            st.session_state.login_role = "patient"
+
+                            st.session_state.patient_id = (
+                                patient["patient_id"]
+                            )
+
+                            st.session_state.patient_name = (
+                                patient["full_name"]
+                            )
+
+                            st.session_state.patient_email = (
+                                patient["email"]
+                            )
+
+                            unfinished = get_unfinished_session(
+                                st.session_state.patient_id
+                            )
+
+                            if unfinished:
+
+                                st.session_state.show_recovery = True
+
+                                st.session_state.recovery_session_id = (
+                                    unfinished["session_id"]
+                                )
+
+                            else:
+
+                                st.session_state.show_recovery = False
+                                st.session_state.recovery_session_id = None
+
+                            st.rerun()
+
+                        else:
+                            st.error(
+                                "Incorrect email or password."
+                            )
 
     with therapist_tab:
 
-        st.markdown("### Therapist Portal")
+        st.markdown(
+            '<div class="section-heading">Therapist Portal 🩷</div>',
+            unsafe_allow_html=True
+        )
 
         st.write(
             "Access the therapist dashboard to review "
@@ -627,19 +1189,19 @@ if not st.session_state.logged_in:
 
         st.text_input(
             "Email Address",
-            placeholder="Enter your registered email"
+            placeholder="Enter your registered email",
+            key="therapist_email"
         )
 
         st.text_input(
             "Password",
             type="password",
-            placeholder="Enter your password"
+            placeholder="Enter your password",
+            key="therapist_password"
         )
 
         st.warning(
-            "Therapist login is currently under development. "
-            "It will be available once the Therapist Portal "
-            "integration is completed."
+            "Therapist login is currently under development."
         )
 
         st.button(
@@ -655,7 +1217,7 @@ if not st.session_state.logged_in:
 
 
 # ==================================================
-# 13. SESSION RECOVERY
+# 12. SESSION RECOVERY
 # ==================================================
 
 elif st.session_state.show_recovery:
@@ -664,6 +1226,10 @@ elif st.session_state.show_recovery:
 
     st.write(
         "Would you like to continue where you left off?"
+    )
+
+    st.caption(
+        f"Session ID: {st.session_state.recovery_session_id}"
     )
 
     col1, col2 = st.columns(2)
@@ -675,83 +1241,21 @@ elif st.session_state.show_recovery:
             use_container_width=True
         ):
 
-            saved_data = load_session()
+            saved_data = get_patient_session(
+                st.session_state.patient_id,
+                st.session_state.recovery_session_id
+            )
 
-            if saved_data:
+            if saved_data and restore_session(saved_data):
 
-                try:
-
-                    responses = saved_data.get("responses", [])
-
-                    if not isinstance(responses, list):
-                        raise ValueError("Invalid response data")
-
-                    st.session_state.started = saved_data.get(
-                        "started", False
-                    )
-
-                    st.session_state.consent_given = saved_data.get(
-                        "consent_given", False
-                    )
-
-                    st.session_state.session_id = saved_data.get(
-                        "session_id"
-                    )
-
-                    st.session_state.current_question_index = saved_data.get(
-                        "current_question_index", 0
-                    )
-
-                    st.session_state.responses = responses
-
-                    st.session_state.submitted = saved_data.get(
-                        "submitted", False
-                    )
-
-                    st.session_state.pending_followup = saved_data.get(
-                        "pending_followup"
-                    )
-
-                    st.session_state.pending_attempts = saved_data.get(
-                        "pending_attempts", {}
-                    )
-
-                    st.session_state.unclear_message = saved_data.get(
-                        "unclear_message"
-                    )
-
-                    st.session_state.crisis_triggered = saved_data.get(
-                        "crisis_triggered", False
-                    )
-
-                    st.session_state.crisis_acknowledged = saved_data.get(
-                        "crisis_acknowledged", False
-                    )
-
-                    if not st.session_state.session_id:
-
-                        st.session_state.session_id = (
-                            "ANT-"
-                            + datetime.now().strftime("%Y%m%d")
-                            + "-"
-                            + uuid.uuid4().hex[:6].upper()
-                        )
-
-                    st.session_state.show_recovery = False
-
-                    st.rerun()
-
-                except (ValueError, TypeError, KeyError) as error:
-
-                    st.error(
-                        "The saved session could not be restored."
-                    )
-
-                    print("Recovery error:", error)
+                st.session_state.show_recovery = False
+                st.session_state.recovery_session_id = None
+                st.rerun()
 
             else:
-
-                st.warning("No saved session was found.")
+                st.error(
+                    "The saved session could not be restored."
+                )
 
     with col2:
 
@@ -760,12 +1264,12 @@ elif st.session_state.show_recovery:
             use_container_width=True
         ):
 
-            reset_session()
+            start_new_session()
             st.rerun()
 
 
 # ==================================================
-# 14. WELCOME AND CONSENT
+# 13. WELCOME AND CONSENT
 # ==================================================
 
 elif st.session_state.logged_in and not st.session_state.started:
@@ -795,13 +1299,11 @@ elif st.session_state.logged_in and not st.session_state.started:
     st.markdown("### 🔒 Your information")
 
     st.warning("""
-    This prototype saves session information locally
-    in application storage and allows you to download
-    your responses as a JSON file.
+    This prototype stores session information in a local
+    SQLite database. The database is not encrypted.
 
-    Local JSON storage is not encrypted. Avoid entering
-    real identifying or highly sensitive personal
-    information while testing this prototype.
+    Avoid entering real identifying or highly sensitive
+    personal information while testing this prototype.
     """)
 
     st.markdown("### Important information")
@@ -831,28 +1333,19 @@ elif st.session_state.logged_in and not st.session_state.started:
 
             st.session_state.started = True
             st.session_state.consent_given = True
-
-            st.session_state.session_id = (
-                "ANT-"
-                + datetime.now().strftime("%Y%m%d")
-                + "-"
-                + uuid.uuid4().hex[:6].upper()
-            )
-
-            st.session_state.antara_consent = True
+            st.session_state.session_id = generate_session_id()
 
             auto_save()
             st.rerun()
 
         else:
-
             st.error(
                 "Please provide your consent before continuing."
             )
 
 
 # ==================================================
-# 15. MAIN CHAT INTERFACE
+# 14. MAIN CHAT INTERFACE
 # ==================================================
 
 elif (
@@ -860,6 +1353,12 @@ elif (
     and st.session_state.started
     and not st.session_state.submitted
 ):
+
+    st.title("🌷 Antara")
+
+    st.caption(
+        "A space for your feelings, before therapy."
+    )
 
     if st.session_state.crisis_triggered:
 
@@ -947,21 +1446,18 @@ elif (
                     )
 
                     if response["status"] == "skipped":
-
                         st.caption("Skipped")
                         continue
 
                     st.write(response["edited_answer"])
 
                     question_id = response["question_id"]
-
                     edit_key = f"edit_mode_{question_id}"
 
                     if st.button(
                         "Edit",
                         key=f"edit_button_{question_id}_{response_index}"
                     ):
-
                         st.session_state[edit_key] = True
 
                     if st.session_state.get(edit_key, False):
@@ -994,13 +1490,12 @@ elif (
 
                                     response["edited_answer"] = cleaned_answer
                                     response["was_edited"] = True
-
                                     auto_save()
 
                             st.session_state[edit_key] = False
                             st.rerun()
 
-        # HANDLE PENDING AI FOLLOW-UP
+        # HANDLE PENDING FOLLOW-UP
 
         if st.session_state.pending_followup is not None:
 
@@ -1015,7 +1510,6 @@ elif (
             )
 
             if st.session_state.unclear_message:
-
                 display_message(
                     st.session_state.unclear_message,
                     "assistant"
@@ -1061,7 +1555,6 @@ elif (
 
                     st.session_state.pending_followup = None
                     st.session_state.unclear_message = None
-
                     st.session_state.current_question_index += 1
 
                     auto_save()
@@ -1099,7 +1592,6 @@ elif (
                 display_message(attempt, "user")
 
             if st.session_state.unclear_message:
-
                 display_message(
                     st.session_state.unclear_message,
                     "assistant"
@@ -1278,25 +1770,46 @@ elif (
             if st.button("Submit Session"):
 
                 st.session_state.submitted = True
-
                 auto_save()
+
+                try:
+                    complete_patient_session(
+                        st.session_state.patient_id,
+                        st.session_state.session_id
+                    )
+                except Exception as error:
+                    print("Session completion error:", error)
+
                 st.rerun()
 
 
 # ==================================================
-# 16. FINAL THANK-YOU SCREEN
+# 15. FINAL THANK-YOU SCREEN
 # ==================================================
 
 elif st.session_state.submitted:
 
     st.markdown("""
-<div style="background:rgba(255,255,255,0.65);padding:35px 25px;border-radius:22px;text-align:center;margin-top:25px;box-shadow:0 4px 15px rgba(0,0,0,0.06);">
-<div style="font-size:55px;">🌷</div>
-<h1 style="color:#29243a;">Thank You</h1>
-<p style="color:#55516a;font-size:17px;">Thank you for sharing your feelings with honesty. Every feeling deserves to be heard.</p>
-<p style="color:#55516a;font-size:15px;">Your Antara session has ended.</p>
-</div>
-""", unsafe_allow_html=True)
+    <div style="
+        background:rgba(255,255,255,0.85);
+        padding:35px 25px;
+        border-radius:22px;
+        text-align:center;
+        margin-top:25px;
+        border:1px solid #c0d5f3;
+        box-shadow:0 4px 15px rgba(0,0,0,0.06);
+    ">
+        <div style="font-size:55px;">🌷</div>
+        <h1 style="color:#29243a;">Thank You</h1>
+        <p style="color:#55516a;font-size:17px;">
+            Thank you for sharing your feelings with honesty.
+            Every feeling deserves to be heard.
+        </p>
+        <p style="color:#55516a;font-size:15px;">
+            Your Antara session has ended.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
 
     st.markdown("### 🌸 Session Details")
 
@@ -1311,11 +1824,10 @@ elif st.session_state.submitted:
 
     st.write("**Session status:** Ended")
 
-    # JSON DATA
-
     session_data = {
         "application": "Antara",
         "session_id": st.session_state.session_id,
+        "patient_id": st.session_state.patient_id,
         "session_date": datetime.now().isoformat(),
         "total_questions": len(st.session_state.responses),
         "crisis_triggered": st.session_state.crisis_triggered,
@@ -1344,8 +1856,6 @@ elif st.session_state.submitted:
         use_container_width=True
     )
 
-    # THERAPIST PORTAL
-
     st.divider()
 
     st.markdown("### 🩷 Therapist Portal")
@@ -1358,8 +1868,6 @@ elif st.session_state.submitted:
         '<a href="http://127.0.0.1:8000/therapist" target="_blank" style="display:inline-block;padding:10px 20px;background:#6d28d9;color:white;text-decoration:none;border-radius:8px;font-weight:600;">🌸 Open Therapist Intelligence Portal</a>',
         unsafe_allow_html=True
     )
-
-    # START NEW SESSION
 
     st.divider()
 
@@ -1374,26 +1882,5 @@ elif st.session_state.submitted:
         use_container_width=True
     ):
 
-        reset_session()
+        start_new_session()
         st.rerun()
-
-    # DELETE LOCAL SESSION
-
-    with st.expander("🗑️ Delete locally saved session"):
-
-        st.warning(
-            "This deletes the locally saved session from "
-            "Antara's application storage. It does not delete "
-            "JSON files you have already downloaded."
-        )
-
-        with st.container(key="delete-session-container"):
-
-            if st.button(
-                "Delete Local Session",
-                type="secondary",
-                use_container_width=True
-            ):
-
-                reset_session()
-                st.rerun()
