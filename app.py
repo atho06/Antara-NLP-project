@@ -18,7 +18,10 @@ from database import (
     get_patient_sessions,
     delete_patient_session,
     get_unfinished_session,
-    complete_patient_session
+    complete_patient_session,
+    register_therapist,
+    authenticate_therapist,
+    get_all_therapist_sessions
 )
 
 
@@ -517,11 +520,15 @@ defaults = {
     "crisis_acknowledged": False,
     "show_recovery": False,
     "recovery_session_id": None,
-    "logged_in": False,
-    "login_role": None,
-    "patient_id": None,
-    "patient_name": None,
-    "patient_email": None
+    "app_mode": "🌸 Patient Intake",
+    "therapist_logged_in": False,
+    "therapist_id": None,
+    "therapist_name": None,
+    "therapist_email": None,
+    "therapist_license": None,
+    "patient_id": "anonymous_patient",
+    "patient_name": "Anonymous Client",
+    "patient_email": "anonymous@patient.local"
 }
 
 for key, value in defaults.items():
@@ -631,19 +638,17 @@ def restore_session(saved_data):
 
 
 def reset_session():
+    for key in [
+        "started", "consent_given", "session_id", "current_question_index",
+        "responses", "submitted", "pending_followup", "pending_attempts",
+        "unclear_message", "crisis_triggered", "crisis_acknowledged",
+        "show_recovery", "recovery_session_id"
+    ]:
+        st.session_state[key] = defaults[key]
 
-    patient_id = st.session_state.patient_id
-    patient_name = st.session_state.patient_name
-    patient_email = st.session_state.patient_email
-
-    for key, value in defaults.items():
-        st.session_state[key] = value
-
-    st.session_state.logged_in = True
-    st.session_state.login_role = "patient"
-    st.session_state.patient_id = patient_id
-    st.session_state.patient_name = patient_name
-    st.session_state.patient_email = patient_email
+    st.session_state.patient_id = "anonymous_patient"
+    st.session_state.patient_name = "Anonymous Client"
+    st.session_state.patient_email = "anonymous@patient.local"
 
 
 def start_new_session():
@@ -652,13 +657,12 @@ def start_new_session():
     st.session_state.recovery_session_id = None
 
 
-def logout():
-
-    auto_save()
-
-    for key in list(st.session_state.keys()):
-        del st.session_state[key]
-
+def therapist_logout():
+    st.session_state.therapist_logged_in = False
+    st.session_state.therapist_id = None
+    st.session_state.therapist_name = None
+    st.session_state.therapist_email = None
+    st.session_state.therapist_license = None
     st.rerun()
 
 
@@ -866,361 +870,218 @@ def show_crisis_screen():
 
 
 # ==================================================
-# 10. SIDEBAR
+# 10. NAVIGATION & SIDEBAR
 # ==================================================
 
-if st.session_state.logged_in:
+with st.sidebar:
+    st.markdown("## 🌷 Antara")
+    st.caption("Pre-Therapy Intake Intelligence")
 
-    with st.sidebar:
+    portal_options = ["🌸 Patient Intake", "🩷 Therapist Portal"]
+    current_index = 0 if st.session_state.app_mode == "🌸 Patient Intake" else 1
 
-        st.markdown("### 🌷 Your Account")
+    selected_mode = st.radio(
+        "Navigation",
+        portal_options,
+        index=current_index,
+        key="main_navigation_radio"
+    )
 
-        st.write(
-            f"Welcome, **{st.session_state.patient_name}**"
-        )
+    if selected_mode != st.session_state.app_mode:
+        st.session_state.app_mode = selected_mode
+        st.rerun()
 
-        st.caption(st.session_state.patient_email)
+    st.divider()
 
-        if st.button(
-            "Logout",
-            key="logout_button",
-            use_container_width=True
-        ):
-            logout()
+    if st.session_state.app_mode == "🌸 Patient Intake":
+        st.markdown("### 🌸 Patient Intake")
+        st.caption("Strictly confidential & encrypted. No registration required.")
 
-        st.divider()
+        if st.session_state.started and not st.session_state.submitted:
+            q_idx = st.session_state.current_question_index + 1
+            tot_q = len(all_questions)
+            st.info(f"**Progress:** Question {min(q_idx, tot_q)} of {tot_q}")
 
-        st.markdown("### 📂 Session History")
+            if st.button("↺ Start Fresh Intake", use_container_width=True):
+                start_new_session()
+                st.rerun()
 
-        history = get_history()
+    elif st.session_state.app_mode == "🩷 Therapist Portal":
+        if st.session_state.therapist_logged_in:
+            st.markdown("### 👩‍⚕️ Clinician Profile")
+            st.write(f"**{st.session_state.therapist_name}**")
+            st.caption(f"License: {st.session_state.therapist_license}")
+            st.caption(f"Email: {st.session_state.therapist_email}")
 
-        if not history:
-            st.caption("No previous sessions yet.")
-
+            if st.button("Logout of Portal", key="therapist_logout_btn", use_container_width=True):
+                therapist_logout()
         else:
-
-            for session in history:
-
-                session_id = session["session_id"]
-                status = session["status"]
-
-                with st.expander(
-                    f"{session_id} | {status}"
-                ):
-
-                    st.caption(
-                        f"Created: {session.get('created_at', 'N/A')}"
-                    )
-
-                    st.caption(
-                        f"Last updated: {session.get('updated_at', 'N/A')}"
-                    )
-
-                    if status == "in_progress":
-
-                        if st.button(
-                            "Resume Session",
-                            key=f"history_resume_{session_id}",
-                            use_container_width=True
-                        ):
-
-                            saved_data = get_patient_session(
-                                st.session_state.patient_id,
-                                session_id
-                            )
-
-                            if saved_data and restore_session(saved_data):
-
-                                st.session_state.show_recovery = False
-                                st.session_state.recovery_session_id = None
-                                st.rerun()
-
-                            else:
-                                st.error(
-                                    "Unable to restore this session."
-                                )
-
-                    if st.button(
-                        "Delete Session",
-                        key=f"history_delete_{session_id}",
-                        use_container_width=True
-                    ):
-
-                        st.session_state[
-                            f"confirm_delete_{session_id}"
-                        ] = True
-
-                    if st.session_state.get(
-                        f"confirm_delete_{session_id}", False
-                    ):
-
-                        st.warning(
-                            "Are you sure you want to delete this session?"
-                        )
-
-                        confirm_col, cancel_col = st.columns(2)
-
-                        with confirm_col:
-
-                            if st.button(
-                                "Confirm",
-                                key=f"confirm_{session_id}"
-                            ):
-
-                                delete_patient_session(
-                                    st.session_state.patient_id,
-                                    session_id
-                                )
-
-                                if st.session_state.session_id == session_id:
-                                    reset_session()
-
-                                st.session_state[
-                                    f"confirm_delete_{session_id}"
-                                ] = False
-
-                                st.success("Session deleted.")
-                                st.rerun()
-
-                        with cancel_col:
-
-                            if st.button(
-                                "Cancel",
-                                key=f"cancel_{session_id}"
-                            ):
-
-                                st.session_state[
-                                    f"confirm_delete_{session_id}"
-                                ] = False
-
-                                st.rerun()
+            st.caption("🔒 Attending Clinician Access")
 
 
 # ==================================================
-# 11. LOGIN PAGE
+# 11. THERAPIST PORTAL ROUTE
 # ==================================================
 
-if not st.session_state.logged_in:
+if st.session_state.app_mode == "🩷 Therapist Portal":
 
-    st.markdown("""
-    <div class="login-card">
-        <div style="font-size:65px;">🌷</div>
-        <h1 style="color:#29243a;">Welcome to Antara</h1>
-        <p class="login-subtitle">
-            A safe space to express your feelings
-            before therapy.
-        </p>
-        <p class="login-subtitle">
-            Please choose how you would like to continue.
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
+    if not st.session_state.therapist_logged_in:
+        # THERAPIST LOGIN & REGISTRATION
+        st.markdown("""
+        <div class="login-card">
+            <div style="font-size:60px;">👩‍⚕️</div>
+            <h1 style="color:#29243a;">Therapist Intelligence Portal</h1>
+            <p class="login-subtitle">
+                Restricted clinical access for licensed therapists and clinicians.
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
 
-    st.write("")
+        st.write("")
 
-    patient_tab, therapist_tab = st.tabs([
-        "🌸 Patient Login",
-        "🩷 Therapist Login"
-    ])
-
-    with patient_tab:
-
-        register_tab, login_tab = st.tabs([
-            "Create Account",
-            "Login"
+        login_tab, register_tab = st.tabs([
+            "Clinician Login 🩷",
+            "Register Clinician"
         ])
 
-        with register_tab:
-
-            st.markdown(
-                '<div class="section-heading">Create Your Account 🌷</div>',
-                unsafe_allow_html=True
-            )
-
-            with st.form("patient_registration"):
-
-                full_name = st.text_input(
-                    "Full Name",
-                    placeholder="Enter your full name"
-                )
-
-                email = st.text_input(
-                    "Email Address",
-                    placeholder="example@gmail.com"
-                )
-
-                password = st.text_input(
-                    "Create Password",
-                    type="password",
-                    placeholder="Create a strong password"
-                )
-
-                confirm_password = st.text_input(
-                    "Confirm Password",
-                    type="password",
-                    placeholder="Re-enter your password"
-                )
-
-                register_button = st.form_submit_button(
-                    "Create Account 🌷",
-                    use_container_width=True
-                )
-
-                if register_button:
-
-                    if not all([
-                        full_name.strip(),
-                        email.strip(),
-                        password,
-                        confirm_password
-                    ]):
-                        st.error("Please fill in all fields.")
-
-                    elif password != confirm_password:
-                        st.error("Passwords do not match.")
-
-                    else:
-
-                        success, message = register_patient(
-                            full_name.strip(),
-                            email.strip(),
-                            password
-                        )
-
-                        if success:
-                            st.success(
-                                "Account created successfully! "
-                                "Please log in."
-                            )
-                        else:
-                            st.error(message)
-
         with login_tab:
+            st.markdown('<div class="section-heading">Sign In to Review Client Intakes 🩺</div>', unsafe_allow_html=True)
 
-            st.markdown(
-                '<div class="section-heading">Welcome Back 🌷</div>',
-                unsafe_allow_html=True
-            )
-
-            with st.form("patient_login"):
-
-                login_email = st.text_input(
-                    "Email Address",
-                    placeholder="Enter your registered email"
+            with st.form("therapist_login_form"):
+                therapist_email = st.text_input(
+                    "Professional Email",
+                    value="therapist@antara.health",
+                    placeholder="therapist@antara.health"
                 )
-
-                login_password = st.text_input(
+                therapist_password = st.text_input(
                     "Password",
+                    value="Therapist@123",
                     type="password",
                     placeholder="Enter your password"
                 )
+                login_submit = st.form_submit_button("Sign In to Clinical Portal 🩷", use_container_width=True)
 
-                login_button = st.form_submit_button(
-                    "Login 🌷",
-                    use_container_width=True
-                )
-
-                if login_button:
-
-                    if not login_email.strip() or not login_password:
-                        st.error(
-                            "Please enter your email and password."
-                        )
-
+                if login_submit:
+                    if not therapist_email.strip() or not therapist_password:
+                        st.error("Please enter both email and password.")
                     else:
+                        therapist_info = authenticate_therapist(therapist_email.strip(), therapist_password)
+                        if therapist_info:
+                            st.session_state.therapist_logged_in = True
+                            st.session_state.therapist_id = therapist_info["therapist_id"]
+                            st.session_state.therapist_name = therapist_info["full_name"]
+                            st.session_state.therapist_email = therapist_info["email"]
+                            st.session_state.therapist_license = therapist_info.get("license_number", "")
+                            st.success(f"Welcome back, {therapist_info['full_name']}!")
+                            st.rerun()
+                        else:
+                            st.error("Invalid credentials. Please verify your email and password.")
 
-                        patient = authenticate_patient(
-                            login_email.strip(),
-                            login_password
+            st.caption("Default seeded clinician: `therapist@antara.health` / `Therapist@123`")
+
+        with register_tab:
+            st.markdown('<div class="section-heading">Register Clinician Account 📋</div>', unsafe_allow_html=True)
+
+            with st.form("therapist_register_form"):
+                reg_name = st.text_input("Full Name (with Title)", placeholder="Dr. Rajesh Varma, MD")
+                reg_email = st.text_input("Professional Email", placeholder="doctor@clinic.com")
+                reg_license = st.text_input("Clinical License / Registration Number", placeholder="e.g. RCI-PSY-55012")
+                reg_password = st.text_input("Password (min 8 characters)", type="password")
+                reg_confirm = st.text_input("Confirm Password", type="password")
+                register_submit = st.form_submit_button("Register Clinician Account 📋", use_container_width=True)
+
+                if register_submit:
+                    if not all([reg_name.strip(), reg_email.strip(), reg_password, reg_confirm]):
+                        st.error("All fields are required.")
+                    elif reg_password != reg_confirm:
+                        st.error("Passwords do not match.")
+                    else:
+                        ok, msg = register_therapist(reg_name, reg_email, reg_password, reg_license)
+                        if ok:
+                            st.success(f"{msg} You can now log in using the Clinician Login tab.")
+                        else:
+                            st.error(msg)
+
+        st.stop()
+
+    else:
+        # THERAPIST LOGGED-IN CLINICAL DASHBOARD
+        st.markdown(f"""
+        <div style="background:rgba(255,255,255,0.9); padding:24px; border-radius:18px; margin-bottom:20px; border:1px solid #c9d8ff; box-shadow:0 4px 12px rgba(0,0,0,0.04);">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <h2 style="margin:0; color:#29243a;">🩺 Clinical Intake Intelligence Portal</h2>
+                    <p style="margin:4px 0 0 0; color:#55516a; font-size:15px;">
+                        Attending Clinician: <strong>{st.session_state.therapist_name}</strong> &nbsp;•&nbsp; License: <code>{st.session_state.therapist_license or 'Active'}</code>
+                    </p>
+                </div>
+                <div style="background:#e8f4ec; color:#1b7a42; padding:6px 14px; border-radius:20px; font-weight:600; font-size:13px; border:1px solid #b7e4c7;">
+                    🔒 Strictly Confidential
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        sessions = get_all_therapist_sessions()
+
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Total Client Intakes", len(sessions))
+        with col2:
+            completed_count = sum(1 for s in sessions if s.get("status") == "completed")
+            st.metric("Completed Intakes", completed_count)
+        with col3:
+            in_prog_count = sum(1 for s in sessions if s.get("status") == "in_progress")
+            st.metric("In Progress", in_prog_count)
+
+        st.markdown("### 📋 Client Intake Sessions")
+
+        if not sessions:
+            st.info("No patient intake sessions recorded yet. Intakes completed by patients will appear here automatically.")
+        else:
+            for s in sessions:
+                sid = s.get("session_id", "N/A")
+                status = s.get("status", "unknown")
+                updated_at = s.get("updated_at", "N/A")
+                data = s.get("parsed_data", {})
+                responses = data.get("responses", [])
+
+                with st.expander(f"📁 Session {sid} • Status: {status.upper()} • Last Active: {updated_at}"):
+                    st.caption(f"Patient Record ID: `{s.get('patient_id', 'anonymous')}` | Total Responses: {len(responses)}")
+
+                    if responses:
+                        st.markdown("##### Dialogue & Responses:")
+                        for idx, r in enumerate(responses, start=1):
+                            q_text = r.get("question", "")
+                            ans_text = r.get("edited_answer") or r.get("original_answer") or "[Skipped]"
+                            status_badge = "✅ Answered" if r.get("status") != "skipped" else "⏭️ Skipped"
+                            st.markdown(f"**Q{idx}:** *{q_text}*")
+                            st.markdown(f"> **Response:** {ans_text} `({status_badge})`")
+
+                    action_col1, action_col2 = st.columns([1, 1])
+                    with action_col1:
+                        st.download_button(
+                            label="📥 Download Intake JSON",
+                            data=s.get("session_data", "{}"),
+                            file_name=f"{sid}.json",
+                            mime="application/json",
+                            key=f"dl_sess_{sid}",
+                            use_container_width=True
+                        )
+                    with action_col2:
+                        st.markdown(
+                            f'<a href="http://127.0.0.1:8000/therapist?session_id={sid}" target="_blank" style="display:block; text-align:center; padding:9px 12px; background:#6d28d9; color:white; text-decoration:none; border-radius:10px; font-weight:600; font-size:14px;">🌸 Open in Web Analytics Portal ↗</a>',
+                            unsafe_allow_html=True
                         )
 
-                        if patient:
-
-                            st.session_state.logged_in = True
-                            st.session_state.login_role = "patient"
-
-                            st.session_state.patient_id = (
-                                patient["patient_id"]
-                            )
-
-                            st.session_state.patient_name = (
-                                patient["full_name"]
-                            )
-
-                            st.session_state.patient_email = (
-                                patient["email"]
-                            )
-
-                            unfinished = get_unfinished_session(
-                                st.session_state.patient_id
-                            )
-
-                            if unfinished:
-
-                                st.session_state.show_recovery = True
-
-                                st.session_state.recovery_session_id = (
-                                    unfinished["session_id"]
-                                )
-
-                            else:
-
-                                st.session_state.show_recovery = False
-                                st.session_state.recovery_session_id = None
-
-                            st.rerun()
-
-                        else:
-                            st.error(
-                                "Incorrect email or password."
-                            )
-
-    with therapist_tab:
-
-        st.markdown(
-            '<div class="section-heading">Therapist Portal 🩷</div>',
-            unsafe_allow_html=True
-        )
-
-        st.write(
-            "Access the therapist dashboard to review "
-            "patient sessions and clinical reports."
-        )
-
-        st.text_input(
-            "Email Address",
-            placeholder="Enter your registered email",
-            key="therapist_email"
-        )
-
-        st.text_input(
-            "Password",
-            type="password",
-            placeholder="Enter your password",
-            key="therapist_password"
-        )
-
-        st.warning(
-            "Therapist login is currently under development."
-        )
-
-        st.button(
-            "Therapist Login",
-            disabled=True,
-            use_container_width=True
-        )
-
-    st.caption(
-        "Antara is a pre-therapy intake application, "
-        "not a replacement for professional mental-health care."
-    )
+        st.stop()
 
 
 # ==================================================
-# 12. SESSION RECOVERY
+# 12. PATIENT INTAKE (OPEN & CONFIDENTIAL)
 # ==================================================
 
-elif st.session_state.show_recovery:
+if st.session_state.show_recovery:
 
     st.info("We found an unfinished Antara session.")
 
@@ -1272,7 +1133,7 @@ elif st.session_state.show_recovery:
 # 13. WELCOME AND CONSENT
 # ==================================================
 
-elif st.session_state.logged_in and not st.session_state.started:
+elif not st.session_state.started:
 
     st.markdown("""
     <div class="login-card">
@@ -1349,8 +1210,7 @@ elif st.session_state.logged_in and not st.session_state.started:
 # ==================================================
 
 elif (
-    st.session_state.logged_in
-    and st.session_state.started
+    st.session_state.started
     and not st.session_state.submitted
 ):
 

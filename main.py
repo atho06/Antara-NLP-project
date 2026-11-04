@@ -20,6 +20,11 @@ from nlp_engine.question_bank import QuestionBank
 from nlp_engine.crisis_classifier import CrisisClassifier
 from pdf_engine.pdf_generator import ClinicalPDFGenerator
 from storage.erasure_vault import ErasureVault
+from database import (
+    authenticate_therapist,
+    register_therapist,
+    get_all_therapist_sessions
+)
 
 app = FastAPI(
     title="Antara — Pre-Therapy Clinical Intelligence Platform",
@@ -220,6 +225,33 @@ async def erase_session_data(session_id: str):
     """
     receipt = vault.erase_session(session_id)
     return receipt
+
+
+class TherapistAuthRequest(BaseModel):
+    email: str
+    password: str
+
+
+@app.post("/api/therapist/login")
+async def therapist_login(req: TherapistAuthRequest):
+    """
+    Authenticates a licensed therapist against SQLite credentials.
+    """
+    therapist = authenticate_therapist(req.email, req.password)
+    if not therapist:
+        raise HTTPException(status_code=401, detail="Invalid clinician credentials.")
+    return {
+        "status": "AUTHENTICATED",
+        "therapist": therapist
+    }
+
+
+@app.get("/api/therapist/sessions")
+async def list_therapist_sessions():
+    """
+    Lists all intake sessions recorded for therapist review.
+    """
+    return get_all_therapist_sessions()
 
 
 @app.get("/api/health")
