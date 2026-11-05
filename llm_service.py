@@ -4,6 +4,58 @@ import json
 MODEL_NAME = "llama3.2:3b"
 
 
+def format_conversation_history(conversation_history):
+    """
+    Convert conversation history into the format
+    expected by Ollama.
+
+    Every message must contain:
+    {
+        "role": "user" or "assistant",
+        "content": "message"
+    }
+    """
+
+    formatted_messages = []
+
+    if not isinstance(conversation_history, list):
+        return formatted_messages
+
+    for item in conversation_history[-12:]:
+
+        if not isinstance(item, dict):
+            continue
+
+        role = item.get("role")
+        content = item.get("content")
+
+        # Already in Ollama message format
+        if role in ["user", "assistant"] and content:
+            formatted_messages.append({
+                "role": role,
+                "content": str(content)
+            })
+            continue
+
+        # Convert question-answer history if available
+        question = item.get("question")
+        answer = item.get("answer")
+
+        if question:
+            formatted_messages.append({
+                "role": "assistant",
+                "content": str(question)
+            })
+
+        if answer:
+            formatted_messages.append({
+                "role": "user",
+                "content": str(answer)
+            })
+
+    return formatted_messages
+
+
 def generate_followup(question, answer, conversation_history=None):
 
     if conversation_history is None:
@@ -86,9 +138,14 @@ If no follow-up is needed, return:
         }
     ]
 
-    # Include previous conversation for context
-    messages.extend(conversation_history[-12:])
+    # Safely format previous conversation
+    formatted_history = format_conversation_history(
+        conversation_history
+    )
 
+    messages.extend(formatted_history)
+
+    # Add the current question and answer
     messages.append({
         "role": "user",
         "content": (
@@ -111,11 +168,11 @@ If no follow-up is needed, return:
             }
         )
 
-        result = json.loads(
-            response["message"]["content"]
-        )
+        response_content = response["message"]["content"]
 
-        # Validate the AI response
+        result = json.loads(response_content)
+
+        # Validate AI response
         if not isinstance(result, dict):
             raise ValueError("Invalid AI response format")
 
@@ -135,7 +192,7 @@ If no follow-up is needed, return:
             if not message or message.upper() == "NONE":
                 raise ValueError("Missing follow-up question")
 
-            # Limit the response to one question
+            # Ensure only one question is returned
             if message.count("?") > 1:
                 message = message.split("?")[0].strip() + "?"
 
