@@ -44,10 +44,7 @@ def hash_password(password, salt=None):
 def verify_password(password, stored_hash, salt):
     calculated_hash, _ = hash_password(password, salt)
 
-    return secrets.compare_digest(
-        calculated_hash,
-        stored_hash
-    )
+    return secrets.compare_digest(calculated_hash, stored_hash)
 
 
 # ==========================================================
@@ -112,8 +109,6 @@ def init_db():
             )
         """)
 
-        # Migrate older patient tables.
-
         existing_columns = {
             row["name"]
             for row in cursor.execute(
@@ -147,9 +142,6 @@ def init_db():
                     f"{column_name} {column_type}"
                 )
 
-        # Repair patient records with missing IDs.
-        # Existing password hashes and patient details are preserved.
-
         patients_without_ids = cursor.execute("""
             SELECT rowid
             FROM patients
@@ -166,8 +158,6 @@ def init_db():
                 SET patient_id = ?
                 WHERE rowid = ?
             """, (new_id, patient["rowid"]))
-
-        # Session index.
 
         cursor.execute("""
             CREATE INDEX IF NOT EXISTS idx_patient_sessions
@@ -494,7 +484,6 @@ def get_all_therapist_sessions():
 # ==========================================================
 # 6. SAVE PATIENT SESSION
 # ==========================================================
-
 def save_patient_session(
     patient_id,
     session_id,
@@ -504,6 +493,14 @@ def save_patient_session(
 
     if not patient_id or not session_id:
         raise ValueError("Patient ID and session ID are required.")
+
+    if not isinstance(session_data, dict):
+        raise ValueError("Session data must be a dictionary.")
+
+    allowed_statuses = {"in_progress", "completed"}
+
+    if status not in allowed_statuses:
+        raise ValueError("Invalid session status.")
 
     connection = get_connection()
 
@@ -526,13 +523,18 @@ def save_patient_session(
             raise ValueError("Patient account was not found.")
 
         existing = connection.execute("""
-            SELECT created_at
+            SELECT status
             FROM patient_sessions
             WHERE session_id = ?
               AND patient_id = ?
         """, (session_id, patient_id)).fetchone()
 
         if existing:
+
+            if existing["status"] == "completed":
+                raise ValueError(
+                    "Completed sessions cannot be modified."
+                )
 
             connection.execute("""
                 UPDATE patient_sessions
@@ -572,6 +574,8 @@ def save_patient_session(
 
         connection.commit()
 
+        return True
+
     except Exception as error:
 
         connection.rollback()
@@ -580,8 +584,6 @@ def save_patient_session(
 
     finally:
         connection.close()
-
-
 # ==========================================================
 # 7. GET ONE PATIENT SESSION
 # ==========================================================
@@ -649,7 +651,6 @@ def get_patient_sessions(patient_id):
 # ==========================================================
 # 9. GET UNFINISHED SESSION
 # ==========================================================
-
 def get_unfinished_session(patient_id):
 
     if not patient_id:
@@ -659,42 +660,53 @@ def get_unfinished_session(patient_id):
 
     try:
 
-        result = connection.execute("""
+        results = connection.execute("""
             SELECT session_id, session_data
             FROM patient_sessions
             WHERE patient_id = ?
               AND status = 'in_progress'
             ORDER BY updated_at DESC
-            LIMIT 1
-        """, (patient_id,)).fetchone()
+        """, (patient_id,)).fetchall()
 
-        if not result:
-            return None
+        for result in results:
 
-        return {
-            "session_id": result["session_id"],
-            "session_data": json.loads(result["session_data"])
-        }
+            try:
+
+                data = json.loads(result["session_data"])
+
+                if not isinstance(data, dict):
+                    continue
+
+                return {
+                    "session_id": result["session_id"],
+                    "session_data": data
+                }
+
+            except (json.JSONDecodeError, TypeError):
+                continue
+
+        return None
 
     except Exception as error:
+
         print("Unfinished session error:", error)
         return None
 
     finally:
         connection.close()
-
-
 # ==========================================================
 # 10. COMPLETE PATIENT SESSION
 # ==========================================================
-
 def complete_patient_session(patient_id, session_id):
+
+    if not patient_id or not session_id:
+        raise ValueError("Patient ID and session ID are required.")
 
     connection = get_connection()
 
     try:
 
-        connection.execute("""
+        cursor = connection.execute("""
             UPDATE patient_sessions
             SET status = 'completed',
                 updated_at = ?
@@ -706,17 +718,21 @@ def complete_patient_session(patient_id, session_id):
             session_id
         ))
 
+        if cursor.rowcount == 0:
+            raise ValueError("Session was not found.")
+
         connection.commit()
 
+        return True
+
     except Exception as error:
+
         connection.rollback()
         print("Session completion error:", error)
         raise
 
     finally:
         connection.close()
-
-
 # ==========================================================
 # 11. DELETE PATIENT SESSION
 # ==========================================================
@@ -751,6 +767,9 @@ def delete_patient_session(patient_id, session_id):
 # ==========================================================
 
 def get_patient_details(patient_id):
+
+    if not patient_id:
+        return None
 
     connection = get_connection()
 
