@@ -174,6 +174,52 @@ def init_db():
             ON patient_sessions(patient_id)
         """)
 
+        # Seed default attending therapist account if not present
+        existing_therapist = cursor.execute(
+            "SELECT therapist_id FROM therapists WHERE email = ?",
+            ("therapist@antara.health",)
+        ).fetchone()
+
+        if not existing_therapist:
+            pw_hash, pw_salt = hash_password("Therapist@123")
+            cursor.execute("""
+                INSERT INTO therapists (
+                    therapist_id,
+                    full_name,
+                    email,
+                    password_hash,
+                    password_salt,
+                    created_at
+                )
+                VALUES (?, ?, ?, ?, ?, ?)
+            """, (
+                "therapist_default_01",
+                "Dr. Ananya Sharma (Clinical Psychologist)",
+                "therapist@antara.health",
+                pw_hash,
+                pw_salt,
+                datetime.now().isoformat()
+            ))
+
+        # Anonymous patient record for open confidential intake
+        existing_anon = cursor.execute(
+            "SELECT patient_id FROM patients WHERE patient_id = 'anonymous_patient'"
+        ).fetchone()
+
+        if not existing_anon:
+            p_hash, p_salt = hash_password("anonymous_secret")
+            cursor.execute("""
+                INSERT INTO patients (
+                    patient_id,
+                    full_name,
+                    email,
+                    password_hash,
+                    password_salt,
+                    created_at
+                )
+                VALUES ('anonymous_patient', 'Anonymous Patient', 'anonymous@patient.local', ?, ?, ?)
+            """, (p_hash, p_salt, datetime.now().isoformat()))
+
         connection.commit()
 
     except Exception:
@@ -330,6 +376,117 @@ def authenticate_patient(email, password):
         print("Authentication error:", error)
         return None
 
+    finally:
+        connection.close()
+
+
+# ==========================================================
+# 5b. THERAPIST REGISTRATION & AUTHENTICATION
+# ==========================================================
+
+def register_therapist(full_name, email, password):
+    full_name = full_name.strip()
+    email = email.strip().lower()
+
+    if not full_name or not email or not password:
+        return False, "All fields are required."
+
+    if "@" not in email or "." not in email:
+        return False, "Please enter a valid professional email address."
+
+    if len(password) < 8:
+        return False, "Password must contain at least 8 characters."
+
+    password_hash, password_salt = hash_password(password)
+    therapist_id = "THER-" + uuid.uuid4().hex[:10].upper()
+    created_at = datetime.now().isoformat()
+
+    connection = get_connection()
+    try:
+        connection.execute("""
+            INSERT INTO therapists (
+                therapist_id,
+                full_name,
+                email,
+                password_hash,
+                password_salt,
+                created_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (
+            therapist_id,
+            full_name,
+            email,
+            password_hash,
+            password_salt,
+            created_at
+        ))
+        connection.commit()
+        return True, "Therapist account registered successfully."
+    except sqlite3.IntegrityError:
+        return False, "A therapist with this email already exists."
+    except Exception as error:
+        print("Therapist registration error:", error)
+        return False, "An error occurred during registration."
+    finally:
+        connection.close()
+
+
+def authenticate_therapist(email, password):
+    email = email.strip().lower()
+    connection = get_connection()
+
+    try:
+        therapist = connection.execute("""
+            SELECT *
+            FROM therapists
+            WHERE email = ?
+        """, (email,)).fetchone()
+
+        if not therapist:
+            return None
+
+        if verify_password(
+            password,
+            therapist["password_hash"],
+            therapist["password_salt"]
+        ):
+            return {
+                "therapist_id": therapist["therapist_id"],
+                "full_name": therapist["full_name"],
+                "email": therapist["email"]
+            }
+
+        return None
+    except Exception as error:
+        print("Therapist authentication error:", error)
+        return None
+    finally:
+        connection.close()
+
+
+def get_all_therapist_sessions():
+    """Retrieves all sessions across patients for therapist portal review."""
+    connection = get_connection()
+    try:
+        results = connection.execute("""
+            SELECT session_id, patient_id, status, created_at, updated_at, session_data
+            FROM patient_sessions
+            ORDER BY updated_at DESC
+        """).fetchall()
+
+        sessions = []
+        for row in results:
+            item = dict(row)
+            try:
+                item["parsed_data"] = json.loads(item["session_data"])
+            except Exception:
+                item["parsed_data"] = {}
+            sessions.append(item)
+        return sessions
+    except Exception as error:
+        print("Get all therapist sessions error:", error)
+        return []
     finally:
         connection.close()
 
