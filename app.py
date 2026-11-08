@@ -4367,6 +4367,47 @@ def show_therapist_dashboard():
 
                         st.write("")
 
+            with st.expander("🌸 View AI Clinical NLP Synthesis & Observations", expanded=False):
+                try:
+                    from nlp_engine.report_synthesizer import ReportSynthesizer
+                    synthesizer = ReportSynthesizer()
+                    synth_report = synthesizer.generate_full_report(data)
+                    sec1 = synth_report.get("section1_main_concerns", {})
+                    sec2 = synth_report.get("section2_emotions_and_trajectory", {})
+                    sec3 = synth_report.get("section3_themes_and_triggers", {})
+                    sec4 = synth_report.get("section4_clinical_observations", {})
+                    sec5 = synth_report.get("section5_therapy_goals", {})
+
+                    st.markdown("##### 📌 Section 1: Executive Summary & Primary Concerns")
+                    st.write(f"**Clinical Synthesis Takeaway:** {sec1.get('summary_takeaway', 'No concerns summarized.')}")
+                    quotes = sec1.get("verbatim_quotes", [])
+                    if quotes:
+                        st.markdown("**Client Verbatim Anchors:**")
+                        for q in quotes[:4]:
+                            st.markdown(f"> *\"{q.get('quote')}\"* — *({q.get('stage')})*")
+
+                    st.markdown("##### 🌊 Section 2: Emotional Trajectory & Distress Arc")
+                    st.write(f"**Trajectory Narrative:** {sec2.get('trajectory_arc_narrative', 'N/A')}")
+                    st.write(f"• **Dominant Opening Tone:** `{sec2.get('start_emotion', 'N/A')}`")
+                    st.write(f"• **Peak Distress Stage:** `{sec2.get('peak_distress_stage', 'N/A')}`")
+                    st.write(f"• **Concluding Intake Tone:** `{sec2.get('end_emotion', 'N/A')}`")
+
+                    st.markdown("##### 🔍 Section 4: Linguistic Cues & Defense Patterns")
+                    hedging = sec4.get("hedging_and_minimizing", {})
+                    st.write(f"• **Linguistic Hedging Level:** `{hedging.get('hedging_level', 'Low')}` ({hedging.get('total_hedges_detected', 0)} minimizing qualifiers detected)")
+                    inconsistencies = sec4.get("inconsistencies_and_masking", {})
+                    if inconsistencies and inconsistencies.get("has_inconsistencies"):
+                        st.warning(f"⚠️ **Facade / Contradiction Detected:** {inconsistencies.get('total_flags')} flag(s)")
+                        for flag in inconsistencies.get("flags", []):
+                            st.caption(f"• **{flag.get('type')}:** {flag.get('explanation')}")
+                    else:
+                        st.caption("No significant emotional masking or contradictory statements flagged.")
+
+                    st.markdown("##### 🎯 Section 5: Therapy Readiness & Client Goals")
+                    st.write(f"**Stated Hope / Goal for Therapy:** *\"{sec5.get('verbatim_hope', 'No explicit therapy goal stated.')}\"*")
+                except Exception as synth_err:
+                    st.caption(f"Could not generate live synthesis: {synth_err}")
+
             st.divider()
             act_col1, act_col2, act_col3 = st.columns([1, 1, 1])
 

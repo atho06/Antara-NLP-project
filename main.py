@@ -178,23 +178,48 @@ async def analyze_session(session_data: Dict[str, Any]):
 @app.get("/api/report/latest")
 async def get_latest_session_report():
     """
-    Retrieves the most recent intake report stored in volatile memory.
+    Retrieves the most recent intake report stored in volatile memory or SQLite.
     """
     report = vault.get_latest_report()
     if not report:
-        raise HTTPException(status_code=404, detail="No active intake sessions found in memory.")
+        sessions = get_all_therapist_sessions()
+        if sessions:
+            latest = sessions[0]
+            s_data = latest.get("parsed_data") or {}
+            sid = latest.get("session_id", "session_latest")
+            try:
+                report = synthesizer.generate_full_report(s_data)
+                vault.store_session(sid, s_data, report)
+                return report
+            except Exception as e:
+                print(f"Error generating dynamic report for latest session {sid}: {e}")
+        raise HTTPException(status_code=404, detail="No active intake sessions found.")
     return report
 
 
 @app.get("/api/report/{session_id}")
 async def get_session_report(session_id: str):
     """
-    Retrieves an existing analyzed report by session ID.
+    Retrieves an existing analyzed report by session ID, checking memory and SQLite.
     """
     report = vault.get_report(session_id)
     if not report:
         if vault.is_erased(session_id):
             raise HTTPException(status_code=410, detail="Session data has already been permanently erased.")
+        
+        # Check SQLite database
+        sessions = get_all_therapist_sessions()
+        matching = next((s for s in sessions if s.get("session_id") == session_id), None)
+        if matching:
+            s_data = matching.get("parsed_data") or {}
+            try:
+                report = synthesizer.generate_full_report(s_data)
+                vault.store_session(session_id, s_data, report)
+                return report
+            except Exception as e:
+                print(f"Error generating dynamic report for session {session_id}: {e}")
+                raise HTTPException(status_code=500, detail=f"Failed to synthesize report: {e}")
+
         raise HTTPException(status_code=404, detail="Session report not found")
     return report
 
@@ -206,7 +231,17 @@ async def export_session_pdf(session_id: str):
     """
     report = vault.get_report(session_id)
     if not report:
-        raise HTTPException(status_code=404, detail="Session report not found or already purged")
+        sessions = get_all_therapist_sessions()
+        matching = next((s for s in sessions if s.get("session_id") == session_id), None)
+        if matching:
+            s_data = matching.get("parsed_data") or {}
+            try:
+                report = synthesizer.generate_full_report(s_data)
+                vault.store_session(session_id, s_data, report)
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=f"Failed to generate report for PDF: {e}")
+        else:
+            raise HTTPException(status_code=404, detail="Session report not found or already purged")
 
     pdf_bytes = pdf_generator.generate_pdf_bytes(report)
     filename = f"Antara_Clinical_Report_{session_id}.pdf"

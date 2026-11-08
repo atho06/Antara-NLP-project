@@ -62,6 +62,11 @@ class HedgingDetector:
         """
         Analyzes a single utterance for hedging cues.
         """
+        if isinstance(text, list):
+            text = ", ".join(str(x) for x in text if x)
+        elif not isinstance(text, str):
+            text = str(text) if text is not None else ""
+
         if not text:
             return {"hedge_count": 0, "categories": {}, "matches": []}
 

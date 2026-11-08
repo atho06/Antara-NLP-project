@@ -52,22 +52,76 @@ class InconsistencyDetector:
         daily_life_statements = []
         relational_statements = []
 
-        # Categorize responses by stage
+        # Categorize responses by stage, category, and question cues
         for item in transcript:
             if item.get("isSkipped"):
                 continue
-            stage = item.get("stage", "")
+            stage = str(item.get("stage", ""))
+            stage_lower = stage.lower()
+            q_text = str(item.get("question", "")).lower()
+            q_cat = str(item.get("category", "")).lower()
+            q_id = str(item.get("question_id", "")).lower()
             answer = item.get("finalAnswer") or ""
             step = item.get("step")
 
-            if "2_easy_opening" in stage:
+            # 1. Opening statement: initial check-in or step 1/2
+            if not opening_statement and (
+                "2_easy_opening" in stage
+                or "opening" in stage_lower
+                or "opening" in q_cat
+                or "how are you" in q_text
+                or "bringing you" in q_text
+                or "feeling today" in q_text
+                or step in (1, 2)
+            ):
                 opening_statement = answer
                 opening_step = step
-            elif "3_current_feelings" in stage:
+
+            # 2. Somatic statements: physical body, sensations, stress response
+            if (
+                "3_current_feelings" in stage
+                or "somatic" in stage_lower
+                or "somatic" in q_cat
+                or "body" in q_text
+                or "physical" in q_text
+                or "chest" in q_text
+                or "breathing" in q_text
+                or "stomach" in q_text
+                or "headache" in q_text
+                or "muscle" in q_text
+                or "current_feelings" in stage_lower
+                or "distress" in q_cat
+            ):
                 somatic_statements.append({"step": step, "stage": stage, "answer": answer})
-            elif "5_daily_life" in stage:
+
+            # 3. Daily life statements: sleep, routine, work/study, functioning
+            if (
+                "5_daily_life" in stage
+                or "daily" in stage_lower
+                or "daily" in q_cat
+                or "routine" in q_cat
+                or "routine" in q_text
+                or "sleep" in q_text
+                or "appetite" in q_text
+                or "energy" in q_text
+                or "concentration" in q_text
+                or "work" in q_cat
+                or "study" in q_cat
+            ):
                 daily_life_statements.append({"step": step, "stage": stage, "answer": answer})
-            elif "6_relationships" in stage:
+
+            # 4. Relational statements: relationships, family, friends, loneliness
+            if (
+                "6_relationships" in stage
+                or "relationship" in stage_lower
+                or "social" in q_cat
+                or "trust" in q_cat
+                or "connection" in q_cat
+                or "friend" in q_text
+                or "family" in q_text
+                or "lonel" in q_text
+                or "isolated" in q_text
+            ):
                 relational_statements.append({"step": step, "stage": stage, "answer": answer})
 
             # Check intra-sentence masking

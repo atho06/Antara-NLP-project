@@ -85,32 +85,58 @@ class ThemeExtractor:
         therapy_hopes = None
 
         for item in transcript:
-            if item.get("isSkipped") or "consent" in item.get("stage", ""):
+            if item.get("isSkipped") or "consent" in str(item.get("stage", "")).lower():
                 continue
 
-            ans = item.get("finalAnswer") or ""
-            orig = item.get("originalAnswer") or ""
+            ans = (item.get("finalAnswer") or "").strip()
+            orig = (item.get("originalAnswer") or "").strip()
             stage = item.get("stage", "")
+            q_text = item.get("question") or ""
+            q_lower = q_text.lower()
+            stage_lower = str(stage).lower()
+            qid_lower = str(item.get("question_id") or "").lower()
 
-            # If Stage 7 or matching therapy goals, store as therapy hopes
-            stage_str = str(stage).lower()
-            if any(k in stage_str for k in ["therapy", "hope", "goal", "7"]):
-                therapy_hopes = {
-                    "raw_quote": ans,
-                    "question": item.get("question"),
-                    "stage": stage
-                }
+            # If matching therapy goals / hopes, store as therapy hopes
+            if any(k in q_lower or k in stage_lower or k in qid_lower for k in [
+                "therapy", "hope", "goal", "outcome", "change one thing", "expect", "looking for", "7"
+            ]):
+                if ans:
+                    therapy_hopes = {
+                        "raw_quote": ans,
+                        "question": q_text or "Therapeutic Hopes & Intentions",
+                        "stage": stage
+                    }
 
             # Select emotionally informative answers as key direct quotes
-            if any(term in ans.lower() for term in [
-                "imposter", "cracking", "exhale", "guilty", "suffocating", "drowning",
-                "tightness", "knot", "nauseous", "mask", "pretending", "caregiver",
-                "running on empty", "battery", "cold sweats", "burden", "alienated",
-                "grey block", "shaking"
-            ]):
+            is_concern = any(term in ans.lower() for term in [
+                "imposter", "cracking", "exhale", "guilty", "guilt", "suffocating", "drowning",
+                "tightness", "knot", "nauseous", "nausea", "mask", "pretending", "caregiver",
+                "running on empty", "battery", "cold sweats", "burden", "alienated", "lonely",
+                "alone", "grey block", "shaking", "panic", "anxious", "anxiety", "worried", "worry",
+                "argument", "arguments", "conflict", "overwhelmed", "exhausted", "foggy", "stress",
+                "pressure", "expectations", "sleep", "insomnia", "tired", "sad", "crying", "scared",
+                "fear", "afraid", "numb", "shut down", "freeze", "failure", "failing", "nobody understands"
+            ])
+            if is_concern and len(ans) > 8:
                 verbatim_quotes.append({
                     "quote": ans,
                     "stage": stage,
+                    "step": item.get("step")
+                })
+
+        # If too few quotes found, pull the most substantive non-empty client answers
+        if len(verbatim_quotes) < 2:
+            substantive = [
+                item for item in transcript
+                if not item.get("isSkipped") and len((item.get("finalAnswer") or "").strip()) > 15
+                and not any(v["quote"] == item.get("finalAnswer") for v in verbatim_quotes)
+                and "consent" not in str(item.get("stage", "")).lower()
+            ]
+            substantive.sort(key=lambda x: len((x.get("finalAnswer") or "").strip()), reverse=True)
+            for item in substantive[:4 - len(verbatim_quotes)]:
+                verbatim_quotes.append({
+                    "quote": item.get("finalAnswer"),
+                    "stage": item.get("stage"),
                     "step": item.get("step")
                 })
 

@@ -66,13 +66,20 @@ class ReportSynthesizer:
             for i, item in enumerate(session_data["responses"], 1):
                 was_edited = item.get("was_edited", False) or bool(item.get("edit_history"))
                 skipped = item.get("skipped", False) or (item.get("status") == "skipped")
-                final_ans = item.get("edited_answer") or item.get("finalAnswer") or item.get("original_answer") or ""
-                orig_ans = item.get("original_answer") or item.get("originalAnswer") or final_ans
-                stg = item.get("stage_name") or str(item.get("stage", f"step_{i}"))
+                raw_final = item.get("edited_answer") or item.get("finalAnswer") or item.get("original_answer") or ""
+                raw_orig = item.get("original_answer") or item.get("originalAnswer") or raw_final
+                
+                final_ans = ", ".join(str(x) for x in raw_final) if isinstance(raw_final, list) else str(raw_final or "")
+                orig_ans = ", ".join(str(x) for x in raw_orig) if isinstance(raw_orig, list) else str(raw_orig or "")
+                
+                stg = item.get("category") or item.get("stage_name") or item.get("stage") or f"Step {i}"
+                q_id = item.get("question_id", "")
+                q_text = item.get("question", "")
                 transcript.append({
                     "step": i,
                     "stage": stg,
-                    "question": item.get("question", ""),
+                    "question_id": q_id,
+                    "question": q_text,
                     "finalAnswer": final_ans,
                     "originalAnswer": orig_ans,
                     "isEdited": was_edited,
@@ -81,6 +88,19 @@ class ReportSynthesizer:
                 })
         elif transcript is None:
             transcript = []
+        else:
+            # Ensure native transcript answers are strings
+            for item in transcript:
+                fa = item.get("finalAnswer", "")
+                if isinstance(fa, list):
+                    item["finalAnswer"] = ", ".join(str(x) for x in fa)
+                elif fa is not None and not isinstance(fa, str):
+                    item["finalAnswer"] = str(fa)
+                oa = item.get("originalAnswer", "")
+                if isinstance(oa, list):
+                    item["originalAnswer"] = ", ".join(str(x) for x in oa)
+                elif oa is not None and not isinstance(oa, str):
+                    item["originalAnswer"] = str(oa)
 
         # 1. Run all individual NLP extractors
         hedging_res = self.hedging_detector.analyze_transcript(transcript)
@@ -89,13 +109,24 @@ class ReportSynthesizer:
         edit_res = self.edit_analyzer.analyze_transcript_edits(transcript)
         theme_res = self.theme_extractor.extract_themes_and_triggers(transcript)
 
-        # 2. Build Section 1: Main Concerns in Her Own Stated Words
+        # 2. Build Section 1: Main Concerns in Her Own Stated Words (Synthesized Dynamically)
+        top_theme_names = [t["name"] for t in theme_res["themes"][:2]]
+        if top_theme_names:
+            dynamic_summary = (
+                f"Client primarily articulates distress centered on {', '.join(top_theme_names).lower()}, "
+                f"alongside situational and somatic triggers."
+            )
+        elif emotion_res.get("start_emotion") not in ["neutral_subdued", "unspecified"]:
+            dynamic_summary = (
+                f"Client articulates distress characterized by {emotion_res['start_emotion'].replace('_', ' ')} "
+                f"across daily routine and personal experiences."
+            )
+        else:
+            dynamic_summary = "Client describes emotional experiences, daily rhythms, and relational challenges as articulated in verbatim quotes below."
+
         main_concerns = {
             "verbatim_quotes": theme_res["verbatim_concerns"],
-            "summary_takeaway": (
-                f"Client primarily articulates distress through somatic sensations, "
-                f"workplace pressure, and internal self-judgment."
-            )
+            "summary_takeaway": dynamic_summary
         }
 
         # 3. Build Section 2: Key Emotions & Trajectory

@@ -191,11 +191,12 @@ class EmotionAnalyzer:
             valence_points.append(scored["valence"])
 
             # Collect stage-specific focus
-            if "current_feelings" in stage_key or "3" in stage_key:
+            q_str = (item.get("question") or "").lower()
+            if any(k in stage_key.lower() or k in q_str for k in ["feelings", "somatic", "body", "physical", "heart", "tension", "chest", "sleep"]):
                 somatic_emotions.append(scored["primary_emotion"])
-            elif "relationships" in stage_key or "6" in stage_key:
+            elif any(k in stage_key.lower() or k in q_str for k in ["relationship", "family", "friends", "partner", "parents"]):
                 relational_emotions.append(scored["primary_emotion"])
-            elif "therapy_hopes" in stage_key or "7" in stage_key:
+            elif any(k in stage_key.lower() or k in q_str for k in ["therapy", "hope", "goal", "outcome"]):
                 therapy_intentions.append(scored["primary_emotion"])
 
             # Formulate short quote preview
@@ -217,8 +218,8 @@ class EmotionAnalyzer:
         first_step = next((t for t in timeline if t["status"] == "answered"), None)
         last_step = next((t for t in reversed(timeline) if t["status"] == "answered"), None)
 
-        start_emotion = first_step["primary_emotion"] if first_step else "neutral"
-        end_emotion = last_step["primary_emotion"] if last_step else "neutral"
+        start_emotion = first_step["primary_emotion"] if first_step else "neutral_subdued"
+        end_emotion = last_step["primary_emotion"] if last_step else "neutral_subdued"
 
         # Determine peak distress step
         peak_step = None
@@ -228,11 +229,22 @@ class EmotionAnalyzer:
                 min_valence = t["valence"]
                 peak_step = t
 
+        peak_desc = peak_step["stage_label"] if peak_step else "middle stages"
+        if peak_step and peak_step.get("matched_terms"):
+            peak_cues = f" (marked by cues of {', '.join(peak_step['matched_terms'][:2])})"
+        else:
+            peak_cues = ""
+
+        if end_emotion in ["hope_readiness", "positive_calm"]:
+            resolution_text = f"before shifting toward {end_emotion.replace('_', ' ')} as personal reflections concluded."
+        elif end_emotion in ["overwhelm_burnout", "sadness_despair", "anxiety_fear"]:
+            resolution_text = f"and elevated {end_emotion.replace('_', ' ')} persisted into concluding reflections."
+        else:
+            resolution_text = f"concluding with a {end_emotion.replace('_', ' ')} affect."
+
         arc_narrative = (
-            f"Conversation opened with {start_emotion.replace('_', ' ')}. "
-            f"Distress peaked in {peak_step['stage_label'] if peak_step else 'middle stages'} "
-            f"around somatic and daily life descriptions, before concluding with {end_emotion.replace('_', ' ')} "
-            f"during therapy goal exploration."
+            f"Intake dialogue opened with a {start_emotion.replace('_', ' ')} tone. "
+            f"Distress peaked during {peak_desc}{peak_cues}, {resolution_text}"
         )
 
         return {
