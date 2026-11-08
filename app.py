@@ -31,7 +31,12 @@ from database import (
     get_unfinished_session,
     complete_patient_session,
     get_patient_details,
-    update_patient_details
+    update_patient_details,
+    authenticate_therapist,
+    register_therapist,
+    get_all_therapist_sessions,
+    get_connection,
+    hash_password
 )
 
 
@@ -339,6 +344,9 @@ DEFAULTS = {
     "patient_id": None,
     "patient_name": None,
     "patient_email": None,
+    "therapist_id": None,
+    "therapist_name": None,
+    "therapist_email": None,
 
     "show_dashboard": True,
 
@@ -799,6 +807,71 @@ def show_location_fields():
 # 7. LOGIN AND REGISTRATION
 # ==========================================================
 
+def show_therapist_login_page():
+    st.markdown("""
+    <div style="background:rgba(255,255,255,0.8); padding:24px; border-radius:18px; margin-bottom:18px; border:1px solid #c9d8ff; text-align:center;">
+        <div style="font-size:48px;">👩‍⚕️</div>
+        <h2 style="margin:6px 0 0 0; color:#29243a;">Therapist Intelligence Portal</h2>
+        <p style="margin:4px 0 0 0; color:#55516a; font-size:14px;">
+            Confidential pre-session clinical intake review for licensed healthcare professionals.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    t_login_tab, t_reg_tab = st.tabs(["Clinician Login 🩷", "Register Clinician"])
+
+    with t_login_tab:
+        st.markdown("### Clinician Sign In")
+        with st.form("therapist_login_form"):
+            t_email = st.text_input("Professional Email", value="therapist@antara.health")
+            t_pass = st.text_input("Password", value="Therapist@123", type="password")
+            t_submit = st.form_submit_button("Sign In as Clinician 🩺", use_container_width=True)
+
+        if t_submit:
+            if not t_email.strip() or not t_pass:
+                st.error("Please enter both email and password.")
+            else:
+                try:
+                    therapist = authenticate_therapist(t_email.strip().lower(), t_pass)
+                    if therapist:
+                        st.session_state.logged_in = True
+                        st.session_state.login_role = "therapist"
+                        st.session_state.therapist_id = therapist["therapist_id"]
+                        st.session_state.therapist_name = therapist["full_name"]
+                        st.session_state.therapist_email = therapist["email"]
+                        st.success(f"Welcome back, {therapist['full_name']}!")
+                        st.rerun()
+                    else:
+                        st.error("Invalid clinician credentials. Please check your email and password.")
+                except Exception as err:
+                    st.error(f"Authentication error: {err}")
+
+        st.caption("Default clinician account: `therapist@antara.health` / `Therapist@123`")
+
+    with t_reg_tab:
+        st.markdown("### Register New Clinician")
+        with st.form("therapist_reg_form"):
+            tr_name = st.text_input("Full Name & Clinical Title", placeholder="Dr. Rajesh Varma, MD")
+            tr_email = st.text_input("Professional Email", placeholder="doctor@clinic.com")
+            tr_pass = st.text_input("Password (min 8 characters)", type="password")
+            tr_confirm = st.text_input("Confirm Password", type="password")
+            tr_submit = st.form_submit_button("Register Clinician Account", use_container_width=True)
+
+        if tr_submit:
+            if not all([tr_name.strip(), tr_email.strip(), tr_pass, tr_confirm]):
+                st.error("Please fill in all fields.")
+            elif tr_pass != tr_confirm:
+                st.error("Passwords do not match.")
+            elif len(tr_pass) < 8:
+                st.error("Password must be at least 8 characters.")
+            else:
+                ok, msg = register_therapist(tr_name, tr_email, tr_pass)
+                if ok:
+                    st.success(f"{msg} You can now log in under Clinician Login.")
+                else:
+                    st.error(msg)
+
+
 def show_authentication_page():
 
     st.markdown("""
@@ -810,6 +883,18 @@ def show_authentication_page():
         </p>
     </div>
     """, unsafe_allow_html=True)
+
+    auth_portal = st.radio(
+        "Choose Portal",
+        ["🌸 Patient Portal", "🩷 Therapist Portal"],
+        horizontal=True,
+        label_visibility="collapsed",
+        key="auth_portal_radio"
+    )
+
+    if auth_portal == "🩷 Therapist Portal":
+        show_therapist_login_page()
+        return
 
     login_tab, register_tab = st.tabs(
         ["Login", "Create Account"]
@@ -1227,6 +1312,40 @@ def show_sidebar():
 
     </style>
     """, unsafe_allow_html=True)
+
+    if st.session_state.login_role == "therapist":
+        with st.sidebar:
+            st.markdown("""
+            <div class="sidebar-profile" style="background:rgba(255,255,255,0.85); border:1px solid #a7d7b5;">
+                <div class="sidebar-logo">👩‍⚕️</div>
+                <div class="sidebar-title" style="color:#1b7a42;">Antara</div>
+                <p style="text-align:center;color:#2e7d32;font-size:13px;font-weight:600;margin:4px 0 0 0;">
+                    Therapist Portal
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+
+            t_name = st.session_state.therapist_name or "Dr. Ananya Sharma"
+            st.markdown(f"### {html.escape(t_name)}")
+            st.markdown(
+                f'<div class="sidebar-email">{html.escape(str(st.session_state.therapist_email or "therapist@antara.health"))}</div>',
+                unsafe_allow_html=True
+            )
+            st.caption("🔒 Verified Attending Clinician")
+            st.write("")
+
+            if st.button("🚪 Logout of Portal", key="therapist_sidebar_logout", use_container_width=True):
+                for k in list(st.session_state.keys()):
+                    del st.session_state[k]
+                st.rerun()
+
+            st.divider()
+            st.markdown("### 🔗 Clinical Tools")
+            st.markdown(
+                '<a href="http://127.0.0.1:8000/therapist" target="_blank" style="display:block;text-align:center;padding:9px 12px;background:#6d28d9;color:white;text-decoration:none;border-radius:10px;font-weight:600;font-size:13px;box-shadow:0 2px 6px rgba(109,40,217,0.3);">🌸 Open Web Analytics (Port 8000) ↗</a>',
+                unsafe_allow_html=True
+            )
+        return
 
     with st.sidebar:
 
@@ -3930,6 +4049,363 @@ def show_chat():
 
 
 # ==========================================================
+# 26b. THERAPIST CLINICAL DASHBOARD & INTAKE INTELLIGENCE
+# ==========================================================
+
+def seed_demo_patient_intake():
+    sample_session_id = "ANT-20261108-DEMO01"
+    sample_patient_id = "PAT-DEMO-MAYA"
+
+    connection = get_connection()
+    try:
+        existing = connection.execute(
+            "SELECT patient_id FROM patients WHERE patient_id = ?",
+            (sample_patient_id,)
+        ).fetchone()
+
+        if not existing:
+            h, s = hash_password("demo_secret")
+            connection.execute("""
+                INSERT INTO patients (
+                    patient_id, full_name, email, password_hash, password_salt,
+                    phone, age, locality, city, district, state, pincode,
+                    trusted_contact_name, trusted_contact_relationship, trusted_contact_number,
+                    emergency_alert_consent, trusted_contact_agreement, pre_session_note, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                sample_patient_id, "Maya R.", "maya.demo@antara.health", h, s,
+                "9876543210", 24, "Indiranagar", "Bengaluru", "Bengaluru Urban", "Karnataka", "560038",
+                "Priya R.", "Sister", "9876543211",
+                1, 1, "Feeling constantly overwhelmed by graduate school expectations and personal pressure.",
+                datetime.now().isoformat()
+            ))
+            connection.commit()
+    finally:
+        connection.close()
+
+    demo_data = {
+        "application": "Antara",
+        "session_id": sample_session_id,
+        "patient_id": sample_patient_id,
+        "saved_at": datetime.now().isoformat(),
+        "started": True,
+        "consent_given": True,
+        "submitted": True,
+        "conversation_step": "closing",
+        "time_available": "15-20 minutes",
+        "conversation_mode": "Regular conversation",
+        "emotional_theme": ["Anxiety & Panic", "Burnout & Overwhelm"],
+        "crisis_triggered": False,
+        "activity_suggested": True,
+        "activity_answered": True,
+        "activity_data": {
+            "title": "5-4-3-2-1 Sensory Grounding Technique",
+            "accepted": True
+        },
+        "responses": [
+            {
+                "question_id": "emotions_checkin",
+                "question": "How are you feeling right now as you sit down for this conversation?",
+                "original_answer": "Honestly I feel like I'm drowning and completely suffocating every single hour of the day.",
+                "edited_answer": "A bit weary and on edge, but managing okay today.",
+                "acknowledgement": "Thank you for sharing that. It takes courage to acknowledge feeling on edge while trying to manage everything.",
+                "followup_question": "When that weariness feels heaviest, where do you tend to notice it first?",
+                "followup_answer": "Usually a tightness across my temples and feeling a knot in my stomach.",
+                "followup_acknowledgement": "That physical tightness makes total sense given how much you are carrying.",
+                "status": "answered"
+            },
+            {
+                "question_id": "family_concerns",
+                "question": "Are there things happening in your personal or family life that feel difficult to carry right now?",
+                "original_answer": "Family expectations are very high, and there are frequent arguments where I feel completely misunderstood.",
+                "edited_answer": "Family expectations are very high, and there are frequent arguments where I feel completely misunderstood.",
+                "acknowledgement": "Carrying heavy expectations while feeling unheard at home can feel deeply isolating.",
+                "followup_question": "Does having to keep up those expectations make it harder to rest?",
+                "followup_answer": "Yes, I feel like I am always performing and can never let my guard down.",
+                "followup_acknowledgement": "Always feeling the need to perform takes a huge emotional toll.",
+                "status": "answered"
+            },
+            {
+                "question_id": "anxiety_triggers",
+                "question": "Are there specific situations or times of day where anxiety seems to peak?",
+                "original_answer": "Sunday evenings and right before morning standups at work.",
+                "edited_answer": "Sunday evenings and right before morning standups at work.",
+                "acknowledgement": "Those transitional moments before the week begins are very common pressure points.",
+                "followup_question": None,
+                "followup_answer": None,
+                "status": "answered"
+            },
+            {
+                "question_id": "sleep_energy",
+                "question": "How has your sleep and daily physical energy been feeling recently?",
+                "original_answer": "Sleep is broken, maybe 5 hours a night. Waking up exhausted with brain fog by 2 PM.",
+                "edited_answer": "Sleep is broken, maybe 5 hours a night. Waking up exhausted with brain fog by 2 PM.",
+                "acknowledgement": "Broken sleep and recurring afternoon fatigue make handling everyday stress so much harder.",
+                "followup_question": None,
+                "followup_answer": None,
+                "status": "answered"
+            },
+            {
+                "question_id": "therapy_hopes",
+                "question": "What is the primary hope or outcome you are looking for from your upcoming therapy sessions?",
+                "original_answer": "I want to learn how to set boundaries with my family and stop bottling up panic until I shut down.",
+                "edited_answer": "I want to learn how to set boundaries with my family and stop bottling up panic until I shut down.",
+                "acknowledgement": "Wanting healthy boundaries and breaking the cycle of shutting down is such a meaningful goal.",
+                "followup_question": None,
+                "followup_answer": None,
+                "status": "answered"
+            }
+        ]
+    }
+    save_patient_session(sample_patient_id, sample_session_id, demo_data, "completed")
+
+
+def show_therapist_dashboard():
+
+    t_name = st.session_state.therapist_name or "Dr. Ananya Sharma"
+    t_email = st.session_state.therapist_email or "therapist@antara.health"
+
+    st.markdown(f"""
+    <div style="background:rgba(255,255,255,0.92); padding:26px; border-radius:20px; margin-bottom:20px; border:1px solid #c9d8ff; box-shadow:0 6px 18px rgba(0,0,0,0.04);">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+            <div>
+                <h1 style="margin:0; color:#29243a; font-size:28px;">🩺 Antara Clinical Intelligence Portal</h1>
+                <p style="margin:6px 0 0 0; color:#55516a; font-size:15px;">
+                    Attending Clinician: <strong>{html.escape(t_name)}</strong> &nbsp;•&nbsp; <code>Clinical Psychology</code> &nbsp;•&nbsp; <span style="color:#6b7280;">{html.escape(t_email)}</span>
+                </p>
+            </div>
+            <div style="background:#e8f4ec; color:#1b7a42; padding:8px 16px; border-radius:20px; font-weight:600; font-size:13px; border:1px solid #b7e4c7; display:inline-flex; align-items:center; gap:6px;">
+                <span>🔒</span> Confidential Clinician Vault
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.warning(
+        "⚖️ **CLINICAL ETHICS NOTICE:** AI-generated observations and self-reported intake dialogue. "
+        "For pre-therapy reference only to assist the attending licensed therapist. Not a diagnostic assessment."
+    )
+
+    sessions = get_all_therapist_sessions()
+
+    total_sessions = len(sessions)
+    completed_sessions = sum(1 for s in sessions if s.get("status") == "completed")
+    in_progress_sessions = sum(1 for s in sessions if s.get("status") == "in_progress")
+    crisis_flags = sum(
+        1 for s in sessions
+        if s.get("parsed_data", {}).get("crisis_triggered", False)
+    )
+
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric("Total Client Intakes", total_sessions)
+    with col2:
+        st.metric("Completed Intakes", completed_sessions)
+    with col3:
+        st.metric("In-Progress Intakes", in_progress_sessions)
+    with col4:
+        st.metric("Crisis Safety Flags", crisis_flags, delta="- Urgent" if crisis_flags > 0 else "Normal", delta_color="inverse")
+
+    st.write("")
+
+    control_col1, control_col2, control_col3 = st.columns([2, 2, 1])
+    with control_col1:
+        status_filter = st.selectbox(
+            "Filter Sessions by Status",
+            ["All Sessions", "Completed Only", "In-Progress Only", "Crisis Flags Only"]
+        )
+    with control_col2:
+        search_query = st.text_input("Search by Session ID or Patient ID", placeholder="e.g. ANT- or PAT-")
+    with control_col3:
+        st.write("")
+        st.write("")
+        if st.button("🔄 Refresh Data", use_container_width=True):
+            st.rerun()
+
+    filtered_sessions = sessions
+    if status_filter == "Completed Only":
+        filtered_sessions = [s for s in filtered_sessions if s.get("status") == "completed"]
+    elif status_filter == "In-Progress Only":
+        filtered_sessions = [s for s in filtered_sessions if s.get("status") == "in_progress"]
+    elif status_filter == "Crisis Flags Only":
+        filtered_sessions = [
+            s for s in filtered_sessions
+            if s.get("parsed_data", {}).get("crisis_triggered", False)
+        ]
+
+    if search_query.strip():
+        q = search_query.strip().lower()
+        filtered_sessions = [
+            s for s in filtered_sessions
+            if q in s.get("session_id", "").lower() or q in s.get("patient_id", "").lower()
+        ]
+
+    st.divider()
+    st.markdown("### 📋 Client Intake Sessions Explorer")
+
+    if not sessions:
+        st.info(
+            "No client intake sessions have been recorded yet. "
+            "As patients complete their conversational intake via Antara, their sessions will appear here."
+        )
+        if st.button("🌸 Load Demo Client Intake Session (Maya)", use_container_width=True):
+            seed_demo_patient_intake()
+            st.success("Sample patient intake session loaded successfully!")
+            st.rerun()
+        return
+
+    if not filtered_sessions:
+        st.caption("No sessions match the selected filter criteria.")
+        return
+
+    for session in filtered_sessions:
+        sid = session.get("session_id", "N/A")
+        pid = session.get("patient_id", "N/A")
+        status = session.get("status", "unknown")
+        updated_at = format_session_date(session.get("updated_at") or session.get("created_at"))
+        data = session.get("parsed_data", {})
+        responses = data.get("responses", [])
+        crisis_on = data.get("crisis_triggered", False)
+
+        if crisis_on:
+            header_icon = "🚨"
+            status_text = "CRISIS ALERT"
+        elif status == "completed":
+            header_icon = "🌸"
+            status_text = "COMPLETED"
+        else:
+            header_icon = "💬"
+            status_text = "IN PROGRESS"
+
+        with st.expander(f"{header_icon} Session: {sid} • Client: {pid} • Status: {status_text} • Last Active: {updated_at}"):
+
+            if crisis_on:
+                st.error("""
+                🚨 **SAFETY CIRCUIT BREAKER ACTIVATED**
+                Patient indicated acute distress or self-harm concerns during intake.
+                Normal conversational intervention was paused and emergency protocols (112) were presented.
+                Please prioritize immediate direct human contact.
+                """)
+
+            p_details = get_patient_details(pid)
+            st.markdown("#### 👤 Client Profile & Contact Verification")
+            p_col1, p_col2, p_col3 = st.columns(3)
+            with p_col1:
+                st.write(f"**Patient Record ID:** `{pid}`")
+                if p_details:
+                    st.write(f"**Age:** {p_details.get('age') or 'Not specified'}")
+                    st.write(f"**Locality:** {p_details.get('locality') or '—'}, {p_details.get('city') or '—'}")
+            with p_col2:
+                if p_details:
+                    st.write(f"**State / PIN:** {p_details.get('state') or '—'} ({p_details.get('pincode') or '—'})")
+                    st.write(f"**Trusted Contact:** {p_details.get('trusted_contact_name') or 'None listed'}")
+                    st.write(f"**Relationship:** {p_details.get('trusted_contact_relationship') or '—'}")
+            with p_col3:
+                consent_status = "✅ Voluntary Consent Given" if data.get("consent_given") else "⚠️ Consent Pending"
+                st.write(f"**Consent:** {consent_status}")
+                if p_details and p_details.get("emergency_alert_consent"):
+                    st.write("**Emergency Alert Consent:** Granted")
+                if p_details and p_details.get("pre_session_note"):
+                    st.caption(f"Client Pre-Session Note: *{p_details.get('pre_session_note')}*")
+
+            st.write("")
+            st.markdown("#### 🌿 Intake Context & Focus Area")
+            theme_col1, theme_col2, theme_col3 = st.columns(3)
+            with theme_col1:
+                themes = data.get("emotional_theme", [])
+                theme_str = ", ".join(themes) if isinstance(themes, list) and themes else "General Check-in"
+                st.write(f"**Emotional Themes:** {theme_str}")
+            with theme_col2:
+                st.write(f"**Conversation Mode:** {data.get('conversation_mode') or 'Regular conversation'}")
+            with theme_col3:
+                st.write(f"**Time Available:** {data.get('time_available') or '15-20 minutes'}")
+
+            if data.get("activity_suggested"):
+                act_data = data.get("activity_data", {})
+                act_title = act_data.get("title", "Grounding Technique") if isinstance(act_data, dict) else "Grounding Technique"
+                act_ans = "Accepted & Explored" if data.get("activity_answered") else "Offered"
+                st.caption(f"🧘 **Wellness Activity:** {act_title} ({act_ans})")
+
+            st.write("")
+            st.markdown("#### 💬 Verbatim Dialogue & Clarification Transcript")
+
+            if not responses:
+                st.caption("No question responses recorded for this session yet.")
+            else:
+                for idx, r in enumerate(responses, start=1):
+                    q_text = r.get("question", "")
+                    raw_ans = r.get("original_answer", "")
+                    final_ans = r.get("edited_answer", raw_ans)
+                    ack_text = r.get("acknowledgement", "")
+                    followup_q = r.get("followup_question")
+                    followup_a = r.get("followup_answer")
+                    followup_ack = r.get("followup_acknowledgement")
+                    is_skipped = r.get("status") == "skipped"
+
+                    with st.container():
+                        st.markdown(f"**Step {idx}:** *{q_text}*")
+
+                        if is_skipped:
+                            st.markdown("> ⏭️ *[Question Skipped by Client]*")
+                        else:
+                            if raw_ans and final_ans and raw_ans != final_ans:
+                                st.markdown(f"> ✏️ **Final Response:** {final_ans}")
+                                st.caption(f"Original draft before revision: ~~{raw_ans}~~")
+                            else:
+                                st.markdown(f"> 🗣️ **Client Response:** {final_ans or raw_ans}")
+
+                            if ack_text:
+                                st.caption(f"Lia Contextual Acknowledgement: *\"{ack_text}\"*")
+
+                            if followup_q:
+                                st.markdown(f"&nbsp;&nbsp;&nbsp;&nbsp;↳ **Follow-up Clarification:** *{followup_q}*")
+                                if followup_a:
+                                    st.markdown(f"&nbsp;&nbsp;&nbsp;&nbsp;↳ **Client Answer:** {followup_a}")
+                                if followup_ack:
+                                    st.caption(f"&nbsp;&nbsp;&nbsp;&nbsp;↳ Lia Follow-up Acknowledgement: *\"{followup_ack}\"*")
+
+                        st.write("")
+
+            st.divider()
+            act_col1, act_col2, act_col3 = st.columns([1, 1, 1])
+
+            with act_col1:
+                json_export = json.dumps(data, indent=4, ensure_ascii=False)
+                st.download_button(
+                    label="📥 Download Intake JSON",
+                    data=json_export,
+                    file_name=f"{sid}.json",
+                    mime="application/json",
+                    key=f"dl_json_{sid}",
+                    use_container_width=True
+                )
+
+            with act_col2:
+                st.markdown(
+                    f'<a href="http://127.0.0.1:8000/therapist?session_id={sid}" target="_blank" style="display:block; text-align:center; padding:9px 12px; background:#6d28d9; color:white; text-decoration:none; border-radius:10px; font-weight:600; font-size:14px; box-shadow:0 2px 6px rgba(109,40,217,0.3);">🌸 Open Web NLP Report ↗</a>',
+                    unsafe_allow_html=True
+                )
+
+            with act_col3:
+                if st.button("🗑️ Delete Session", key=f"del_sess_{sid}", use_container_width=True):
+                    st.session_state[f"confirm_delete_therapist_{sid}"] = True
+
+            if st.session_state.get(f"confirm_delete_therapist_{sid}", False):
+                st.warning(f"Are you sure you want to permanently delete session `{sid}`?")
+                conf_c1, conf_c2 = st.columns(2)
+                with conf_c1:
+                    if st.button("Yes, Delete", key=f"yes_del_{sid}"):
+                        delete_patient_session(pid, sid)
+                        st.session_state[f"confirm_delete_therapist_{sid}"] = False
+                        st.success("Session deleted.")
+                        st.rerun()
+                with conf_c2:
+                    if st.button("Cancel", key=f"cancel_del_{sid}"):
+                        st.session_state[f"confirm_delete_therapist_{sid}"] = False
+                        st.rerun()
+
+
+# ==========================================================
 # 27. MAIN APPLICATION
 # ==========================================================
 
@@ -3938,6 +4414,10 @@ show_sidebar()
 if not st.session_state.logged_in:
 
     show_authentication_page()
+
+elif st.session_state.login_role == "therapist":
+
+    show_therapist_dashboard()
 
 elif st.session_state.show_recovery:
 
