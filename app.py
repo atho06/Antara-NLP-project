@@ -884,15 +884,16 @@ def show_authentication_page():
     </div>
     """, unsafe_allow_html=True)
 
+    st.write("")
     auth_portal = st.radio(
-        "Choose Portal",
-        ["🌸 Patient Portal", "🩷 Therapist Portal"],
+        "**Select Portal to Access:**",
+        ["🌸 Patient Portal (Client Intake)", "🩷 Therapist Portal (Clinician Dashboard)"],
         horizontal=True,
-        label_visibility="collapsed",
         key="auth_portal_radio"
     )
+    st.write("")
 
-    if auth_portal == "🩷 Therapist Portal":
+    if "Therapist" in auth_portal:
         show_therapist_login_page()
         return
 

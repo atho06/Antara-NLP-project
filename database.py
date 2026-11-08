@@ -170,8 +170,8 @@ def init_db():
             ("therapist@antara.health",)
         ).fetchone()
 
+        pw_hash, pw_salt = hash_password("Therapist@123")
         if not existing_therapist:
-            pw_hash, pw_salt = hash_password("Therapist@123")
             cursor.execute("""
                 INSERT INTO therapists (
                     therapist_id,
@@ -190,6 +190,13 @@ def init_db():
                 pw_salt,
                 datetime.now().isoformat()
             ))
+        else:
+            cursor.execute("""
+                UPDATE therapists
+                SET password_hash = ?,
+                    password_salt = ?
+                WHERE email = 'therapist@antara.health'
+            """, (pw_hash, pw_salt))
 
         # Anonymous patient record for open confidential intake
         existing_anon = cursor.execute(
