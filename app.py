@@ -36,10 +36,11 @@ from database import (
     hash_password
 )
 from emergency_service import send_emergency_sms, get_emergency_alerts_for_patient
+from theme_manager import apply_theme_css, render_theme_toggle
 
 
 # ==========================================================
-# 1. PAGE CONFIGURATION
+# 1. PAGE CONFIGURATION & THEME
 # ==========================================================
 
 st.set_page_config(
@@ -48,232 +49,7 @@ st.set_page_config(
     layout="wide"
 )
 
-st.markdown("""
-<style>
-.stApp {
-    background: linear-gradient(
-        120deg,#c9d8ff 0%,#ead5f5 50%,#ffcddd 100%
-    ) !important;
-}
-
-[data-testid="stAppViewContainer"],
-[data-testid="stMain"],
-[data-testid="stMainBlockContainer"] {
-    background: transparent !important;
-}
-
-.block-container {
-    max-width:1100px;
-    padding-top:2rem;
-    padding-bottom:5rem;
-}
-
-.stApp p,.stApp li,.stApp label,
-.stApp h1,.stApp h2,.stApp h3,.stApp h4 {
-    color:#000;
-}
-
-header[data-testid="stHeader"],
-[data-testid="stToolbar"] {
-    background:#f3cce8 !important;
-}
-
-header[data-testid="stHeader"] *,
-[data-testid="stToolbar"] * {
-    color:#000 !important;
-    fill:#000 !important;
-}
-
-section[data-testid="stSidebar"],
-section[data-testid="stSidebar"] > div {
-    background:#b9d8ff !important;
-}
-
-section[data-testid="stSidebar"] * {
-    color:#000 !important;
-}
-
-section[data-testid="stSidebar"] .stButton > button {
-    background:#e8f2ff !important;
-    color:#253b5c !important;
-    border:1px solid #91baf0 !important;
-    border-radius:14px !important;
-    font-weight:600 !important;
-    min-height:45px;
-}
-
-[data-testid="stTextInput"] [data-baseweb="input"],
-[data-testid="stTextInput"] [data-baseweb="base-input"],
-[data-testid="stTextArea"] [data-baseweb="textarea"],
-[data-testid="stNumberInput"] [data-baseweb="input"] {
-    background:#E8F2FF !important;
-    border:1px solid #A9C9F5 !important;
-    border-radius:14px !important;
-}
-
-[data-testid="stTextInput"] input,
-[data-testid="stNumberInput"] input,
-[data-testid="stTextArea"] textarea {
-    background:#E8F2FF !important;
-    color:#222 !important;
-    -webkit-text-fill-color:#222 !important;
-    border:none !important;
-    caret-color:#3979e8 !important;
-}
-
-[data-testid="stDateInput"] input {
-    background:#E8F2FF !important;
-    color:#222 !important;
-    border:1px solid #A9C9F5 !important;
-    border-radius:14px !important;
-}
-
-.stSelectbox div[data-baseweb="select"] > div,
-.stMultiSelect div[data-baseweb="select"] > div {
-    background:#E8F2FF !important;
-    border:1px solid #A9C9F5 !important;
-    border-radius:12px !important;
-}
-
-.stButton > button,
-.stDownloadButton > button,
-[data-testid="stFormSubmitButton"] button {
-    background:#b9d8ff !important;
-    color:#253b5c !important;
-    border:1px solid #91baf0 !important;
-    border-radius:14px !important;
-    font-weight:600 !important;
-    padding:12px 18px !important;
-    box-shadow:none !important;
-}
-
-.stButton > button:hover {
-    background:#9fc8ff !important;
-}
-
-.login-card {
-    background:rgba(255,255,255,.90);
-    padding:35px;
-    border-radius:24px;
-    text-align:center;
-    box-shadow:0 5px 20px rgba(0,0,0,.06);
-    margin-top:25px;
-    border:1px solid #d8c9ed;
-}
-
-.login-subtitle {
-    color:#55516a !important;
-    font-size:16px;
-}
-
-[data-testid="stForm"] {
-    background:rgba(255,255,255,.35) !important;
-    border:1px solid rgba(255,255,255,.65) !important;
-    border-radius:18px !important;
-    padding:18px !important;
-}
-
-.bot-row {
-    display:flex;
-    justify-content:flex-start;
-    margin:18px 0;
-}
-
-.bot-bubble {
-    background:#eeeaf1;
-    color:#292633;
-    padding:13px 17px;
-    border-radius:16px 16px 16px 5px;
-    max-width:75%;
-    font-size:15px;
-    line-height:1.6;
-    overflow-wrap:anywhere;
-}
-
-.user-row {
-    display:flex;
-    justify-content:flex-end;
-    margin:18px 0;
-}
-
-.user-bubble {
-    background:#3979e8;
-    color:#fff;
-    padding:13px 17px;
-    border-radius:16px 16px 5px 16px;
-    max-width:75%;
-    font-size:15px;
-    line-height:1.6;
-    overflow-wrap:anywhere;
-}
-
-[data-testid="stProgress"] {
-    background:transparent !important;
-}
-
-[data-testid="stProgress"] > div {
-    background:#E8F2FF !important;
-    border-radius:20px !important;
-    height:10px !important;
-    overflow:hidden !important;
-}
-
-[data-testid="stProgress"] div[role="progressbar"] {
-    background:#3979e8 !important;
-    border-radius:20px !important;
-}
-
-[data-testid="stBottom"],
-[data-testid="stBottom"] > div,
-[data-testid="stBottom"] > div > div,
-[data-testid="stBottomBlockContainer"] {
-    background:#b9d8ff !important;
-}
-
-[data-testid="stBottom"] {
-    border-top:1px solid #91baf0 !important;
-}
-
-[data-testid="stChatInput"] {
-    background:#E8F2FF !important;
-    border:2px solid #91baf0 !important;
-    border-radius:25px !important;
-    overflow:hidden !important;
-}
-
-[data-testid="stChatInput"] textarea {
-    background:#E8F2FF !important;
-    color:#222 !important;
-}
-
-.quick-heading {
-    color:#57455f;
-    font-size:14px;
-    font-weight:600;
-    margin-top:15px;
-    margin-bottom:8px;
-}
-
-#MainMenu,footer {
-    visibility:hidden;
-}
-
-@media(max-width:768px) {
-    .block-container {
-        padding-left:1rem;
-        padding-right:1rem;
-    }
-
-    .login-card {
-        padding:22px;
-    }
-
-    .bot-bubble,.user-bubble {
-        max-width:90%;
-    }
-}
-</style>
-""", unsafe_allow_html=True)
+apply_theme_css()
 
 
 # ==========================================================
@@ -345,6 +121,7 @@ DEFAULTS = {
 
     "emergency_alert_sent": False,
     "last_emergency_receipt": None,
+    "app_theme": "⚙️ System",
 
     "show_dashboard": True,
 
@@ -1189,64 +966,23 @@ def show_authentication_page():
 
 def show_sidebar():
 
-    if not st.session_state.logged_in:
-        return
-
-    st.markdown("""
-    <style>
-
-    [data-testid="stSidebar"] {
-        background: #b9d8ff !important;
-    }
-
-    .sidebar-profile {
-        background: rgba(255,255,255,0.65);
-        padding: 20px;
-        border-radius: 18px;
-        margin-bottom: 18px;
-        border: 1px solid rgba(255,255,255,0.8);
-    }
-
-    .sidebar-logo {
-        font-size: 32px;
-        text-align: center;
-    }
-
-    .sidebar-title {
-        text-align: center;
-        font-size: 23px;
-        font-weight: 700;
-        color: #344c78;
-    }
-
-    .sidebar-email {
-        color: #55516a;
-        font-size: 13px;
-        overflow-wrap: anywhere;
-    }
-
-    .sidebar-heading {
-        font-size: 17px;
-        font-weight: 700;
-        color: #344c78;
-        margin-top: 20px;
-        margin-bottom: 12px;
-    }
-
-    </style>
-    """, unsafe_allow_html=True)
-
     with st.sidebar:
 
         st.markdown("""
         <div class="sidebar-profile">
             <div class="sidebar-logo">🌷</div>
             <div class="sidebar-title">Antara</div>
-            <p style="text-align:center;color:#625c73;">
+            <p style="text-align:center;margin:4px 0 0 0;font-size:13px;">
                 Your Personal Wellness & Self-Care Space
             </p>
         </div>
         """, unsafe_allow_html=True)
+
+        render_theme_toggle(sidebar=True)
+
+        if not st.session_state.logged_in:
+            st.caption("Sign in to access your confidential wellness conversations.")
+            return
 
         first_name = (
             st.session_state.patient_name or "Patient"
@@ -3051,92 +2787,24 @@ def show_patient_dashboard():
     ]
 
     # ------------------------------------------------------
-    # DASHBOARD STYLING
+    # DASHBOARD STYLING & STATUS COLORS
     # ------------------------------------------------------
 
     st.markdown("""
     <style>
-
-    .dashboard-welcome {
-        background: rgba(255,255,255,0.88);
-        padding: 28px;
-        border-radius: 22px;
-        border: 1px solid rgba(255,255,255,0.9);
-        box-shadow: 0 5px 20px rgba(70,60,100,0.07);
-        margin-bottom: 25px;
-    }
-
-    .dashboard-welcome h1 {
-        color: #29243a;
-        font-size: 30px;
-        margin-bottom: 8px;
-    }
-
-    .dashboard-welcome p {
-        color: #625c73;
-        font-size: 16px;
-    }
-
-    .stat-card {
-        background: rgba(255,255,255,0.88);
-        padding: 23px;
-        border-radius: 20px;
-        border: 1px solid rgba(255,255,255,0.9);
-        box-shadow: 0 4px 15px rgba(70,60,100,0.06);
-        min-height: 125px;
-    }
-
-    .stat-icon {
-        font-size: 25px;
-        margin-bottom: 8px;
-    }
-
-    .stat-number {
-        font-size: 30px;
-        font-weight: 700;
-        color: #344c78;
-    }
-
-    .stat-label {
-        color: #696477;
-        font-size: 14px;
-    }
-
-    .section-heading {
-        color: #29243a;
-        font-size: 23px;
-        font-weight: 700;
-        margin-top: 20px;
-        margin-bottom: 12px;
-    }
-
-    .activity-card {
-        background: rgba(255,255,255,0.85);
-        padding: 18px;
-        border-radius: 16px;
-        border: 1px solid #e8ddf0;
-        margin-bottom: 12px;
-    }
-
-    .activity-card p {
-        color: #625c73;
-        margin-bottom: 5px;
-    }
-
     .status-completed {
-        color: #247a58;
+        color: #10b981;
         font-weight: 700;
     }
 
     .status-progress {
-        color: #a36b20;
+        color: #f59e0b;
         font-weight: 700;
     }
 
     .welcome-icon {
         font-size: 35px;
     }
-
     </style>
     """, unsafe_allow_html=True)
 
