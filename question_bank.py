@@ -240,22 +240,22 @@ QUESTION_BANK = {
     },
 
     "therapy_goals": {
-        "name": "Your Hopes for Therapy",
+        "name": "Your Hopes for Support & Growth",
         "questions": [
             {
-                "id": "THER_01",
-                "question": "What would you most like to work on or understand during therapy?",
-                "tags": ["therapy"]
+                "id": "SUPP_01",
+                "question": "What would you most like to focus on, understand, or change about how you feel right now?",
+                "tags": ["support", "reflection"]
             },
             {
-                "id": "THER_02",
-                "question": "What would you like your therapist to understand about you?",
-                "tags": ["therapy"]
+                "id": "SUPP_02",
+                "question": "What would you most like someone close to you to understand about what you're experiencing?",
+                "tags": ["support", "connection"]
             },
             {
-                "id": "THER_03",
-                "question": "What kind of support would make you feel comfortable?",
-                "tags": ["therapy", "support"]
+                "id": "SUPP_03",
+                "question": "What kind of emotional support or self-care would make you feel most comforted right now?",
+                "tags": ["support", "self_care"]
             }
         ]
     },
