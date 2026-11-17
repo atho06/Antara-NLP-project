@@ -584,6 +584,51 @@ COMMON_CSS = """
     visibility: hidden;
 }
 
+/* Smooth gradual theme transitions */
+html, body, .stApp,
+[data-testid="stAppViewContainer"],
+[data-testid="stMain"],
+[data-testid="stMainBlockContainer"],
+section[data-testid="stSidebar"],
+section[data-testid="stSidebar"] > div,
+header[data-testid="stHeader"],
+[data-testid="stToolbar"],
+[data-testid="stBottom"],
+[data-testid="stBottom"] > div,
+.login-card,
+.dashboard-welcome,
+.stat-card,
+.activity-card,
+.bot-bubble,
+.user-bubble,
+.sidebar-profile,
+[data-testid="stForm"],
+.stButton > button,
+[data-testid="stTextInput"] [data-baseweb="input"],
+[data-testid="stTextArea"] [data-baseweb="textarea"],
+div[data-baseweb="select"] > div {
+    transition: background 0.9s cubic-bezier(0.25, 0.8, 0.25, 1),
+                background-color 0.9s cubic-bezier(0.25, 0.8, 0.25, 1),
+                color 0.65s ease-in-out,
+                border-color 0.85s ease-in-out,
+                box-shadow 0.9s ease-in-out !important;
+}
+
+@keyframes themeGradualFade {
+    0% {
+        opacity: 0.75;
+        filter: blur(1px);
+    }
+    100% {
+        opacity: 1;
+        filter: blur(0px);
+    }
+}
+
+.stApp {
+    animation: themeGradualFade 0.85s cubic-bezier(0.25, 1, 0.5, 1) !important;
+}
+
 @media (max-width: 768px) {
     .block-container {
         padding-left: 1rem;
