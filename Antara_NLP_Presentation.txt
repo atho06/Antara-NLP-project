@@ -1,0 +1,524 @@
+﻿##################################################
+# 🧠 Antara — NLP Class Presentation
+##################################################
+
+Course: Natural Language Processing  
+Presentation Title: Antara: A Conversational Self-Help Companion Powered by Multi-Layer NLP
+
+---
+
+==================================================
+Slide 1 — Title Slide
+==================================================
+
+##################################################
+# ANTARA
+##################################################
+--- Your AI-Powered Emotional Wellness Companion ---
+
+A Conversational Self-Help App with Multi-Layer NLP
+
+---
+
+"Because sometimes, you just need someone to listen."
+
+[NLP Course — [Year] | Team: [Your Names]]
+
+---
+
+==================================================
+Slide 2 — The Problem
+==================================================
+
+##################################################
+# The Mental Health Gap
+##################################################
+
+| Statistic | Reality |
+|-----------|---------|
+| 🇮🇳 India's Mental Health Burden | ~200 million people affected |
+| 👨‍⚕️ Psychiatrist-to-Patient Ratio | 1 per 100,000 people |
+| 💸 Barrier: Cost | Therapy sessions unaffordable for most |
+| 🕐 Barrier: Stigma | Social stigma prevents help-seeking |
+| 🌐 Barrier: Access | Rural areas have almost no access |
+
+--- What if someone could talk to someone, right now, without judgment? ---
+
+Antara doesn't replace professional care — it fills the gap between needing help and getting it.
+
+---
+
+==================================================
+Slide 3 — What is Antara?
+==================================================
+
+##################################################
+# Antara: Your Safe Space to Talk
+##################################################
+
+Antara is a self-help emotional wellness companion app.
+
+--- Core Pillars: ---
+- 🤖 Lia — An empathetic AI conversational agent
+- 🧠 Multi-Layer NLP Pipeline — Real-time emotion, theme, and crisis analysis
+- 🚨 Emergency Safety Net — Automatic SMS alert to a trusted contact
+- 🔒 Privacy-First — All processing runs locally, no cloud
+
+--- Who is it for? ---
+Students, professionals, or anyone going through stress, anxiety, loneliness, burnout, or relationship issues — who want a private, non-judgmental space to reflect.
+
+---
+
+==================================================
+Slide 4 — System Architecture
+==================================================
+
+##################################################
+# Architecture Overview
+##################################################
+
+`mermaid
+flowchart TD
+    U[👤 User] --> UI[Streamlit UI / app.py]
+    UI --> LIA[🤖 Lia - LLM Engine\nllm_service.py]
+    UI --> CD[🚨 Crisis Detector\ncrisis_detection.py]
+    UI --> QF[❓ Adaptive Question Flow\nquestion_bank.py]
+    
+    UI --> NLP[🧠 NLP Analysis Pipeline]
+    NLP --> HG[Hedging Detector]
+    NLP --> EA[Emotion Analyzer]
+    NLP --> TE[Theme Extractor]
+    NLP --> ID[Inconsistency Detector]
+    
+    CD --> SMS[📱 Emergency SMS\nemergency_service.py]
+    SMS --> EC[Emergency Contact]
+    
+    UI --> DB[(🗄️ SQLite\ndatabase.py)]
+    LIA --> OL[Ollama / Llama 3.2:3b\nLocal LLM]
+`
+
+---
+
+==================================================
+Slide 5 — NLP Component 1: Lia (Conversational AI)
+==================================================
+
+##################################################
+# 🤖 Lia — The Heart of Antara
+##################################################
+
+--- What is Lia? ---
+An empathetic, context-aware conversational AI agent that responds to user messages in real time.
+
+--- How it works: ---
+- Powered by Llama 3.2:3b running locally via Ollama
+- Receives conversation history + user message
+- Generates empathetic, non-directive responses
+- Falls back to curated built-in acknowledgments (no internet needed)
+
+--- NLP Techniques: ---
+| Technique | Implementation |
+|-----------|---------------|
+| Contextual language generation | Local LLM (transformer-based) |
+| Prompt engineering | System prompt templates for therapeutic tone |
+| Conversation memory | Multi-turn context window |
+| Emotion-aware responses | Tone guided by crisis/emotion pipeline output |
+
+File: [llm_service.py](file:///d:/College/sem5/NLP/Antara/llm_service.py)
+
+---
+
+==================================================
+Slide 6 — NLP Component 2: Crisis Detection
+==================================================
+
+##################################################
+# 🚨 Crisis Detection System
+##################################################
+
+--- Why it matters: ---
+If a user expresses thoughts of self-harm or suicide, the app must respond immediately.
+
+--- How it works: ---
+`
+User Input → Regex Pattern Matching → Negation Check → Crisis Score → Trigger/Dismiss
+`
+
+--- NLP Techniques Used: ---
+- Regular Expressions — Keyword and phrase matching for crisis signals
+  - "want to die", "end it all", "can't go on", "hurt myself" etc.
+- Negation Handling — Prevents false positives
+  - "I don't want to die" → ✅ NOT a crisis trigger
+- Severity Scoring — Classifies mild concern vs. acute crisis
+- Safety Circuit Breaker — Halts normal conversation; shows crisis resources
+
+--- Output: ---
+- 🟡 Low severity → Gentle check-in prompt
+- 🔴 High severity → Crisis resource display + Emergency SMS dispatch
+
+File: [crisis_detection.py](file:///d:/College/sem5/NLP/Antara/crisis_detection.py)
+
+---
+
+==================================================
+Slide 7 — NLP Component 3: Adaptive Question Flow
+==================================================
+
+##################################################
+# ❓ Adaptive Conversation Flow
+##################################################
+
+--- The Problem with Static Scripts: ---
+One-size-fits-all therapy questions don't work. Someone anxious needs different support than someone grieving.
+
+--- Antara's Solution: ---
+Dynamically branch the conversation based on NLP-detected emotional themes.
+
+`
+User speaks → Theme Extractor → Identify Primary Theme → Select Question Branch
+`
+
+--- Supported Themes & Branches: ---
+| Detected Theme | Tailored Questions About... |
+|---|---|
+| 😰 Anxiety | Worry triggers, coping mechanisms, body sensations |
+| 😢 Sadness / Grief | Loss, isolation, support networks |
+| 😩 Burnout | Work-life balance, energy levels, rest |
+| 💔 Relationships | Communication, boundaries, trust |
+| 😔 Loneliness | Social connection, community, belonging |
+| 🤒 Physical Health | Sleep, appetite, somatic symptoms |
+
+File: [question_bank.py](file:///d:/College/sem5/NLP/Antara/question_bank.py)
+
+---
+
+==================================================
+Slide 8 — NLP Component 4: Multi-Layer Analysis Pipeline
+==================================================
+
+##################################################
+# 🧠 The NLP Analysis Pipeline
+##################################################
+
+Antara runs 4 parallel NLP analyzers on every user response:
+
+---
+
+--- 1. 🌫️ Hedging Detector (hedging_detector.py) ---
+Detects linguistic patterns that minimize or dismiss emotional pain:
+- "I guess I'm fine", "It's probably nothing", "I don't want to bother anyone"
+- Flagging hedging → signals emotional suppression
+
+---
+
+--- 2. 📈 Emotion Trajectory Analyzer (emotion_analyzer.py) ---
+Tracks the emotional arc across the entire conversation:
+- Valence scoring (positive / negative affect)
+- Peak distress detection
+- Closing affect — is the user leaving better or worse?
+
+---
+
+--- 3. 🏷️ Theme Extractor (theme_extractor.py) ---
+Keyword clustering to identify concern domains from free text:
+- Groups keywords into semantic clusters (anxiety, loneliness, grief, etc.)
+- Drives adaptive question flow (Slide 7)
+
+---
+
+--- 4. ⚡ Inconsistency Detector (inconsistency_detector.py) ---
+Detects emotional masking — contradictory statements:
+- "I'm totally fine, but I cry every morning"
+- "I'm happy, but nothing feels worth doing"
+- Flags mismatch between stated emotion and described behavior
+
+---
+
+==================================================
+Slide 9 — Emergency Safety Feature
+==================================================
+
+##################################################
+# 🚨 Emergency Contact SMS System
+##################################################
+
+--- Scenario: ---
+User is in acute distress. Crisis detection fires. The app dispatches an automated SMS to a pre-registered trusted contact.
+
+--- Flow: ---
+`
+Crisis Detected → Severity Check → Retrieve Emergency Contact
+→ Compose SMS → Dispatch via Twilio/Fast2SMS → Log to Database
+`
+
+--- SMS Content (auto-generated): ---
+"Hi [Contact Name], your friend [User Name] may need your support right now. They've been using the Antara wellness app and have shown signs of distress. Please reach out to them when you can. — Antara Safety System"
+
+--- Key Design Decisions: ---
+- 📋 Logged in SQLite emergency_alerts table with timestamp
+- 🔔 Consent-based — user registers contact voluntarily at sign-up
+- 🌐 Offline fallback — simulated dispatch if no Twilio credentials
+- 📵 Never reveals private conversation content in the SMS
+
+File: [emergency_service.py](file:///d:/College/sem5/NLP/Antara/emergency_service.py)
+
+---
+
+==================================================
+Slide 10 — User Experience Walkthrough
+==================================================
+
+##################################################
+# 📱 User Journey
+##################################################
+
+`
+flowchart LR
+    A[🏠 Landing Page] --> B[📝 Register / Login]
+    B --> C[👤 Set up Profile + Emergency Contact]
+    C --> D[💬 Chat with Lia]
+    D --> E{Distress Detected?}
+    E -- No --> F[Continue Conversation]
+    F --> D
+    E -- Yes, mild --> G[Lia: Gentle check-in + Resources]
+    E -- Yes, acute --> H[🚨 Crisis Screen + SMS Dispatch]
+`
+
+--- Key UX Features: ---
+- 🌙 Dark / Light / System themes — user comfort during sensitive conversations
+- ⚡ Quick-response chips — reduces friction when user can't find words
+- 📖 Guided reflections — structured prompts, not just open chat
+- 🔒 Session-based — conversations don't auto-persist across sessions (privacy)
+
+---
+
+==================================================
+Slide 11 — Privacy-First Architecture
+==================================================
+
+##################################################
+# 🔒 Privacy by Design
+##################################################
+
+--- Why privacy matters in a mental health app: ---
+Mental health data is extremely sensitive. Users must trust the system completely.
+
+--- How Antara protects users: ---
+| Concern | Our Approach |
+|---------|-------------|
+| 🤖 LLM data | Local Ollama — no data sent to OpenAI or any cloud |
+| 🗄️ Storage | SQLite — data stays on the user's machine |
+| 📡 Network | Only SMS dispatch (opt-in); no telemetry |
+| 🔑 Auth | Session-based login; no OAuth or third-party SSO |
+| 📋 Transparency | App clearly states it is non-diagnostic |
+
+This is a research/educational prototype. In production, additional security measures (encryption at rest, audit logs, HIPAA compliance) would be required.
+
+---
+
+==================================================
+Slide 12 — Technology Stack
+==================================================
+
+##################################################
+# 🛠️ Technology Stack
+##################################################
+
+| Layer | Technology | Purpose |
+|-------|-----------|---------|
+| 🖥️ UI | Python + Streamlit | Web interface, chat, themes |
+| 🤖 LLM | Ollama + Llama 3.2:3b | Local language model for Lia |
+| 🧠 NLP | Python (regex, heuristics) | Crisis, hedging, inconsistency, emotion, themes |
+| 🗄️ Database | SQLite | User profiles, sessions, alerts |
+| 🌐 Backend API | FastAPI | REST API (extensible) |
+| 📱 SMS | Twilio / Fast2SMS | Emergency contact notification |
+| 📄 PDF | ReportLab | (Session export, optional) |
+| 📦 Package Mgmt | pip / requirements.txt | Dependency management |
+
+--- Why these choices? ---
+- Streamlit: Rapid prototyping for ML/NLP apps
+- Local LLM: Privacy-first; no API costs; works offline
+- SQLite: Zero-config; portable; sufficient for prototype scale
+
+---
+
+==================================================
+Slide 13 — NLP Innovations Summary
+==================================================
+
+##################################################
+# 🧠 What Makes Antara an NLP Project?
+##################################################
+
+--- NLP is used at every layer of the system: ---
+
+`
+📥 Input Processing
+   └── Tokenization, regex matching, text normalization
+
+🔍 Semantic Analysis
+   └── Theme extraction (keyword clustering)
+   └── Emotion trajectory (valence scoring)
+   └── Hedging detection (linguistic pattern analysis)
+   └── Inconsistency detection (contradiction NLP)
+
+🤖 Language Generation
+   └── Transformer-based LLM (Llama 3.2:3b)
+   └── Prompt engineering for therapeutic tone
+   └── Context-aware multi-turn dialogue
+
+🚨 Safety Layer
+   └── Crisis keyword NLP with negation handling
+   └── Severity scoring → automated action
+`
+
+--- This is a complete NLP pipeline — not just a chatbot. ---
+
+---
+
+==================================================
+Slide 14 — Ethical Considerations
+==================================================
+
+##################################################
+# ⚖️ Ethics & Responsibility
+##################################################
+
+--- What Antara is NOT: ---
+- ❌ Not a clinical diagnostic tool
+- ❌ Not a replacement for a licensed therapist
+- ❌ Not designed to handle psychiatric emergencies alone
+
+--- Ethical safeguards built in: ---
+- ✅ Consent — users opt-in to emergency contact feature
+- ✅ Transparency — clinical ethics notice shown at every session
+- ✅ Privacy — local-first, no cloud processing
+- ✅ Boundaries — Lia explicitly recommends professional help when needed
+- ✅ Non-directive — Lia listens and reflects; doesn't diagnose or prescribe
+
+--- Research Ethics: ---
+This is an academic prototype for educational and research purposes. Any real deployment would require IRB review, clinical validation, and regulatory compliance.
+
+---
+
+==================================================
+Slide 15 — Future Scope
+==================================================
+
+##################################################
+# 🚀 What's Next for Antara?
+##################################################
+
+| Feature | Description |
+|---------|-------------|
+| 📱 Android App | Native mobile app (APK build workflow already in repo) |
+| 🌐 Multi-language | Hindi, Malayalam, Tamil support — critical for India |
+| 🔊 Voice Mode | Speech-to-text input for users who prefer speaking |
+| 📊 Mood Tracking | Long-term emotional trend visualization |
+| 🌍 Live SMS | Full Twilio integration with verified numbers |
+| 🧪 Clinical Validation | Partnership with mental health professionals for validation |
+| 🔐 E2E Encryption | End-to-end encrypted storage for production |
+| 🤝 Peer Support | Moderated community for peer connection (opt-in) |
+
+---
+
+==================================================
+Slide 16 — Demo
+==================================================
+
+##################################################
+# 🎬 Live Demo
+##################################################
+
+--- What we'll show: ---
+
+1. User Registration — Setting up profile + emergency contact
+2. Chat with Lia — Normal conversation flow
+3. Adaptive Questions — Theme-based question branching
+4. Crisis Simulation — What happens when distress is detected
+5. Theme Toggle — Dark / Light / System mode
+
+---
+
+[Live demo / video walkthrough]
+
+---
+
+==================================================
+Slide 17 — Conclusion
+==================================================
+
+##################################################
+# 🎯 Key Takeaways
+##################################################
+
+--- What we built: ---
+Antara is a privacy-first, NLP-powered emotional wellness companion with a multi-layer analysis pipeline and an automated emergency safety net.
+
+--- NLP Contributions: ---
+1. 🤖 Local LLM — Empathetic dialogue generation (Llama 3.2:3b)
+2. 🚨 Crisis NLP — Pattern matching with negation handling
+3. 🏷️ Theme Extraction — Semantic keyword clustering
+4. 📈 Emotion Trajectory — Valence tracking across conversation
+5. 🌫️ Hedging Detection — Linguistic suppression identification
+6. ⚡ Inconsistency Detection — Contradiction analysis
+7. ❓ Adaptive Flow — NLP-driven conversation branching
+
+--- Impact: ---
+Antara demonstrates that NLP can be deployed responsibly to address real-world mental health access gaps — with privacy, empathy, and safety at its core.
+
+---
+
+==================================================
+Slide 18 — Q&A
+==================================================
+
+##################################################
+# 🙏 Thank You
+##################################################
+
+==================================================
+Antara — Because you deserve to be heard.
+==================================================
+
+---
+
+GitHub: [github.com/atho06/Antara-NLP-project](https://github.com/atho06/Antara-NLP-project)
+
+Tech Stack: Python · Streamlit · Ollama · Llama 3.2:3b · SQLite · FastAPI
+
+Team: [Your Names Here]
+
+---
+
+"The goal of mental health treatment is not the absence of pain, but the ability to live with it." — Adapted from DBT
+
+---
+
+==================================================
+📋 Speaker Notes
+==================================================
+
+--- Slide 2 (Problem): ---
+Mention that India has one of the highest burdens of mental illness but severely lacks infrastructure. This sets up why a self-help app like Antara is needed.
+
+--- Slide 4 (Architecture): ---
+Walk through the diagram left to right. Emphasize that every box in the NLP Analysis Pipeline is a separate Python module with its own NLP technique.
+
+--- Slide 5 (Lia): ---
+Stress that Lia runs entirely locally — no API key, no internet, no data leaving the device. This is unusual and important.
+
+--- Slide 6 (Crisis Detection): ---
+This is a good moment to show a quick code snippet of the regex patterns if time allows. Mention negation handling as a classic NLP challenge.
+
+--- Slide 8 (Pipeline): ---
+This is the most technical slide. Take your time. Each analyzer runs on every user message simultaneously. Together they form a multi-signal view of the user's emotional state.
+
+--- Slide 11 (Privacy): ---
+Anticipate the question: "What if someone is really in danger?" Answer: The emergency SMS is the bridge to real-world help. The app never claims to be a crisis line.
+
+--- Slide 14 (Ethics): ---
+Be prepared for questions about liability and clinical validity. The honest answer is: this is a research prototype, and real deployment needs professional oversight.
+
+--- Slide 16 (Demo): ---
+Have the app running on localhost:8501 before the presentation. Test the crisis trigger with a soft phrase like "I feel like I want to disappear" to show the safety UI without being alarming.

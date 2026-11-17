@@ -1,0 +1,353 @@
+﻿##################################################
+# 🎤 Antara — Presentation Script
+##################################################
+Total Time: 8 minutes | Ruthvika: 4 min (Slides 1–7) | Athira: 4 min (Slides 8–17)
+
+Read naturally — don't rush. Pause briefly between bullet points. The ⏸ symbol means take a 1-second breath.
+
+---
+
+##################################################
+# 👤 RUTHVIKA — Slides 1 to 7 (4 minutes)
+##################################################
+
+---
+
+==================================================
+Slide 1 — Title ⏱ ~15 seconds
+==================================================
+
+[Click to start the animation. Wait for ANTARA to appear on screen.]
+
+"Good morning everyone.
+I'm Ruthvika, and this is Antara — our AI-powered emotional wellness companion, built as part of our Natural Language Processing course. ⏸
+My teammate Athira and I will walk you through the problem it solves, the NLP techniques we used, and how the system works end-to-end."
+
+---
+
+==================================================
+Slide 2 — The Mental Health Gap ⏱ ~40 seconds
+==================================================
+
+[Click. Cards animate in one by one.]
+
+"Let's start with the problem.
+
+India has one of the highest burdens of mental illness in the world — around 200 million people affected. ⏸
+Yet there's only one psychiatrist for every 100,000 people.
+
+The barriers are real — therapy is expensive, stigma stops people from asking for help, and rural areas have almost no access at all. ⏸
+
+Even digital tools fail here. Static questionnaires and rigid forms miss emotional context — they can't tell if someone is actually fine or just saying they are.
+
+Antara is designed to fill this gap."
+
+---
+
+==================================================
+Slide 3 — What is Antara? ⏱ ~45 seconds
+==================================================
+
+[Click. Pillars float in.]
+
+"So what is Antara exactly?
+
+Antara is a self-help emotional wellness companion. Users chat with Lia, our empathetic AI, to process their feelings, do guided reflections, and practice wellness activities. ⏸
+
+There are four core pillars:
+
+Lia — the conversational AI, powered by a local language model.
+An NLP pipeline — five different analyzers running on every single user response in real-time.
+An Emergency Safety Net — if the app detects serious distress, it automatically sends an SMS to the user's trusted contact.
+And privacy-first design — everything runs locally. No data ever leaves the user's device."
+
+---
+
+==================================================
+Slide 4 — System Architecture ⏱ ~35 seconds
+==================================================
+
+[Click. Architecture boxes appear.]
+
+"Here's the full system architecture.
+
+The user interacts through a Streamlit web interface. ⏸
+That connects to three things in parallel: Lia, the crisis detector, and the adaptive question flow engine.
+
+All three feed into the NLP Analysis Pipeline — five independent Python modules running simultaneously. ⏸
+
+If the crisis detector fires at high severity, emergency_service.py dispatches an SMS. All session data is stored in SQLite locally, and Lia's LLM runs on Ollama — completely on-device, no internet needed."
+
+---
+
+==================================================
+Slide 5 — Lia: The Conversational AI Engine ⏱ ~55 seconds
+==================================================
+
+[Click. Table rows fade in.]
+
+"Let's talk about Lia — the heart of Antara.
+
+Lia is powered by llama3.2:3b, running locally via Ollama. No API key. No internet. No data ever sent to any cloud service. ⏸
+
+The NLP techniques we use here:
+
+Contextual language generation — the transformer model generates responses based on the entire conversation history.
+
+Prompt engineering — we crafted a system prompt that keeps Lia in a therapeutic, non-directive tone at all times. ⏸
+
+Multi-turn memory — the full conversation history is passed on every single call, so Lia always has context.
+
+Two key functions — generate_followup() creates an empathetic follow-up question, and generate_followup_acknowledgement() validates the user's feeling before probing deeper.
+
+And if Ollama isn't running? Lia falls back to a built-in acknowledgment library — the app never breaks."
+
+---
+
+==================================================
+Slide 6 — Crisis Detection System ⏱ ~50 seconds
+==================================================
+
+[Click. Flow diagram appears, then category cards.]
+
+"This is probably the most important NLP component — the crisis detection system.
+
+If a user expresses self-harm or suicidal ideation, the app must respond immediately. ⏸
+
+We built a 50+ pattern regex engine across four categories:
+- Self-harm patterns — things like 'want to hurt myself', 'cut myself'
+- Suicide ideation — 'want to die', 'end my life', 'suicidal'
+- Threats to others — 'want to kill someone'
+- Immediate danger — 'I am not safe', 'I cannot go on'
+
+The key NLP challenge here is negation handling. ⏸ We use a 60-character look-behind window. So the sentence 'I don't want to die' correctly evaluates as safe, while 'I want to die' triggers the crisis response.
+
+This is essential — without negation handling, we'd have too many false positives that could make the app feel alarming and untrustworthy."
+
+---
+
+==================================================
+Slide 7 — Adaptive Conversation Flow ⏱ ~40 seconds
+==================================================
+
+[Click. Flow steps appear, then theme table.]
+
+"The last component I'll cover is the adaptive question flow.
+
+Antara doesn't use a fixed questionnaire. ⏸ The conversation branches dynamically based on the NLP-detected emotional theme of the user's responses.
+
+We support six emotional themes:
+Anxiety, Sadness and Grief, Burnout, Relationship issues, Loneliness, and Physical or somatic concerns.
+
+Each theme maps to its own set of tailored questions. So someone who's anxious gets asked about their worry triggers and coping mechanisms — not the same questions as someone who's grieving. ⏸
+
+The session also starts by detecting the user's time preference — from a quick 5-minute check-in to a fully open-ended conversation. This adaptive branching is what makes Antara feel like a conversation, not a form.
+
+I'll now hand over to my teammate Athira, who will walk you through the NLP analysis pipeline and the remaining features."
+
+---
+---
+
+##################################################
+# 👤 ATHIRA — Slides 8 to 17 (4 minutes)
+##################################################
+
+---
+
+==================================================
+Slide 8 — The Multi-Layer NLP Analysis Pipeline ⏱ ~60 seconds
+==================================================
+
+[Click. Analyzer cards float in one by one.]
+
+"Thank you Ruthvika. Hi everyone, I'm Athira.
+
+While Ruthvika covered how Antara talks to users, I'll walk you through how it understands them — through five NLP analyzers running in the background on every response. ⏸
+
+First — the Hedging Detector. This catches epistemic minimizing language: phrases like 'I guess', 'just a bit', 'probably nothing', 'I don't want to be a burden.' These are signals of emotional suppression — the user is downplaying their distress. We detect four categories: minimizers, epistemic modals, diminutives, and self-doubt patterns. ⏸
+
+Second — the Emotion Trajectory Analyzer. This is a lexicon-based classifier across five emotion dimensions: anxiety and fear, sadness and despair, overwhelm and burnout, guilt and shame, and anger. It tracks the emotional arc across the entire session — are they getting better or worse? ⏸
+
+Third — the Theme Extractor. It clusters keywords into four clinical life domains: Work and Performance, Interpersonal Isolation, Somatic Dysregulation, and Perfectionism. This directly feeds the adaptive question flow Ruthvika described. ⏸
+
+Fourth — the Inconsistency Detector. This flags contradiction patterns — things like 'I'm totally fine, but I cry every morning.' That gap between what someone says and what they describe is a classic emotional masking signal. ⏸
+
+And fifth — the Edit Analyzer. This one is unique. It uses Python's SequenceMatcher to compare the original and edited version of a user's message — detecting when someone types something emotionally significant and then deletes it before sending. That self-censorship is itself meaningful data."
+
+---
+
+==================================================
+Slide 9 — Emergency Contact SMS System ⏱ ~35 seconds
+==================================================
+
+[Click. Flow and SMS box appear.]
+
+"When the crisis detector fires at high severity, the Emergency Service activates.
+
+It retrieves the user's pre-registered trusted contact, composes a compassionate SMS, dispatches it via Twilio or Fast2SMS, and logs the full alert to SQLite. ⏸
+
+The message is simple — it doesn't share any conversation content, just a brief notice to reach out. Privacy is protected at every step.
+
+If no SMS credentials are configured — say, in a demo environment — the system logs a simulated dispatch so the app never fails or crashes.
+
+And critically: the user registered their emergency contact voluntarily during sign-up. It's fully consent-based."
+
+---
+
+==================================================
+Slide 10 — User Experience Walkthrough ⏱ ~25 seconds
+==================================================
+
+[Click. Steps appear.]
+
+"The user journey through Antara is straightforward.
+
+Register with an emergency contact. Choose a conversation mode. Do a quick emotional check-in using 8 quick-response chip options. Chat with Lia through adaptive questions. If the crisis path triggers, the safety UI appears and the SMS is sent. And optionally, do wellness activities — breathing exercises, grounding techniques, journaling. ⏸
+
+The sidebar also has a theme toggle — Light mode, Dark mode, or System mode — because a calming visual environment matters during sensitive conversations."
+
+---
+
+==================================================
+Slide 11 — Privacy-First Architecture ⏱ ~20 seconds
+==================================================
+
+[Click.]
+
+"Privacy is a core design principle, not an afterthought.
+
+The LLM runs entirely on-device via Ollama — zero data sent to OpenAI or any cloud. Session data lives in SQLite on the user's machine. No telemetry. Passwords are hashed. The edit analyzer detects patterns but never stores raw text. ⏸
+
+This is an academic prototype — production deployment would require encryption at rest, audit logs, and regulatory compliance."
+
+---
+
+==================================================
+Slide 12 — Technology Stack ⏱ ~20 seconds
+==================================================
+
+[Click.]
+
+"Quick overview of the stack:
+
+Streamlit for the web UI — rapid prototyping for ML and NLP apps.
+Ollama with llama3.2:3b for local language model inference.
+Python for all five NLP modules.
+SQLite for all storage — zero config, runs anywhere.
+FastAPI as the backend REST API.
+Twilio or Fast2SMS for emergency SMS.
+And CSS injected via Streamlit for the Light, Dark, and System themes."
+
+---
+
+==================================================
+Slide 13 — NLP at Every Layer ⏱ ~20 seconds
+==================================================
+
+[Click.]
+
+"To summarize where NLP is active across the system:
+
+At the input layer — tokenization, regex normalization, skip-phrase detection.
+At the semantic layer — theme clustering, valence scoring, hedging patterns, contradiction detection, and edit delta analysis.
+At the generation layer — transformer LLM with multi-turn dialogue and prompt engineering.
+And at the safety layer — 50+ crisis regex patterns with negation look-behind and severity routing that triggers the emergency SMS.
+
+Antara is a complete, multi-signal NLP pipeline — not just a chatbot."
+
+---
+
+==================================================
+Slide 14 — Ethical Considerations ⏱ ~20 seconds
+==================================================
+
+[Click.]
+
+"An important note on ethics.
+
+Antara is not a diagnostic tool. It is not a replacement for a licensed therapist. It is not a crisis line. ⏸
+
+We built consent, transparency, local-first privacy, and non-directive design into every layer. Lia listens and reflects — she never diagnoses or prescribes.
+
+This is an academic prototype. Any real-world deployment would require institutional review, clinical validation, and regulatory compliance."
+
+---
+
+==================================================
+Slide 15 — Future Scope ⏱ ~20 seconds
+==================================================
+
+[Click.]
+
+"Looking ahead, there are several exciting directions:
+
+An Android app — the APK build workflow is already in our GitHub repo.
+Multilingual support for Hindi, Malayalam, and Tamil — critical for accessibility across India.
+Voice input mode for users who prefer speaking.
+Long-term mood tracking across multiple sessions.
+Full Twilio production integration with verified sender numbers.
+And end-to-end encryption for a production-ready deployment."
+
+---
+
+==================================================
+Slide 16 — Conclusion ⏱ ~30 seconds
+==================================================
+
+[Click.]
+
+"To wrap up:
+
+Antara demonstrates that NLP can be deployed responsibly to bridge real-world mental health access gaps. ⏸
+
+We built eight distinct NLP techniques into a single cohesive system:
+Local LLM generation, crisis regex with negation handling, theme extraction, emotion trajectory tracking, hedging detection, inconsistency detection, edit analysis, and adaptive conversation flow.
+
+Combined with privacy-first architecture, an automated emergency safety net, and empathetic design — we believe Antara is a meaningful step toward making mental health support more accessible, more human, and more safe.
+
+Thank you."
+
+---
+
+==================================================
+Slide 17 — Thank You ⏱ ~10 seconds
+==================================================
+
+[Smile. Wait for applause to settle.]
+
+"We're happy to take any questions!"
+
+Demo tip: If the teacher asks for a live demo, navigate to localhost:8501. To trigger the crisis UI, type something like "I feel like I want to disappear" — it's evocative enough to show the safety screen without being distressing.
+
+---
+
+##################################################
+# ⏱ Full Timing Reference
+##################################################
+
+| Slide | Speaker | Content | Time |
+|---|---|---|---|
+| 1 | Ruthvika | Title | 0:15 |
+| 2 | Ruthvika | Problem Statement | 0:40 |
+| 3 | Ruthvika | What is Antara? | 0:45 |
+| 4 | Ruthvika | Architecture | 0:35 |
+| 5 | Ruthvika | Lia / LLM Engine | 0:55 |
+| 6 | Ruthvika | Crisis Detection | 0:50 |
+| 7 | Ruthvika | Adaptive Flow | 0:40 |
+| TOTAL | Ruthvika | | ~4:00 |
+| 8 | Athira | NLP Pipeline (5 analyzers) | 1:00 |
+| 9 | Athira | Emergency SMS | 0:35 |
+| 10 | Athira | UX Walkthrough | 0:25 |
+| 11 | Athira | Privacy | 0:20 |
+| 12 | Athira | Tech Stack | 0:20 |
+| 13 | Athira | NLP Innovations | 0:20 |
+| 14 | Athira | Ethics | 0:20 |
+| 15 | Athira | Future Scope | 0:20 |
+| 16 | Athira | Conclusion | 0:30 |
+| 17 | Athira | Thank You | 0:10 |
+| TOTAL | Athira | | ~4:00 |
+
+---
+
+Handover line (end of Slide 7): "I'll now hand over to my teammate Athira, who will walk you through the NLP analysis pipeline and the remaining features."
+Athira's opening (Slide 8): "Thank you Ruthvika. Hi everyone, I'm Athira. While Ruthvika covered how Antara talks to users, I'll walk you through how it understands them..."
