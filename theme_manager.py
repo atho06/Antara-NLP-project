@@ -89,6 +89,37 @@ section[data-testid="stSidebar"] .stButton > button {
     border-radius: 14px !important;
     font-weight: 600 !important;
     min-height: 45px;
+    box-shadow: none !important;
+    transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease !important;
+}
+
+section[data-testid="stSidebar"] .stButton > button:hover {
+    background: #d4e6ff !important;
+    color: #1e3350 !important;
+    border-color: #7daeed !important;
+}
+
+section[data-testid="stSidebar"] .stButton > button:active {
+    background: #bed8fc !important;
+    color: #162840 !important;
+    border-color: #6a9ee5 !important;
+    box-shadow: inset 0 2px 4px rgba(37, 59, 92, 0.12) !important;
+}
+
+section[data-testid="stSidebar"] .stButton > button:focus,
+section[data-testid="stSidebar"] .stButton > button:focus-visible {
+    background: #d4e6ff !important;
+    color: #1e3350 !important;
+    border-color: #6a9ee5 !important;
+    box-shadow: 0 0 0 3px rgba(145, 186, 240, 0.4) !important;
+    outline: none !important;
+}
+
+section[data-testid="stSidebar"] .stButton > button:focus:not(:focus-visible) {
+    background: #e8f2ff !important;
+    color: #253b5c !important;
+    border-color: #91baf0 !important;
+    box-shadow: none !important;
 }
 
 [data-testid="stTextInput"] [data-baseweb="input"],
@@ -98,16 +129,36 @@ section[data-testid="stSidebar"] .stButton > button {
     background: #E8F2FF !important;
     border: 1px solid #A9C9F5 !important;
     border-radius: 14px !important;
+    box-shadow: none !important;
+    transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+[data-testid="stTextInput"] [data-baseweb="base-input"]:focus-within,
+[data-testid="stTextArea"] [data-baseweb="textarea"]:focus-within,
+[data-testid="stNumberInput"] [data-baseweb="base-input"]:focus-within,
+.stSelectbox div[data-baseweb="select"]:focus-within > div {
+    background: #d6e7ff !important;
+    border: 1px solid #6b9fe8 !important;
+    box-shadow: 0 0 0 2px rgba(107, 159, 232, 0.28) !important;
 }
 
 [data-testid="stTextInput"] input,
 [data-testid="stNumberInput"] input,
 [data-testid="stTextArea"] textarea {
-    background: #E8F2FF !important;
+    background: transparent !important;
     color: #222 !important;
     -webkit-text-fill-color: #222 !important;
     border: none !important;
     caret-color: #3979e8 !important;
+    box-shadow: none !important;
+}
+
+[data-testid="stTextInput"] input:focus,
+[data-testid="stNumberInput"] input:focus,
+[data-testid="stTextArea"] textarea:focus {
+    background: transparent !important;
+    outline: none !important;
+    box-shadow: none !important;
 }
 
 [data-testid="stDateInput"] input {
@@ -115,6 +166,14 @@ section[data-testid="stSidebar"] .stButton > button {
     color: #222 !important;
     border: 1px solid #A9C9F5 !important;
     border-radius: 14px !important;
+    transition: background 0.2s ease, border-color 0.2s ease !important;
+}
+
+[data-testid="stDateInput"] input:focus {
+    background: #d6e7ff !important;
+    border: 1px solid #6b9fe8 !important;
+    box-shadow: 0 0 0 2px rgba(107, 159, 232, 0.28) !important;
+    outline: none !important;
 }
 
 .stSelectbox div[data-baseweb="select"] > div,
@@ -122,9 +181,11 @@ section[data-testid="stSidebar"] .stButton > button {
     background: #E8F2FF !important;
     border: 1px solid #A9C9F5 !important;
     border-radius: 12px !important;
+    transition: background 0.2s ease, border-color 0.2s ease !important;
 }
 
-.stSelectbox div[data-baseweb="select"] * {
+.stSelectbox div[data-baseweb="select"] *,
+.stMultiSelect div[data-baseweb="select"] * {
     color: #222 !important;
 }
 
@@ -138,10 +199,47 @@ section[data-testid="stSidebar"] .stButton > button {
     font-weight: 600 !important;
     padding: 12px 18px !important;
     box-shadow: none !important;
+    outline: none !important;
+    transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease !important;
 }
 
-.stButton > button:hover {
-    background: #9fc8ff !important;
+.stButton > button:hover,
+.stDownloadButton > button:hover,
+[data-testid="stFormSubmitButton"] button:hover {
+    background: #a3c9fc !important;
+    color: #1e3350 !important;
+    border-color: #7daeed !important;
+}
+
+.stButton > button:active,
+.stDownloadButton > button:active,
+[data-testid="stFormSubmitButton"] button:active {
+    background: #8ebef8 !important;
+    color: #162840 !important;
+    border-color: #6a9ee5 !important;
+    box-shadow: inset 0 2px 4px rgba(37, 59, 92, 0.15) !important;
+}
+
+.stButton > button:focus,
+.stButton > button:focus-visible,
+.stDownloadButton > button:focus,
+.stDownloadButton > button:focus-visible,
+[data-testid="stFormSubmitButton"] button:focus,
+[data-testid="stFormSubmitButton"] button:focus-visible {
+    background: #a3c9fc !important;
+    color: #1e3350 !important;
+    border-color: #6a9ee5 !important;
+    box-shadow: 0 0 0 3px rgba(145, 186, 240, 0.45) !important;
+    outline: none !important;
+}
+
+.stButton > button:focus:not(:focus-visible),
+.stDownloadButton > button:focus:not(:focus-visible),
+[data-testid="stFormSubmitButton"] button:focus:not(:focus-visible) {
+    background: #b9d8ff !important;
+    color: #253b5c !important;
+    border-color: #91baf0 !important;
+    box-shadow: none !important;
 }
 
 .login-card {
@@ -233,11 +331,53 @@ section[data-testid="stSidebar"] .stButton > button {
     border: 2px solid #91baf0 !important;
     border-radius: 25px !important;
     overflow: hidden !important;
+    box-shadow: none !important;
+    transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+[data-testid="stChatInput"]:focus-within {
+    background: #d6e7ff !important;
+    border: 2px solid #6b9fe8 !important;
+    box-shadow: 0 0 0 3px rgba(107, 159, 232, 0.28) !important;
+}
+
+[data-testid="stChatInput"] > div,
+[data-testid="stChatInput"] div[data-baseweb="base-input"],
+[data-testid="stChatInput"] div[data-baseweb="textarea"] {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
 }
 
 [data-testid="stChatInput"] textarea {
-    background: #E8F2FF !important;
-    color: #222 !important;
+    background: transparent !important;
+    color: #222222 !important;
+    -webkit-text-fill-color: #222222 !important;
+    caret-color: #3979e8 !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+[data-testid="stChatInput"] textarea:focus {
+    background: transparent !important;
+    color: #222222 !important;
+    -webkit-text-fill-color: #222222 !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+[data-testid="stChatInputSubmitButton"] {
+    background: transparent !important;
+    color: #3979e8 !important;
+    transition: background 0.2s ease !important;
+}
+
+[data-testid="stChatInputSubmitButton"]:hover {
+    background: rgba(145, 186, 240, 0.25) !important;
+}
+
+[data-testid="stChatInputSubmitButton"] svg {
+    fill: #3979e8 !important;
 }
 
 .quick-heading {
@@ -584,7 +724,7 @@ COMMON_CSS = """
     visibility: hidden;
 }
 
-/* Smooth gradual theme transitions */
+/* Smooth gradual theme transitions for layout containers */
 html, body, .stApp,
 [data-testid="stAppViewContainer"],
 [data-testid="stMain"],
@@ -602,16 +742,12 @@ header[data-testid="stHeader"],
 .bot-bubble,
 .user-bubble,
 .sidebar-profile,
-[data-testid="stForm"],
-.stButton > button,
-[data-testid="stTextInput"] [data-baseweb="input"],
-[data-testid="stTextArea"] [data-baseweb="textarea"],
-div[data-baseweb="select"] > div {
-    transition: background 0.9s cubic-bezier(0.25, 0.8, 0.25, 1),
-                background-color 0.9s cubic-bezier(0.25, 0.8, 0.25, 1),
+[data-testid="stForm"] {
+    transition: background 0.85s cubic-bezier(0.25, 0.8, 0.25, 1),
+                background-color 0.85s cubic-bezier(0.25, 0.8, 0.25, 1),
                 color 0.65s ease-in-out,
                 border-color 0.85s ease-in-out,
-                box-shadow 0.9s ease-in-out !important;
+                box-shadow 0.85s ease-in-out !important;
 }
 
 @keyframes themeGradualFade {
