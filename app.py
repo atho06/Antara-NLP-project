@@ -32,6 +32,7 @@ from database import (
     complete_patient_session,
     get_patient_details,
     update_patient_details,
+    change_patient_password,
     get_connection,
     hash_password
 )
@@ -148,6 +149,7 @@ DEFAULTS = {
     "app_theme": "⚙️ System",
 
     "show_dashboard": True,
+    "show_settings": False,
 
     "started": False,
     "consent_given": False,
@@ -1015,6 +1017,16 @@ def show_sidebar():
 
         if not st.session_state.logged_in:
             st.caption("Sign in to access your confidential wellness conversations.")
+            st.divider()
+            if st.session_state.get("show_settings", False):
+                if st.button("❌ Close Settings", key="sidebar_close_settings_loggedout", use_container_width=True):
+                    st.session_state.show_settings = False
+                    st.rerun()
+            else:
+                if st.button("⚙️ Settings", key="sidebar_open_settings_loggedout", use_container_width=True):
+                    st.session_state.show_settings = True
+                    st.rerun()
+            st.caption("🌷 Antara | Your feelings matter.")
             return
 
         first_name = (
@@ -1211,6 +1223,18 @@ def show_sidebar():
             st.session_state.emergency_alert_sent = False
             auto_save()
             st.rerun()
+
+        st.divider()
+
+        # ⚙️ Settings at the bottom of the sidebar
+        if st.session_state.get("show_settings", False):
+            if st.button("❌ Close Settings", key="sidebar_close_settings_btn", use_container_width=True):
+                st.session_state.show_settings = False
+                st.rerun()
+        else:
+            if st.button("⚙️ Settings", key="sidebar_open_settings_btn", use_container_width=True):
+                st.session_state.show_settings = True
+                st.rerun()
 
         st.caption(
             "🌷 Antara | Your feelings matter."
@@ -3444,17 +3468,29 @@ def show_patient_dashboard():
             </div>
             """, unsafe_allow_html=True)
 
-        if st.button(
-            "🌷 Start a New Conversation",
-            key="home_new_session",
-            use_container_width=True
-        ):
+        home_btn_c1, home_btn_c2 = st.columns([1, 1])
 
-            start_new_session()
+        with home_btn_c1:
+            if st.button(
+                "🌷 Start a New Conversation",
+                key="home_new_session",
+                use_container_width=True
+            ):
 
-            st.session_state.show_dashboard = False
+                start_new_session()
 
-            st.rerun()
+                st.session_state.show_dashboard = False
+
+                st.rerun()
+
+        with home_btn_c2:
+            if st.button(
+                "⚙️ Settings & Preferences",
+                key="home_open_settings",
+                use_container_width=True
+            ):
+                st.session_state.show_settings = True
+                st.rerun()
 
         # RECENT ACTIVITY
 
@@ -4089,12 +4125,459 @@ def show_chat():
 
 
 # ==========================================================
+# 26. SETTINGS & PREFERENCES
+# ==========================================================
+
+def show_settings_page():
+
+    # Top Header & Back Navigation
+    col_title, col_btn = st.columns([3, 1])
+
+    with col_title:
+        st.markdown("""
+        <div style="margin-bottom: 8px;">
+            <h1 style="margin:0; font-size:1.85rem; font-weight:700;">⚙️ Settings & Preferences</h1>
+            <p style="margin:4px 0 0 0; opacity:0.8; font-size:0.95rem;">
+                Manage your account, emergency safety network, conversation flow, themes, and data.
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with col_btn:
+        if st.session_state.started and not st.session_state.get("show_dashboard", False):
+            back_lbl = "⬅️ Back to Chat"
+        else:
+            back_lbl = "⬅️ Back to Dashboard"
+
+        if st.button(back_lbl, key="settings_top_back_btn", use_container_width=True):
+            st.session_state.show_settings = False
+            st.rerun()
+
+    st.write("")
+
+    tab_account, tab_emergency, tab_theme, tab_conv, tab_privacy, tab_about = st.tabs([
+        "👤 Account Details",
+        "🆘 Emergency Contacts",
+        "🎨 Theme & Visuals",
+        "💬 Conversation",
+        "🛡️ Privacy & Data",
+        "ℹ️ About Antara"
+    ])
+
+    patient_id = st.session_state.get("patient_id")
+    patient = get_patient_details(patient_id) if patient_id else {}
+    if not patient:
+        patient = {}
+
+    # ==========================================================
+    # TAB 1: 👤 ACCOUNT DETAILS
+    # ==========================================================
+    with tab_account:
+        if not st.session_state.logged_in:
+            st.info("Please sign in or create an account to view and update your personal details.")
+        else:
+            st.markdown("### 👤 Personal Account Information")
+            st.caption("Keep your profile information up-to-date for your personalized wellness companion.")
+
+            acc_col1, acc_col2 = st.columns(2)
+            with acc_col1:
+                st.text_input("Account ID", value=str(patient_id or ""), disabled=True, help="Your unique confidential identifier.")
+                acc_name = st.text_input("Full Name", value=patient.get("full_name") or st.session_state.patient_name or "", key="set_acc_name")
+                acc_phone = st.text_input("Phone Number", value=patient.get("phone") or "", key="set_acc_phone", placeholder="+91...")
+                acc_age = st.number_input("Age", min_value=10, max_value=120, value=int(patient.get("age") or 21), key="set_acc_age")
+            with acc_col2:
+                st.text_input("Email Address", value=str(st.session_state.patient_email or patient.get("email") or ""), disabled=True, help="Registered email address.")
+                acc_dob = st.text_input("Date of Birth (YYYY-MM-DD)", value=patient.get("date_of_birth") or "", key="set_acc_dob", placeholder="YYYY-MM-DD")
+                acc_city = st.text_input("City", value=patient.get("city") or "", key="set_acc_city")
+                acc_state = st.text_input("State", value=patient.get("state") or "", key="set_acc_state")
+
+            loc_col1, loc_col2 = st.columns(2)
+            with loc_col1:
+                acc_locality = st.text_input("Locality / Area", value=patient.get("locality") or "", key="set_acc_locality")
+            with loc_col2:
+                acc_pincode = st.text_input("Pincode", value=patient.get("pincode") or "", key="set_acc_pincode")
+
+            acc_note = st.text_area(
+                "Personal Pre-Session Notes (Optional notes or topics you'd like Lia to keep in mind)",
+                value=patient.get("pre_session_note") or "",
+                key="set_acc_notes"
+            )
+
+            if st.button("💾 Save Profile Changes", key="btn_save_profile_settings", use_container_width=True):
+                updates = {
+                    "full_name": acc_name.strip(),
+                    "phone": acc_phone.strip(),
+                    "age": int(acc_age),
+                    "date_of_birth": acc_dob.strip(),
+                    "city": acc_city.strip(),
+                    "state": acc_state.strip(),
+                    "locality": acc_locality.strip(),
+                    "pincode": acc_pincode.strip(),
+                    "pre_session_note": acc_note.strip()
+                }
+                success = update_patient_details(patient_id, updates)
+                if success:
+                    st.session_state.patient_name = acc_name.strip()
+                    st.success("✅ Profile information updated successfully! 🌸")
+                    st.rerun()
+                else:
+                    st.error("Unable to save profile changes. Please try again.")
+
+            st.write("")
+            st.divider()
+
+            # Security / Change Password Section
+            st.markdown("### 🔒 Security & Password")
+            st.caption("Change your account password below.")
+
+            pwd_col1, pwd_col2 = st.columns(2)
+            with pwd_col1:
+                cur_pwd = st.text_input("Current Password", type="password", key="set_cur_pwd")
+            with pwd_col2:
+                new_pwd = st.text_input("New Password (min 6 characters)", type="password", key="set_new_pwd")
+                confirm_pwd = st.text_input("Confirm New Password", type="password", key="set_confirm_pwd")
+
+            if st.button("🔑 Update Password", key="btn_update_password", use_container_width=True):
+                if not cur_pwd or not new_pwd:
+                    st.warning("Please fill out all password fields.")
+                elif new_pwd != confirm_pwd:
+                    st.error("New password and confirmation do not match.")
+                elif len(new_pwd) < 6:
+                    st.error("New password must be at least 6 characters.")
+                else:
+                    ok, msg = change_patient_password(patient_id, cur_pwd, new_pwd)
+                    if ok:
+                        st.success(f"✅ {msg}")
+                    else:
+                        st.error(f"❌ {msg}")
+
+    # ==========================================================
+    # TAB 2: 🆘 EMERGENCY CONTACTS
+    # ==========================================================
+    with tab_emergency:
+        st.markdown("### 🆘 Trusted Emergency Safety Contact")
+        st.write(
+            "Antara is a self-help wellness tool. If you ever express acute distress, crisis, or ask for help, "
+            "Antara can automatically dispatch an urgent SMS notification to your trusted contact."
+        )
+
+        emg_col1, emg_col2 = st.columns(2)
+        with emg_col1:
+            emg_name = st.text_input(
+                "Trusted Contact Full Name",
+                value=patient.get("trusted_contact_name") or "",
+                key="set_emg_name",
+                placeholder="e.g., Mom, Sarah, Alex..."
+            )
+            rel_options = ["Parent", "Partner / Spouse", "Sibling", "Close Friend", "Therapist / Counselor", "Guardian", "Relative", "Other"]
+            cur_rel = patient.get("trusted_contact_relationship") or "Parent"
+            rel_idx = rel_options.index(cur_rel) if cur_rel in rel_options else 0
+            emg_rel = st.selectbox("Relationship to you", rel_options, index=rel_idx, key="set_emg_rel")
+
+        with emg_col2:
+            emg_phone = st.text_input(
+                "Contact Phone Number (Include country code e.g. +91XXXXXXXXXX)",
+                value=patient.get("trusted_contact_number") or "",
+                key="set_emg_phone",
+                placeholder="+91..."
+            )
+            emg_consent = st.checkbox(
+                "I give consent for Antara to dispatch an emergency SMS alert to this contact if severe distress is detected",
+                value=bool(patient.get("emergency_alert_consent", 1)),
+                key="set_emg_consent"
+            )
+            emg_agree = st.checkbox(
+                "I have informed this person that they are listed as my emergency contact",
+                value=bool(patient.get("trusted_contact_agreement", 1)),
+                key="set_emg_agree"
+            )
+
+        decline_reason = ""
+        if not emg_consent:
+            decline_reason = st.text_input(
+                "Reason for declining automated emergency alert (Optional)",
+                value=patient.get("reason_for_declining") or "",
+                key="set_emg_decline"
+            )
+
+        if st.button("💾 Save Emergency Contact Details", key="btn_save_emergency_contact", use_container_width=True):
+            if patient_id:
+                emg_updates = {
+                    "trusted_contact_name": emg_name.strip(),
+                    "trusted_contact_relationship": emg_rel,
+                    "trusted_contact_number": emg_phone.strip(),
+                    "emergency_alert_consent": 1 if emg_consent else 0,
+                    "trusted_contact_agreement": 1 if emg_agree else 0,
+                    "reason_for_declining": decline_reason.strip()
+                }
+                success = update_patient_details(patient_id, emg_updates)
+                if success:
+                    st.success("✅ Emergency contact details saved! 💗")
+                    st.rerun()
+                else:
+                    st.error("Unable to save emergency contact.")
+            else:
+                st.info("Sign in to save this permanently.")
+
+        st.write("")
+        st.divider()
+
+        st.markdown("#### 📲 Test Emergency Dispatch")
+        st.caption("Verify your contact number with a live test alert (Twilio or verified safety receipt).")
+
+        if st.button("🚨 Send Test Alert to My Contact", key="btn_send_test_alert", use_container_width=True):
+            target_phone = emg_phone.strip() or patient.get("trusted_contact_number")
+            target_name = emg_name.strip() or patient.get("trusted_contact_name") or "Emergency Contact"
+            if not target_phone:
+                st.warning("Please enter a valid phone number above first.")
+            else:
+                with st.spinner("Dispatching test alert..."):
+                    res = send_emergency_sms(
+                        patient_id=str(patient_id or "TEST-USER"),
+                        session_id=str(st.session_state.session_id or "TEST-SESSION"),
+                        contact_name=target_name,
+                        contact_number=target_phone,
+                        user_name=str(st.session_state.patient_name or "Antara User"),
+                        reason="Test SMS Notification from Settings"
+                    )
+                if res.get("success"):
+                    st.success(f"✅ Alert dispatched! Alert ID: `{res.get('alert_id')}` via `{res.get('provider')}` at {res.get('timestamp')}")
+                else:
+                    st.error(f"❌ Failed: {res.get('error')}")
+
+        st.write("")
+        st.markdown("#### 📞 24/7 Crisis Helplines Directory")
+        st.caption("Confidential, free, professional support available 24 hours a day.")
+
+        hl_col1, hl_col2 = st.columns(2)
+        with hl_col1:
+            st.markdown("""
+            - **Tele-MANAS (Govt. of India)**: `14416` or `1800-891-4416`
+            - **Vandrevala Foundation**: `9999 666 555`
+            - **KIRAN Mental Health**: `1800-599-0019`
+            """)
+        with hl_col2:
+            st.markdown("""
+            - **NIMHANS Psychosocial Helpline**: `080-46110007`
+            - **AASRA Suicide Prevention**: `9820466726`
+            - **Emergency Ambulance**: `112`
+            """)
+
+    # ==========================================================
+    # TAB 3: 🎨 THEME & VISUALS
+    # ==========================================================
+    with tab_theme:
+        st.markdown("### 🎨 Theme & Visual Preferences")
+        st.caption("Tailor Antara's appearance to whatever feels most relaxing and comfortable for your eyes.")
+
+        cur_theme = st.session_state.get("app_theme", "⚙️ System")
+        theme_options = ["⚙️ System", "☀️ Light", "🌙 Dark"]
+        t_idx = theme_options.index(cur_theme) if cur_theme in theme_options else 0
+
+        selected_theme = st.radio(
+            "Select Appearance Theme:",
+            theme_options,
+            index=t_idx,
+            key="set_theme_radio",
+            horizontal=True
+        )
+        if selected_theme != cur_theme:
+            st.session_state.app_theme = selected_theme
+            st.rerun()
+
+        st.write("")
+        st.info("✨ **Gradual Fade Transition:** Antara uses smooth 0.85s keyframe bloom transitions for natural, gentle theme switching that doesn't jar your eyes.")
+
+        st.markdown("#### 👁️ Text & Readability")
+        font_scale = st.radio(
+            "Reading Size / Legibility:",
+            ["Normal (Default)", "Comfortable (+10%)", "Large (+20%)"],
+            index=0,
+            key="set_font_scale_radio",
+            horizontal=True
+        )
+        st.session_state.font_scale = font_scale
+
+        st.markdown("#### 🎨 Live Palette Preview")
+        preview_col1, preview_col2 = st.columns(2)
+        with preview_col1:
+            st.markdown("""
+            <div style="padding:14px; border-radius:12px; border:1px solid #d8c9ed; margin-bottom:10px;">
+                <p style="margin:0; font-weight:600; font-size:13px;">Assistant Message Bubble</p>
+                <p style="margin:6px 0 0 0; font-size:14px;">"Take all the time you need. I'm right here with you 🌸"</p>
+            </div>
+            """, unsafe_allow_html=True)
+        with preview_col2:
+            st.markdown("""
+            <div style="padding:14px; border-radius:12px; border:1px solid #c7d2fe; margin-bottom:10px; text-align:right;">
+                <p style="margin:0; font-weight:600; font-size:13px;">User Message Bubble</p>
+                <p style="margin:6px 0 0 0; font-size:14px;">"I'm feeling a little calmer now, thank you."</p>
+            </div>
+            """, unsafe_allow_html=True)
+
+    # ==========================================================
+    # TAB 4: 💬 CONVERSATION PREFERENCES
+    # ==========================================================
+    with tab_conv:
+        st.markdown("### 💬 Conversation & Chat Experience")
+        st.caption("Set your default chat durations, pacing, and interaction style.")
+
+        dur_col1, dur_col2 = st.columns(2)
+        with dur_col1:
+            def_dur = st.session_state.get("time_available") or "5 minutes"
+            dur_idx = TIME_OPTIONS.index(def_dur) if def_dur in TIME_OPTIONS else 0
+            pref_dur = st.selectbox("Default Check-in Duration", TIME_OPTIONS, index=dur_idx, key="set_pref_duration")
+
+            pref_mode = st.radio(
+                "Conversation Depth & Style",
+                list(CONVERSATION_MODES.keys()),
+                index=1,
+                key="set_pref_mode"
+            )
+
+        with dur_col2:
+            pref_checkin = st.radio(
+                "Engagement & Fatigue Check-ins",
+                [
+                    "Standard (Periodic check-ins after 3 and 8 questions)",
+                    "Frequent (Check in every 3 questions)",
+                    "Only On-Demand (Only when I click 'Need a break?')"
+                ],
+                index=0,
+                key="set_pref_checkin_freq"
+            )
+
+            pref_quick = st.checkbox("Show quick-reply buttons under questions", value=True, key="set_pref_quick_opts")
+            pref_ack = st.checkbox("Show Lia's empathetic reflection after answers", value=True, key="set_pref_ack")
+
+        if st.button("💾 Save Conversation Preferences", key="btn_save_conv_prefs", use_container_width=True):
+            st.session_state.time_available = pref_dur
+            st.session_state.conversation_mode = pref_mode
+            st.session_state.pref_checkin_freq = pref_checkin
+            st.session_state.pref_quick_opts = pref_quick
+            st.session_state.pref_ack = pref_ack
+            st.success("✅ Conversation preferences saved!")
+
+    # ==========================================================
+    # TAB 5: 🛡️ PRIVACY & DATA MANAGEMENT
+    # ==========================================================
+    with tab_privacy:
+        st.markdown("### 🛡️ Privacy & Confidentiality")
+        st.write(
+            "Antara is built from the ground up for strict confidentiality. "
+            "All sessions, reflections, and contact details are stored **locally in your private SQLite database** "
+            "with PBKDF2 password encryption. Your conversations are never sold or sent to third-party ad networks."
+        )
+
+        sessions = get_history() if st.session_state.logged_in else []
+        completed_sessions = [s for s in sessions if s.get("status") == "completed"]
+        in_progress_sessions = [s for s in sessions if s.get("status") == "in_progress"]
+
+        st.markdown("#### 📊 Your Data Footprint")
+        stat_c1, stat_c2, stat_c3 = st.columns(3)
+        with stat_c1:
+            st.metric("Total Sessions", len(sessions))
+        with stat_c2:
+            st.metric("Completed", len(completed_sessions))
+        with stat_c3:
+            st.metric("In Progress", len(in_progress_sessions))
+
+        st.write("")
+        st.markdown("#### 📥 Export My Conversation History")
+        st.caption("You own your wellness journey. Download a full copy of your transcripts at any time.")
+
+        exp_c1, exp_c2 = st.columns(2)
+        with exp_c1:
+            # JSON Export
+            json_export_data = {
+                "patient_id": patient_id,
+                "patient_name": st.session_state.patient_name,
+                "exported_at": datetime.now().isoformat(),
+                "total_sessions": len(sessions),
+                "sessions": sessions
+            }
+            st.download_button(
+                label="📥 Download JSON Export",
+                data=json.dumps(json_export_data, indent=2),
+                file_name=f"antara_wellness_data_{patient_id or 'guest'}.json",
+                mime="application/json",
+                use_container_width=True
+            )
+
+        with exp_c2:
+            # Plaintext summary
+            txt_lines = [
+                f"Antara Wellness Companion — Personal Transcript Export",
+                f"Patient ID: {patient_id}",
+                f"Exported At: {datetime.now().strftime('%d %B %Y, %I:%M %p')}",
+                f"Total Sessions: {len(sessions)}",
+                "=" * 50,
+                ""
+            ]
+            for s in sessions:
+                txt_lines.append(f"Session ID: {s.get('session_id')} | Status: {s.get('status')} | Date: {s.get('created_at')}")
+                txt_lines.append("-" * 40)
+            txt_content = "\n".join(txt_lines)
+
+            st.download_button(
+                label="📄 Download Plaintext Summary (.txt)",
+                data=txt_content,
+                file_name=f"antara_summary_{patient_id or 'guest'}.txt",
+                mime="text/plain",
+                use_container_width=True
+            )
+
+        st.write("")
+        st.divider()
+
+        st.markdown("#### 🧹 Session Clean-up")
+        if st.session_state.started and not st.session_state.submitted:
+            st.warning("You currently have an active in-progress conversation.")
+            if st.button("🗑️ Discard In-Progress Session & Return to Dashboard", key="btn_discard_active_session"):
+                st.session_state.started = False
+                st.session_state.show_dashboard = True
+                st.session_state.show_settings = False
+                st.rerun()
+
+    # ==========================================================
+    # TAB 6: ℹ️ ABOUT ANTARA
+    # ==========================================================
+    with tab_about:
+        st.markdown("### ℹ️ About Antara")
+        st.markdown("""
+        **Antara** is a conversational self-help and emotional wellness companion.
+        Designed with empathy, cognitive reframing, and crisis safety at its core, 
+        Antara provides a gentle, unhurried space for daily emotional reflection and self-compassion.
+
+        ---
+
+        #### ⚙️ Technical System Info
+        - **Version**: `Antara v2.4 (NLP Self-Help Edition)`
+        - **NLP Engine**: Hybrid Architecture (Local LLM + Resilient Fallback Heuristics)
+        - **Storage**: Local SQLite Database with PBKDF2 Password Hashing
+        - **Emergency Alert**: Automated Twilio SMS Gateway & Fallback
+        - **Design System**: Smooth CSS Keyframe Bloom & Multi-Theme Engine
+
+        ---
+
+        #### 💡 Disclaimer
+        Antara is designed strictly as a supportive self-help conversational tool. 
+        It does not diagnose medical or psychological conditions, nor does it provide psychiatric medical advice. 
+        In emergency situations, always reach out to real-world healthcare professionals or local emergency helplines.
+        """)
+
+
+# ==========================================================
 # 27. MAIN APPLICATION
 # ==========================================================
 
 show_sidebar()
 
-if not st.session_state.logged_in:
+if st.session_state.get("show_settings", False):
+
+    show_settings_page()
+
+elif not st.session_state.logged_in:
 
     show_authentication_page()
 

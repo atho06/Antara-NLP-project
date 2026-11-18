@@ -878,7 +878,46 @@ def update_patient_details(patient_id, updates):
 
 
 # ==========================================================
-# 14. INITIALIZE DATABASE
+# 14. CHANGE PATIENT PASSWORD
+# ==========================================================
+
+def change_patient_password(patient_id, current_password, new_password):
+    if not patient_id or not current_password or not new_password:
+        return False, "All password fields are required."
+
+    if len(new_password) < 6:
+        return False, "New password must be at least 6 characters long."
+
+    connection = get_connection()
+    try:
+        user = connection.execute(
+            "SELECT password_hash, password_salt FROM patients WHERE patient_id = ?",
+            (patient_id,)
+        ).fetchone()
+
+        if not user:
+            return False, "Account not found."
+
+        if not verify_password(current_password, user["password_hash"], user["password_salt"]):
+            return False, "Current password does not match."
+
+        new_hash, new_salt = hash_password(new_password)
+        connection.execute(
+            "UPDATE patients SET password_hash = ?, password_salt = ? WHERE patient_id = ?",
+            (new_hash, new_salt, patient_id)
+        )
+        connection.commit()
+        return True, "Password changed successfully!"
+    except Exception as error:
+        connection.rollback()
+        print("Password change error:", error)
+        return False, f"Error updating password: {error}"
+    finally:
+        connection.close()
+
+
+# ==========================================================
+# 15. INITIALIZE DATABASE
 # ==========================================================
 
 init_db()
