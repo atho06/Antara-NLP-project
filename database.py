@@ -131,7 +131,10 @@ def init_db():
             "emergency_alert_consent": "INTEGER DEFAULT 0",
             "trusted_contact_agreement": "INTEGER DEFAULT 0",
             "reason_for_declining": "TEXT DEFAULT ''",
-            "pre_session_note": "TEXT DEFAULT ''"
+            "pre_session_note": "TEXT DEFAULT ''",
+            "email_verified": "INTEGER DEFAULT 0",
+            "phone_verified": "INTEGER DEFAULT 0",
+            "trusted_contact_verified": "INTEGER DEFAULT 0"
         }
 
         for column_name, column_type in new_columns.items():
@@ -828,7 +831,10 @@ def update_patient_details(patient_id, updates):
         "emergency_alert_consent",
         "trusted_contact_agreement",
         "reason_for_declining",
-        "pre_session_note"
+        "pre_session_note",
+        "email_verified",
+        "phone_verified",
+        "trusted_contact_verified"
     }
 
     if not isinstance(updates, dict):
@@ -875,6 +881,13 @@ def update_patient_details(patient_id, updates):
 
     finally:
         connection.close()
+
+
+def set_patient_verification(patient_id, field, is_verified=1):
+    valid_fields = {"email_verified", "phone_verified", "trusted_contact_verified"}
+    if field not in valid_fields:
+        return False
+    return update_patient_details(patient_id, {field: 1 if is_verified else 0})
 
 
 # ==========================================================

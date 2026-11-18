@@ -33,6 +33,7 @@ from database import (
     get_patient_details,
     update_patient_details,
     change_patient_password,
+    set_patient_verification,
     get_connection,
     hash_password
 )
@@ -150,6 +151,9 @@ DEFAULTS = {
 
     "show_dashboard": True,
     "show_settings": False,
+    "show_otp_ui_email": False,
+    "show_otp_ui_patient_phone": False,
+    "show_otp_ui_trusted_phone": False,
 
     "started": False,
     "consent_given": False,
@@ -231,6 +235,94 @@ def calculate_age(dob):
         today.year - dob.year
         - ((today.month, today.day) < (dob.month, dob.day))
     )
+
+
+# ==========================================================
+# 4B. EMAIL & CONTACT VERIFICATION HELPERS
+# ==========================================================
+
+def validate_email_format(email: str):
+    email = str(email or "").strip().lower()
+    if not email:
+        return False, "Email address cannot be empty."
+    if not re.fullmatch(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$", email):
+        return False, "Please enter a valid email format (e.g. name@example.com)."
+    return True, "Valid email format."
+
+
+def validate_phone_format(phone: str):
+    clean = re.sub(r"[^\d+]", "", str(phone or "").strip())
+    digits = re.sub(r"\D", "", clean)
+    if not digits:
+        return False, "Phone number cannot be empty."
+    if len(digits) < 10:
+        return False, "Phone number must contain at least 10 digits."
+    if len(digits) > 15:
+        return False, "Phone number cannot exceed 15 digits."
+    return True, "Valid phone number format."
+
+
+def send_verification_otp(channel: str, recipient: str, user_name: str = "User"):
+    import secrets
+    clean_recipient = str(recipient or "").strip()
+    if not clean_recipient:
+        return {"success": False, "error": "Recipient is required."}
+
+    otp = f"{secrets.randbelow(900000) + 100000}"
+    st.session_state[f"otp_store_{channel}"] = {
+        "code": otp,
+        "recipient": clean_recipient,
+        "sent_at": datetime.now().timestamp()
+    }
+    st.session_state[f"show_otp_ui_{channel}"] = True
+
+    # If it's a mobile number, dispatch verification SMS
+    if "phone" in channel:
+        clean_phone = re.sub(r"[^\d+]", "", clean_recipient)
+        try:
+            send_emergency_sms(
+                patient_id=str(st.session_state.get("patient_id") or "PAT-VERIFY"),
+                session_id=str(st.session_state.get("session_id") or "SESSION-VERIFY"),
+                contact_name=clean_recipient,
+                contact_number=clean_phone,
+                user_name=user_name,
+                reason=f"Verification OTP: {otp}"
+            )
+        except Exception as e:
+            print("OTP SMS dispatch notice:", e)
+
+    return {
+        "success": True,
+        "code": otp,
+        "recipient": clean_recipient,
+        "channel": channel
+    }
+
+
+def verify_entered_otp(channel: str, entered_code: str, patient_id: str):
+    stored = st.session_state.get(f"otp_store_{channel}")
+    if not stored:
+        return False, "No active verification code found. Please click 'Verify'."
+
+    # Expiration check (10 minutes)
+    if datetime.now().timestamp() - float(stored.get("sent_at", 0)) > 600:
+        return False, "Verification code has expired. Please request a new one."
+
+    if str(entered_code or "").strip() != str(stored.get("code", "")).strip():
+        return False, "Invalid verification code. Please check and try again."
+
+    field_map = {
+        "email": "email_verified",
+        "patient_phone": "phone_verified",
+        "trusted_phone": "trusted_contact_verified"
+    }
+    target_field = field_map.get(channel)
+    if target_field and patient_id:
+        set_patient_verification(patient_id, target_field, 1)
+
+    st.session_state.pop(f"otp_store_{channel}", None)
+    st.session_state[f"show_otp_ui_{channel}"] = False
+    return True, "Verification successful! 🌸"
 
 
 def display_message(message, sender="assistant"):
@@ -858,23 +950,18 @@ def show_authentication_page():
             if not full_name.strip():
                 errors.append("Enter your full name.")
 
-            if not re.fullmatch(
-                r"[^@\s]+@[^@\s]+\.[^@\s]+",
-                email.strip()
-            ):
+            valid_em, em_err = validate_email_format(email)
+            if not valid_em:
+                errors.append(em_err)
 
-                errors.append(
-                    "Enter a valid email address."
-                )
+            valid_p, p_err = validate_phone_format(phone)
+            if not valid_p:
+                errors.append(f"Phone Number: {p_err}")
 
-            if not re.fullmatch(
-                r"\d{10}",
-                phone.strip()
-            ):
-
-                errors.append(
-                    "Enter a valid 10-digit phone number."
-                )
+            if trusted_phone.strip():
+                valid_tp, tp_err = validate_phone_format(trusted_phone)
+                if not valid_tp:
+                    errors.append(f"Trusted Contact Phone: {tp_err}")
 
             for field, label in [
                 ("reg_locality", "Locality"),
@@ -928,14 +1015,9 @@ def show_authentication_page():
                         "Enter your trusted contact's name."
                     )
 
-                if not re.fullmatch(
-                    r"\d{10}",
-                    trusted_phone.strip()
-                ):
-
-                    errors.append(
-                        "Enter a valid trusted contact number."
-                    )
+                valid_tp, tp_err = validate_phone_format(trusted_phone)
+                if not valid_tp:
+                    errors.append(f"Trusted Contact Phone: {tp_err}")
 
                 if not trusted_agreement:
 
@@ -3715,6 +3797,30 @@ def show_patient_dashboard():
 
         if patient:
 
+            # Verification Status Summary
+            em_v = bool(patient.get("email_verified", 0))
+            ph_v = bool(patient.get("phone_verified", 0))
+            tc_v = bool(patient.get("trusted_contact_verified", 0))
+
+            v_col1, v_col2, v_col3 = st.columns(3)
+            with v_col1:
+                st.caption("📧 Email Verification")
+                st.markdown("🟢 **Verified**" if em_v else "🟠 **Unverified**")
+            with v_col2:
+                st.caption("📱 Mobile Verification")
+                st.markdown("🟢 **Verified**" if ph_v else "🟠 **Unverified**")
+            with v_col3:
+                st.caption("🆘 Safety Contact")
+                st.markdown("🟢 **Verified**" if tc_v else "🟠 **Unverified**")
+
+            if not (em_v and ph_v and tc_v):
+                st.info("💡 Complete verification for your email and contact numbers in **⚙️ Settings** to activate verified safety alerts.")
+                if st.button("⚙️ Open Settings to Verify", key="dash_profile_to_settings", use_container_width=True):
+                    st.session_state.show_settings = True
+                    st.rerun()
+
+            st.write("")
+
             with st.form("patient_profile_form"):
 
                 st.markdown("#### 👤 Basic Information")
@@ -3813,14 +3919,9 @@ def show_patient_dashboard():
                             "Full name cannot be empty."
                         )
 
-                    if not re.fullmatch(
-                        r"\d{10}",
-                        phone.strip()
-                    ):
-
-                        errors.append(
-                            "Enter a valid 10-digit phone number."
-                        )
+                    valid_p, p_err = validate_phone_format(phone)
+                    if not valid_p:
+                        errors.append(f"Phone Number: {p_err}")
 
                     if not date_of_birth.strip():
 
@@ -3877,9 +3978,11 @@ def show_patient_dashboard():
 
                     else:
 
+                        old_p = str(patient.get("phone") or "").strip()
+                        new_p = phone.strip()
                         updates = {
                             "full_name": full_name.strip(),
-                            "phone": phone.strip(),
+                            "phone": new_p,
                             "date_of_birth": date_of_birth.strip(),
                             "age": calculated_age,
                             "locality": locality.strip(),
@@ -3888,6 +3991,8 @@ def show_patient_dashboard():
                             "state": state.strip(),
                             "pincode": pincode.strip()
                         }
+                        if old_p and new_p != old_p:
+                            updates["phone_verified"] = 0
 
                         try:
 
@@ -4179,14 +4284,85 @@ def show_settings_page():
             st.markdown("### 👤 Personal Account Information")
             st.caption("Keep your profile information up-to-date for your personalized wellness companion.")
 
+            is_email_verified = bool(patient.get("email_verified", 0))
+            is_phone_verified = bool(patient.get("phone_verified", 0))
+
             acc_col1, acc_col2 = st.columns(2)
             with acc_col1:
                 st.text_input("Account ID", value=str(patient_id or ""), disabled=True, help="Your unique confidential identifier.")
                 acc_name = st.text_input("Full Name", value=patient.get("full_name") or st.session_state.patient_name or "", key="set_acc_name")
                 acc_phone = st.text_input("Phone Number", value=patient.get("phone") or "", key="set_acc_phone", placeholder="+91...")
+
+                # Phone verification status & trigger
+                valid_phone, phone_msg = validate_phone_format(acc_phone)
+                if acc_phone and not valid_phone:
+                    st.caption(f"⚠️ {phone_msg}")
+
+                if is_phone_verified and acc_phone.strip() == str(patient.get("phone") or "").strip() and acc_phone.strip():
+                    st.markdown("🟢 **Phone Number Verified** ✅")
+                else:
+                    phone_v_c1, phone_v_c2 = st.columns([1, 1])
+                    with phone_v_c1:
+                        st.markdown("🟠 **Phone Unverified** ⚠️")
+                    with phone_v_c2:
+                        if st.button("📱 Verify Phone", key="btn_init_phone_verify", use_container_width=True):
+                            if not valid_phone:
+                                st.error(phone_msg)
+                            else:
+                                update_patient_details(patient_id, {"phone": acc_phone.strip()})
+                                send_verification_otp("patient_phone", acc_phone.strip(), patient.get("full_name") or "User")
+                                st.session_state.show_otp_ui_patient_phone = True
+                                st.rerun()
+
+                if st.session_state.get("show_otp_ui_patient_phone", False):
+                    otp_store = st.session_state.get("otp_store_patient_phone", {})
+                    st.info(f"📱 SMS verification code sent to **{acc_phone}**! *(Demo OTP: `{otp_store.get('code', '123456')}`)*")
+                    otp_p_in, otp_p_btn = st.columns([2, 1])
+                    with otp_p_in:
+                        entered_p_otp = st.text_input("Enter 6-digit SMS OTP", key="input_phone_otp", max_chars=6)
+                    with otp_p_btn:
+                        if st.button("Confirm OTP", key="btn_confirm_phone_otp", use_container_width=True):
+                            ok, msg = verify_entered_otp("patient_phone", entered_p_otp, patient_id)
+                            if ok:
+                                st.success(msg)
+                                st.rerun()
+                            else:
+                                st.error(msg)
+
                 acc_age = st.number_input("Age", min_value=10, max_value=120, value=int(patient.get("age") or 21), key="set_acc_age")
+
             with acc_col2:
-                st.text_input("Email Address", value=str(st.session_state.patient_email or patient.get("email") or ""), disabled=True, help="Registered email address.")
+                email_val = str(st.session_state.patient_email or patient.get("email") or "")
+                st.text_input("Email Address", value=email_val, disabled=True, help="Registered email address.")
+
+                # Email verification status & trigger
+                if is_email_verified:
+                    st.markdown("🟢 **Email Verified & Confirmed** ✅")
+                else:
+                    email_v_c1, email_v_c2 = st.columns([1, 1])
+                    with email_v_c1:
+                        st.markdown("🟠 **Email Unverified** ⚠️")
+                    with email_v_c2:
+                        if st.button("✉️ Verify Email", key="btn_init_email_verify", use_container_width=True):
+                            send_verification_otp("email", email_val, patient.get("full_name") or "User")
+                            st.session_state.show_otp_ui_email = True
+                            st.rerun()
+
+                if st.session_state.get("show_otp_ui_email", False):
+                    otp_store = st.session_state.get("otp_store_email", {})
+                    st.info(f"📩 Verification email sent to **{email_val}**! *(Demo OTP: `{otp_store.get('code', '123456')}`)*")
+                    otp_e_in, otp_e_btn = st.columns([2, 1])
+                    with otp_e_in:
+                        entered_e_otp = st.text_input("Enter 6-digit Email OTP", key="input_email_otp", max_chars=6)
+                    with otp_e_btn:
+                        if st.button("Confirm Code", key="btn_confirm_email_otp", use_container_width=True):
+                            ok, msg = verify_entered_otp("email", entered_e_otp, patient_id)
+                            if ok:
+                                st.success(msg)
+                                st.rerun()
+                            else:
+                                st.error(msg)
+
                 acc_dob = st.text_input("Date of Birth (YYYY-MM-DD)", value=patient.get("date_of_birth") or "", key="set_acc_dob", placeholder="YYYY-MM-DD")
                 acc_city = st.text_input("City", value=patient.get("city") or "", key="set_acc_city")
                 acc_state = st.text_input("State", value=patient.get("state") or "", key="set_acc_state")
@@ -4204,9 +4380,11 @@ def show_settings_page():
             )
 
             if st.button("💾 Save Profile Changes", key="btn_save_profile_settings", use_container_width=True):
+                old_phone = str(patient.get("phone") or "").strip()
+                new_phone = acc_phone.strip()
                 updates = {
                     "full_name": acc_name.strip(),
-                    "phone": acc_phone.strip(),
+                    "phone": new_phone,
                     "age": int(acc_age),
                     "date_of_birth": acc_dob.strip(),
                     "city": acc_city.strip(),
@@ -4215,6 +4393,10 @@ def show_settings_page():
                     "pincode": acc_pincode.strip(),
                     "pre_session_note": acc_note.strip()
                 }
+                # If phone number changed, reset verification
+                if old_phone and new_phone != old_phone:
+                    updates["phone_verified"] = 0
+
                 success = update_patient_details(patient_id, updates)
                 if success:
                     st.session_state.patient_name = acc_name.strip()
@@ -4261,6 +4443,8 @@ def show_settings_page():
             "Antara can automatically dispatch an urgent SMS notification to your trusted contact."
         )
 
+        is_tc_verified = bool(patient.get("trusted_contact_verified", 0))
+
         emg_col1, emg_col2 = st.columns(2)
         with emg_col1:
             emg_name = st.text_input(
@@ -4281,6 +4465,48 @@ def show_settings_page():
                 key="set_emg_phone",
                 placeholder="+91..."
             )
+
+            # Format check
+            valid_tc, tc_msg = validate_phone_format(emg_phone)
+            if emg_phone and not valid_tc:
+                st.caption(f"⚠️ {tc_msg}")
+
+            # Contact number verification badge & trigger
+            if is_tc_verified and emg_phone.strip() == str(patient.get("trusted_contact_number") or "").strip() and emg_phone.strip():
+                st.markdown("🟢 **Contact Number Verified & Safety Link Active** ✅")
+            else:
+                tc_v_c1, tc_v_c2 = st.columns([1, 1])
+                with tc_v_c1:
+                    st.markdown("🟠 **Contact Unverified** ⚠️")
+                with tc_v_c2:
+                    if st.button("📲 Verify Number", key="btn_init_tc_verify", use_container_width=True):
+                        if not valid_tc:
+                            st.error(tc_msg)
+                        else:
+                            update_patient_details(patient_id, {
+                                "trusted_contact_name": emg_name.strip(),
+                                "trusted_contact_number": emg_phone.strip(),
+                                "trusted_contact_relationship": emg_rel
+                            })
+                            send_verification_otp("trusted_phone", emg_phone.strip(), patient.get("full_name") or "User")
+                            st.session_state.show_otp_ui_trusted_phone = True
+                            st.rerun()
+
+            if st.session_state.get("show_otp_ui_trusted_phone", False):
+                otp_store = st.session_state.get("otp_store_trusted_phone", {})
+                st.info(f"📲 Confirmation SMS sent to **{emg_name} ({emg_phone})**! *(Demo OTP: `{otp_store.get('code', '123456')}`)*")
+                otp_tc_in, otp_tc_btn = st.columns([2, 1])
+                with otp_tc_in:
+                    entered_tc_otp = st.text_input("Enter 6-digit Contact OTP", key="input_tc_otp", max_chars=6)
+                with otp_tc_btn:
+                    if st.button("Confirm Contact", key="btn_confirm_tc_otp", use_container_width=True):
+                        ok, msg = verify_entered_otp("trusted_phone", entered_tc_otp, patient_id)
+                        if ok:
+                            st.success(msg)
+                            st.rerun()
+                        else:
+                            st.error(msg)
+
             emg_consent = st.checkbox(
                 "I give consent for Antara to dispatch an emergency SMS alert to this contact if severe distress is detected",
                 value=bool(patient.get("emergency_alert_consent", 1)),
@@ -4302,14 +4528,20 @@ def show_settings_page():
 
         if st.button("💾 Save Emergency Contact Details", key="btn_save_emergency_contact", use_container_width=True):
             if patient_id:
+                old_tc_phone = str(patient.get("trusted_contact_number") or "").strip()
+                new_tc_phone = emg_phone.strip()
                 emg_updates = {
                     "trusted_contact_name": emg_name.strip(),
                     "trusted_contact_relationship": emg_rel,
-                    "trusted_contact_number": emg_phone.strip(),
+                    "trusted_contact_number": new_tc_phone,
                     "emergency_alert_consent": 1 if emg_consent else 0,
                     "trusted_contact_agreement": 1 if emg_agree else 0,
                     "reason_for_declining": decline_reason.strip()
                 }
+                # Reset verification if number changed
+                if old_tc_phone and new_tc_phone != old_tc_phone:
+                    emg_updates["trusted_contact_verified"] = 0
+
                 success = update_patient_details(patient_id, emg_updates)
                 if success:
                     st.success("✅ Emergency contact details saved! 💗")
