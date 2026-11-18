@@ -1007,6 +1007,16 @@ def show_sidebar():
 
         st.write("")
 
+        if st.session_state.started and not st.session_state.get("show_dashboard", False):
+            if st.button(
+                "⬅️ Back to Dashboard",
+                key="sidebar_back_to_dashboard",
+                use_container_width=True
+            ):
+                st.session_state.show_dashboard = True
+                auto_save()
+                st.rerun()
+
         if st.button(
             "🚪 Logout",
             key="sidebar_logout",
@@ -1742,17 +1752,26 @@ def show_introduction():
         "We can go at your pace. 💗"
     )
 
-    if st.button(
-        "Continue",
-        use_container_width=True
-    ):
-
-        st.session_state.conversation_step = "time"
-
-        if auto_save():
+    btn_col1, btn_col2 = st.columns([1, 2])
+    with btn_col1:
+        if st.button("⬅️ Dashboard", key="intro_back_dashboard", use_container_width=True):
+            st.session_state.show_dashboard = True
+            auto_save()
             st.rerun()
-        else:
-            st.error("Unable to save your progress.")
+
+    with btn_col2:
+        if st.button(
+            "Continue ➡️",
+            key="intro_continue",
+            use_container_width=True
+        ):
+
+            st.session_state.conversation_step = "time"
+
+            if auto_save():
+                st.rerun()
+            else:
+                st.error("Unable to save your progress.")
 
 
 def show_time_selection():
@@ -1776,21 +1795,30 @@ def show_time_selection():
         key="mode_choice"
     )
 
-    if st.button(
-        "Continue",
-        use_container_width=True
-    ):
-
-        st.session_state.time_available = time_choice
-
-        st.session_state.conversation_mode = mode_choice
-
-        st.session_state.conversation_step = "emotion"
-
-        if auto_save():
+    btn_col1, btn_col2 = st.columns([1, 2])
+    with btn_col1:
+        if st.button("⬅️ Back", key="time_back_intro", use_container_width=True):
+            st.session_state.conversation_step = "introduction"
+            auto_save()
             st.rerun()
-        else:
-            st.error("Unable to save your progress.")
+
+    with btn_col2:
+        if st.button(
+            "Continue ➡️",
+            key="time_continue",
+            use_container_width=True
+        ):
+
+            st.session_state.time_available = time_choice
+
+            st.session_state.conversation_mode = mode_choice
+
+            st.session_state.conversation_step = "emotion"
+
+            if auto_save():
+                st.rerun()
+            else:
+                st.error("Unable to save your progress.")
 
 
 # ==========================================================
@@ -1821,45 +1849,54 @@ def show_emotional_checkin():
         key="additional_feeling"
     )
 
-    if st.button(
-        "Continue",
-        use_container_width=True
-    ):
-
-        chosen = list(emotions)
-
-        if extra.strip():
-            chosen.append(extra.strip())
-
-        if not chosen:
-
-            st.warning(
-                "Choose at least one feeling, or select "
-                "'I don't really know how I feel'."
-            )
-
-            return
-
-        st.session_state.emotional_theme = chosen
-
-        st.session_state.responses.append({
-            "question_id": "EMOTION_01",
-            "question": QUESTION_BANK[
-                "emotional_checkin"
-            ]["question"],
-            "original_answer": chosen,
-            "edited_answer": chosen,
-            "status": "answered"
-        })
-
-        build_question_flow()
-
-        st.session_state.conversation_step = "questions"
-
-        if auto_save():
+    btn_col1, btn_col2 = st.columns([1, 2])
+    with btn_col1:
+        if st.button("⬅️ Back", key="emotion_back_time", use_container_width=True):
+            st.session_state.conversation_step = "time"
+            auto_save()
             st.rerun()
-        else:
-            st.error("Unable to save your emotional check-in.")
+
+    with btn_col2:
+        if st.button(
+            "Continue ➡️",
+            key="emotion_continue",
+            use_container_width=True
+        ):
+
+            chosen = list(emotions)
+
+            if extra.strip():
+                chosen.append(extra.strip())
+
+            if not chosen:
+
+                st.warning(
+                    "Choose at least one feeling, or select "
+                    "'I don't really know how I feel'."
+                )
+
+                return
+
+            st.session_state.emotional_theme = chosen
+
+            st.session_state.responses.append({
+                "question_id": "EMOTION_01",
+                "question": QUESTION_BANK[
+                    "emotional_checkin"
+                ]["question"],
+                "original_answer": chosen,
+                "edited_answer": chosen,
+                "status": "answered"
+            })
+
+            build_question_flow()
+
+            st.session_state.conversation_step = "questions"
+
+            if auto_save():
+                st.rerun()
+            else:
+                st.error("Unable to save your emotional check-in.")
 
 
 # ==========================================================
@@ -2466,6 +2503,21 @@ def show_questions():
                 st.warning(
                     "Please enter an answer."
                 )
+
+    nav_back_col1, nav_back_col2 = st.columns([1, 1])
+    with nav_back_col1:
+        if index > 0:
+            if st.button("⬅️ Previous question", key=f"prev_{question['id']}", use_container_width=True):
+                st.session_state.current_question_index -= 1
+                if st.session_state.responses and len(st.session_state.responses) > st.session_state.current_question_index:
+                    st.session_state.responses.pop()
+                auto_save()
+                st.rerun()
+        else:
+            if st.button("⬅️ Back to Feelings check-in", key=f"prev_to_emotion_{question['id']}", use_container_width=True):
+                st.session_state.conversation_step = "emotion"
+                auto_save()
+                st.rerun()
 
     c1, c2, c3 = st.columns(3)
 
@@ -3664,14 +3716,22 @@ def show_chat():
 
         return
 
+    top_nav1, top_nav2 = st.columns([1, 3])
+    with top_nav1:
+        if st.button("⬅️ Dashboard", key="chat_top_back_dashboard", use_container_width=True, help="Save & return to your dashboard"):
+            st.session_state.show_dashboard = True
+            auto_save()
+            st.rerun()
+
+    with top_nav2:
+        st.caption(
+            f"Session ID: {st.session_state.session_id}"
+        )
+
     st.title("🌷 Antara")
 
     st.caption(
         "A space for your feelings, emotional wellness & self-care."
-    )
-
-    st.caption(
-        f"Session ID: {st.session_state.session_id}"
     )
 
     if st.session_state.crisis_triggered:
