@@ -65,17 +65,17 @@ TIME_OPTIONS = [
 ]
 
 TIME_LIMITS = {
-    "5 minutes": 5,
-    "10 minutes": 8,
-    "15 minutes": 11,
-    "20 minutes": 14,
+    "5 minutes": 8,
+    "10 minutes": 12,
+    "15 minutes": 16,
+    "20 minutes": 20,
     "I have plenty of time": 100
 }
 
 CONVERSATION_MODES = {
-    "Quick check-in": 5,
-    "Regular conversation": 9,
-    "Detailed conversation": 16,
+    "Quick check-in": 8,
+    "Regular conversation": 14,
+    "Detailed conversation": 22,
     "I want to talk freely": 100
 }
 
@@ -2383,7 +2383,7 @@ def show_questions():
 
     if index >= len(questions):
 
-        st.session_state.conversation_step = "wellness"
+        st.session_state.conversation_step = "continuation_check"
 
         auto_save()
         st.rerun()
@@ -2704,6 +2704,130 @@ def show_engagement_check():
                 "was_edited": False
             })
             st.session_state.conversation_step = "closing"
+            auto_save()
+            st.rerun()
+
+
+# ==========================================================
+# 20C. EXTEND CONVERSATION & CONTINUATION CHECK
+# ==========================================================
+
+def extend_conversation_questions():
+
+    existing_ids = {
+        q["id"] for q in st.session_state.selected_questions
+    }
+    new_questions = []
+
+    categories = [
+        "daily_routine",
+        "therapy_goals",
+        "general",
+        "relationships",
+        "stress",
+        "sadness",
+        "loneliness",
+        "physical_health"
+    ]
+
+    for cat in categories:
+        cat_data = QUESTION_BANK.get(cat, {})
+        for item in cat_data.get("questions", []):
+            if item["id"] not in existing_ids:
+                new_questions.append({
+                    "category": cat,
+                    "id": item["id"],
+                    "text": item["question"]
+                })
+                existing_ids.add(item["id"])
+            if len(new_questions) >= 4:
+                break
+        if len(new_questions) >= 4:
+            break
+
+    if not new_questions:
+        open_prompts = [
+            "What is something on your mind right now that you haven't had a chance to say out loud?",
+            "If there is one thing you wish someone understood about what you're feeling, what would it be?",
+            "What is something small that brought you even a little comfort recently?",
+            "Looking ahead, what is one kind thing you can do for yourself today?"
+        ]
+        curr_len = len(st.session_state.selected_questions)
+        for i, text in enumerate(open_prompts):
+            new_questions.append({
+                "category": "open_reflection",
+                "id": f"OPEN_REFLECT_{curr_len + i + 1}",
+                "text": text
+            })
+
+    st.session_state.selected_questions.extend(new_questions)
+
+
+def show_continuation_check():
+
+    show_previous_conversation()
+
+    continuation_message = (
+        "We've gone through our planned check-in questions for today 🌸.\n\n"
+        "I want to make sure you have all the time and space you need, and our conversation "
+        "doesn't have to end here if you still have things on your mind.\n\n"
+        "Would you like to keep talking and explore more, or are you ready to wrap up our session for today?"
+    )
+    display_message(continuation_message, "assistant")
+
+    st.markdown(
+        '<div class="quick-heading">'
+        'Would you like to continue or finish?'
+        '</div>',
+        unsafe_allow_html=True
+    )
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        if st.button(
+            "💬 Keep Talking (Continue Conversation)",
+            key="btn_keep_talking_cont",
+            use_container_width=True
+        ):
+            extend_conversation_questions()
+            st.session_state.conversation_step = "questions"
+            st.session_state.responses.append({
+                "question_id": "CONT_EXTEND",
+                "category": "continuation",
+                "question": "Would you like to continue our conversation or wrap up?",
+                "original_answer": "I'd like to continue talking 💬",
+                "edited_answer": "I'd like to continue talking 💬",
+                "status": "answered",
+                "lia_acknowledgement": "I'm really glad you want to stay and chat a bit longer. Let's keep going at whatever pace feels good 💗",
+                "followup_question": None,
+                "followup_answer": None,
+                "followup_skipped": False,
+                "was_edited": False
+            })
+            auto_save()
+            st.rerun()
+
+    with col2:
+        if st.button(
+            "🌿 Ready to Wrap Up for Today",
+            key="btn_wrap_up_cont",
+            use_container_width=True
+        ):
+            st.session_state.conversation_step = "wellness"
+            st.session_state.responses.append({
+                "question_id": "CONT_WRAPUP",
+                "category": "continuation",
+                "question": "Would you like to continue our conversation or wrap up?",
+                "original_answer": "I'm ready to wrap up for today 🌿",
+                "edited_answer": "I'm ready to wrap up for today 🌿",
+                "status": "answered",
+                "lia_acknowledgement": "You did wonderfully today. Thank you for sharing your time and thoughts with me 🌸",
+                "followup_question": None,
+                "followup_answer": None,
+                "followup_skipped": False,
+                "was_edited": False
+            })
             auto_save()
             st.rerun()
 # ==========================================================
@@ -3766,6 +3890,10 @@ def show_chat():
     elif step == "questions":
 
         show_questions()
+
+    elif step == "continuation_check":
+
+        show_continuation_check()
 
     elif step == "wellness":
 
