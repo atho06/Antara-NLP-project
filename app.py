@@ -142,6 +142,10 @@ DEFAULTS = {
     "pending_followup": None,
     "unclear_message": None,
 
+    "pending_engagement_check": False,
+    "eng_check_3_done": False,
+    "eng_check_6_done": False,
+
     "activity_suggested": False,
     "activity_data": None,
     "activity_answered": False,
@@ -244,6 +248,7 @@ def get_session_data():
         "current_question_index",
         "responses",
         "pending_followup",
+        "pending_engagement_check",
         "unclear_message",
         "activity_suggested",
         "activity_data",
@@ -324,6 +329,7 @@ def restore_session(saved_data):
             "current_question_index",
             "responses",
             "pending_followup",
+            "pending_engagement_check",
             "unclear_message",
             "activity_suggested",
             "activity_data",
@@ -2347,6 +2353,21 @@ def show_questions():
 
         return
 
+    # Periodic Engagement & Fatigue Check-in (triggers after 3 and 6 questions)
+    answered_count = len([r for r in st.session_state.responses if r.get("status") in ["answered", "skipped"]])
+    if (
+        (answered_count >= 3 and not st.session_state.get("eng_check_3_done", False))
+        or (answered_count >= 6 and not st.session_state.get("eng_check_6_done", False))
+    ):
+        if answered_count >= 6:
+            st.session_state.eng_check_6_done = True
+        else:
+            st.session_state.eng_check_3_done = True
+        st.session_state.pending_engagement_check = True
+        auto_save()
+        st.rerun()
+        return
+
     show_previous_conversation()
 
     question = questions[index]
@@ -2446,13 +2467,14 @@ def show_questions():
                     "Please enter an answer."
                 )
 
-    c1, c2 = st.columns(2)
+    c1, c2, c3 = st.columns(3)
 
     with c1:
 
         if st.button(
             "Skip this question",
-            key=f"skip_{question['id']}"
+            key=f"skip_{question['id']}",
+            use_container_width=True
         ):
 
             st.session_state.responses.append({
@@ -2475,7 +2497,8 @@ def show_questions():
 
         if st.button(
             "Pause conversation",
-            key=f"pause_{question['id']}"
+            key=f"pause_{question['id']}",
+            use_container_width=True
         ):
 
             previous_step = st.session_state.conversation_step
@@ -2492,8 +2515,145 @@ def show_questions():
                     "Unable to save your conversation."
                 )
 
+    with c3:
+
+        if st.button(
+            "🌿 Need a break?",
+            key=f"checkin_{question['id']}",
+            use_container_width=True,
+            help="Take a breather, switch activities, or check in with Lia"
+        ):
+            st.session_state.pending_engagement_check = True
+            if auto_save():
+                st.rerun()
+            else:
+                st.error("Unable to save your progress.")
+
     if not st.session_state.pending_followup:
         show_answer_editor()
+
+
+# ==========================================================
+# 20B. ENGAGEMENT & FATIGUE CHECK-IN
+# ==========================================================
+
+def show_engagement_check():
+
+    show_previous_conversation()
+
+    check_message = (
+        "Hey, let's take a gentle pause for a moment 🌿\n\n"
+        "We've been talking for a bit, and I want to make sure you're feeling comfortable. "
+        "Antara is your safe space—it should never feel like an interrogation, a test, or a boring questionnaire.\n\n"
+        "How is this conversation feeling for you right now?"
+    )
+    display_message(check_message, "assistant")
+
+    st.markdown(
+        '<div class="quick-heading">'
+        'How would you like to proceed?'
+        '</div>',
+        unsafe_allow_html=True
+    )
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        if st.button(
+            "😊 I'm doing good, let's keep talking",
+            key="eng_keep_going",
+            use_container_width=True
+        ):
+            st.session_state.pending_engagement_check = False
+            st.session_state.responses.append({
+                "question_id": "CHECKIN_CONTINUE",
+                "category": "engagement",
+                "question": "How are you feeling about our conversation right now?",
+                "original_answer": "I'm doing good, let's keep talking 😊",
+                "edited_answer": "I'm doing good, let's keep talking 😊",
+                "status": "answered",
+                "lia_acknowledgement": "Glad to hear that! We'll keep going at whatever pace feels comfortable for you 🌸",
+                "followup_question": None,
+                "followup_answer": None,
+                "followup_skipped": False,
+                "was_edited": False
+            })
+            auto_save()
+            st.rerun()
+
+    with col2:
+        if st.button(
+            "🫂 It's feeling a bit heavy / overwhelming",
+            key="eng_overwhelmed",
+            use_container_width=True
+        ):
+            st.session_state.pending_engagement_check = False
+            st.session_state.responses.append({
+                "question_id": "CHECKIN_OVERWHELMED",
+                "category": "engagement",
+                "question": "How are you feeling about our conversation right now?",
+                "original_answer": "It's feeling a bit heavy / overwhelming 🫂",
+                "edited_answer": "It's feeling a bit heavy / overwhelming 🫂",
+                "status": "answered",
+                "lia_acknowledgement": "Thank you for being open with me. It is completely okay to feel overwhelmed. Let's stop the questions and take a quiet, calming break together 💗",
+                "followup_question": None,
+                "followup_answer": None,
+                "followup_skipped": False,
+                "was_edited": False
+            })
+            st.session_state.conversation_step = "wellness"
+            auto_save()
+            st.rerun()
+
+    col3, col4 = st.columns(2)
+
+    with col3:
+        if st.button(
+            "🥱 A bit bored / tired of answering questions",
+            key="eng_bored",
+            use_container_width=True
+        ):
+            st.session_state.pending_engagement_check = False
+            st.session_state.responses.append({
+                "question_id": "CHECKIN_BORED",
+                "category": "engagement",
+                "question": "How are you feeling about our conversation right now?",
+                "original_answer": "A bit bored / tired of answering questions 🥱",
+                "edited_answer": "A bit bored / tired of answering questions 🥱",
+                "status": "answered",
+                "lia_acknowledgement": "I completely understand! Answering question after question gets tedious fast. Let's skip the rest of the questions and do something relaxing instead 🌷",
+                "followup_question": None,
+                "followup_answer": None,
+                "followup_skipped": False,
+                "was_edited": False
+            })
+            st.session_state.conversation_step = "wellness"
+            auto_save()
+            st.rerun()
+
+    with col4:
+        if st.button(
+            "🌿 I'd like to wrap up for today",
+            key="eng_wrap_up",
+            use_container_width=True
+        ):
+            st.session_state.pending_engagement_check = False
+            st.session_state.responses.append({
+                "question_id": "CHECKIN_WRAPUP",
+                "category": "engagement",
+                "question": "How are you feeling about our conversation right now?",
+                "original_answer": "I'd like to wrap up for today 🌿",
+                "edited_answer": "I'd like to wrap up for today 🌿",
+                "status": "answered",
+                "lia_acknowledgement": "You did wonderfully today. Taking care of yourself means knowing when you've done enough. Let's wrap things up gently 🌸",
+                "followup_question": None,
+                "followup_answer": None,
+                "followup_skipped": False,
+                "was_edited": False
+            })
+            st.session_state.conversation_step = "closing"
+            auto_save()
+            st.rerun()
 # ==========================================================
 # 21. FOLLOW-UP QUESTIONS
 # ==========================================================
@@ -3522,6 +3682,11 @@ def show_chat():
     if st.session_state.pending_followup:
 
         show_followup()
+        return
+
+    if st.session_state.get("pending_engagement_check", False):
+
+        show_engagement_check()
         return
 
     step = st.session_state.conversation_step
