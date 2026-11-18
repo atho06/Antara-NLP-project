@@ -21,6 +21,7 @@ public class MainActivity extends Activity {
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
         settings.setDomStorageEnabled(true);
+        settings.setDatabaseEnabled(true);
         settings.setLoadWithOverviewMode(true);
         settings.setUseWideViewPort(true);
 
@@ -33,7 +34,10 @@ public class MainActivity extends Activity {
 
         setContentView(webView);
 
-        webView.loadUrl("https://YOUR-ANTARA-APP-URL");
+        // Replace with your hosted Antara URL (e.g. https://your-antara-app.streamlit.app)
+        // or local IP for testing (e.g. http://10.0.2.2:8501 for emulator, http://192.168.x.x:8501 for physical device)
+        String serverUrl = "https://YOUR-ANTARA-APP-URL";
+        webView.loadUrl(serverUrl);
     }
 
     @Override
