@@ -64,19 +64,43 @@ TIME_OPTIONS = [
     "I have plenty of time"
 ]
 
-TIME_LIMITS = {
-    "5 minutes": 8,
-    "10 minutes": 12,
-    "15 minutes": 16,
-    "20 minutes": 20,
-    "I have plenty of time": 100
+TIME_DURATION_SECONDS = {
+    "5 minutes": 5 * 60,
+    "10 minutes": 10 * 60,
+    "15 minutes": 15 * 60,
+    "20 minutes": 20 * 60,
+    "I have plenty of time": 24 * 60 * 60
 }
 
+def get_session_target_seconds():
+    time_choice = st.session_state.get("time_available")
+    return TIME_DURATION_SECONDS.get(time_choice, 5 * 60)
+
+def get_elapsed_seconds():
+    start = st.session_state.get("chat_started_at")
+    if not start:
+        return 0
+    try:
+        return max(0, datetime.now().timestamp() - float(start))
+    except (ValueError, TypeError):
+        return 0
+
+def is_session_time_up():
+    target = get_session_target_seconds()
+    if target >= 24 * 60 * 60:
+        return False
+    return get_elapsed_seconds() >= target
+
+def get_session_time_remaining():
+    target = get_session_target_seconds()
+    elapsed = get_elapsed_seconds()
+    return max(0, target - elapsed)
+
 CONVERSATION_MODES = {
-    "Quick check-in": 8,
-    "Regular conversation": 14,
-    "Detailed conversation": 22,
-    "I want to talk freely": 100
+    "Quick check-in": "gentle and focused",
+    "Regular conversation": "balanced and thoughtful",
+    "Detailed conversation": "deep and comprehensive",
+    "I want to talk freely": "open and unhurried"
 }
 
 EMOTION_OPTIONS = QUESTION_BANK["emotional_checkin"]["options"]
@@ -131,6 +155,7 @@ DEFAULTS = {
     "submitted": False,
 
     "conversation_step": "introduction",
+    "chat_started_at": None,
     "time_available": None,
     "conversation_mode": "Regular conversation",
 
@@ -241,6 +266,7 @@ def get_session_data():
         "submitted",
         "conversation_step",
         "paused_from_step",
+        "chat_started_at",
         "time_available",
         "conversation_mode",
         "emotional_theme",
@@ -322,6 +348,7 @@ def restore_session(saved_data):
             "consent_given",
             "submitted",
             "conversation_step",
+            "chat_started_at",
             "time_available",
             "conversation_mode",
             "emotional_theme",
@@ -1309,6 +1336,10 @@ def show_welcome():
             st.session_state.show_dashboard = False
 
             st.session_state.conversation_step = "introduction"
+            st.session_state.chat_started_at = None
+            st.session_state.eng_check_3_done = False
+            st.session_state.eng_check_6_done = False
+            st.session_state.pending_engagement_check = False
 
             st.session_state.responses = []
             st.session_state.selected_questions = []
@@ -1407,48 +1438,18 @@ def build_question_flow():
         add_questions("relationships", 2)
 
     add_questions("therapy_goals", 2)
-    add_questions("closing", 1)
 
     unique = []
     seen = set()
 
     for question in selected:
-
-        if question["id"] not in seen:
-
+        if question["category"] != "closing" and question["id"] not in seen:
             unique.append(question)
             seen.add(question["id"])
 
-    mode_limit = CONVERSATION_MODES.get(
-        st.session_state.conversation_mode,
-        9
-    )
-
-    time_limit = TIME_LIMITS.get(
-        st.session_state.time_available,
-        100
-    )
-
-    limit = min(mode_limit, time_limit)
-
-    closing = [
-        q for q in unique
-        if q["category"] == "closing"
-    ]
-
-    others = [
-        q for q in unique
-        if q["category"] != "closing"
-    ]
-
-    flow = (
-        others[:max(0, limit - len(closing))]
-        + closing
-    )
-
-    st.session_state.selected_questions = flow
-
+    st.session_state.selected_questions = unique
     st.session_state.current_question_index = 0
+    st.session_state.chat_started_at = datetime.now().timestamp()
 # ==========================================================
 # 12. WELLNESS ACTIVITIES
 # ==========================================================
@@ -1905,10 +1906,25 @@ def show_emotional_checkin():
 
 def get_quick_options(question):
 
-    return QUESTION_OPTIONS.get(
-        question.get("id"),
-        []
-    )
+    qid = question.get("id", "")
+    if qid in QUESTION_OPTIONS:
+        return QUESTION_OPTIONS[qid]
+
+    cat = question.get("category", "")
+    if cat == "mindfulness":
+        return ["I notice something quiet and peaceful", "I feel a bit restless right now", "Something else"]
+    elif cat in ["comfort", "habits"]:
+        return ["It's been okay", "It could definitely be better", "Something else"]
+    elif cat in ["strengths", "self_compassion", "growth"]:
+        return ["My resilience and patience", "Taking things one day at a time", "Something else"]
+    elif cat in ["reflection", "processing", "emotions", "open_reflection"]:
+        return ["I'm still reflecting on this", "It's hard to put into words", "Something else"]
+
+    return [
+        "I'm still thinking about it",
+        "It's hard to put into words",
+        "Something else"
+    ]
 
 
 def get_llm_history():
@@ -2377,26 +2393,37 @@ def show_answer_editor():
 
 def show_questions():
 
-    questions = st.session_state.selected_questions
+    # Initialize clock start time if not yet set
+    if not st.session_state.get("chat_started_at"):
+        st.session_state.chat_started_at = datetime.now().timestamp()
 
+    # Real-time clock check: Has the user's chosen session duration elapsed?
+    if is_session_time_up():
+        st.session_state.conversation_step = "continuation_check"
+        auto_save()
+        st.rerun()
+        return
+
+    # Dynamic continuous question generation: If questions are exhausted but time remains, generate more!
+    questions = st.session_state.selected_questions
     index = st.session_state.current_question_index
 
     if index >= len(questions):
+        extend_conversation_questions()
+        questions = st.session_state.selected_questions
+        if index >= len(questions):
+            st.session_state.conversation_step = "continuation_check"
+            auto_save()
+            st.rerun()
+            return
 
-        st.session_state.conversation_step = "continuation_check"
-
-        auto_save()
-        st.rerun()
-
-        return
-
-    # Periodic Engagement & Fatigue Check-in (triggers after 3 and 6 questions)
+    # Periodic Engagement & Fatigue Check-in (triggers after 3 and 8 questions)
     answered_count = len([r for r in st.session_state.responses if r.get("status") in ["answered", "skipped"]])
     if (
         (answered_count >= 3 and not st.session_state.get("eng_check_3_done", False))
-        or (answered_count >= 6 and not st.session_state.get("eng_check_6_done", False))
+        or (answered_count >= 8 and not st.session_state.get("eng_check_6_done", False))
     ):
-        if answered_count >= 6:
+        if answered_count >= 8:
             st.session_state.eng_check_6_done = True
         else:
             st.session_state.eng_check_3_done = True
@@ -2409,16 +2436,26 @@ def show_questions():
 
     question = questions[index]
 
-    st.progress(
-        min(
-            (index + 1) / max(len(questions), 1),
-            1.0
-        )
-    )
+    # Time-based progress bar and status caption
+    target_sec = get_session_target_seconds()
+    elapsed_sec = get_elapsed_seconds()
 
-    st.caption(
-        f"Question {index + 1} of {len(questions)}"
-    )
+    if target_sec < 24 * 60 * 60:
+        time_ratio = min(1.0, elapsed_sec / max(target_sec, 1))
+        st.progress(time_ratio)
+        mins_left = max(0, int(round((target_sec - elapsed_sec) / 60)))
+        if mins_left > 0:
+            st.caption(
+                f"⏱️ ~{mins_left} min remaining of your "
+                f"{st.session_state.get('time_available', 'session')} · Question {index + 1}"
+            )
+        else:
+            st.caption(
+                f"⏱️ Final moments of your "
+                f"{st.session_state.get('time_available', 'session')} · Question {index + 1}"
+            )
+    else:
+        st.caption(f"🌿 Open conversation · Question {index + 1}")
 
     display_message(
         question["text"],
@@ -2519,12 +2556,12 @@ def show_questions():
                 auto_save()
                 st.rerun()
 
-    c1, c2, c3 = st.columns(3)
+    c1, c2, c3, c4 = st.columns(4)
 
     with c1:
 
         if st.button(
-            "Skip this question",
+            "Skip question",
             key=f"skip_{question['id']}",
             use_container_width=True
         ):
@@ -2548,7 +2585,7 @@ def show_questions():
     with c2:
 
         if st.button(
-            "Pause conversation",
+            "Pause",
             key=f"pause_{question['id']}",
             use_container_width=True
         ):
@@ -2570,12 +2607,26 @@ def show_questions():
     with c3:
 
         if st.button(
-            "🌿 Need a break?",
+            "🌿 Need break?",
             key=f"checkin_{question['id']}",
             use_container_width=True,
             help="Take a breather, switch activities, or check in with Lia"
         ):
             st.session_state.pending_engagement_check = True
+            if auto_save():
+                st.rerun()
+            else:
+                st.error("Unable to save your progress.")
+
+    with c4:
+
+        if st.button(
+            "🏁 Wrap up",
+            key=f"wrap_{question['id']}",
+            use_container_width=True,
+            help="Ready to conclude or wrap up your session"
+        ):
+            st.session_state.conversation_step = "continuation_check"
             if auto_save():
                 st.rerun()
             else:
@@ -2712,6 +2763,29 @@ def show_engagement_check():
 # 20C. EXTEND CONVERSATION & CONTINUATION CHECK
 # ==========================================================
 
+CONTINUOUS_REFLECTION_QUESTIONS = [
+    {"category": "strengths", "text": "What is one strength or quality in yourself that has helped you get through hard days in the past?"},
+    {"category": "coping", "text": "When everything feels like too much, what is one small activity or place that helps you feel safe?"},
+    {"category": "mindfulness", "text": "Take a gentle breath. If you look around your space right now, what is one calming or grounding thing you notice?"},
+    {"category": "self_compassion", "text": "If a dear friend came to you carrying the same weight you're carrying today, what gentle words would you say to them?"},
+    {"category": "reflection", "text": "What is something that has been taking up a lot of your mental energy lately?"},
+    {"category": "reflection", "text": "What is one thing you wish someone in your life understood a little better about your day-to-day experience?"},
+    {"category": "habits", "text": "How has your sleep or rest been feeling over the past few nights?"},
+    {"category": "comfort", "text": "What is a favorite song, book, show, or warm drink that always brings you a sense of comfort?"},
+    {"category": "boundaries", "text": "Is there any situation or obligation right now where you feel you need to set a gentler boundary for yourself?"},
+    {"category": "gratitude", "text": "Even on tough days, was there one tiny moment—like warm sunshine, a kind smile, or a quiet moment—that felt okay?"},
+    {"category": "emotions", "text": "When you feel stressed or low, where in your body do you notice that tension the most?"},
+    {"category": "goals", "text": "What is something small you're quietly hoping for or looking forward to in the coming weeks?"},
+    {"category": "creativity", "text": "Do you have any hobbies, music, or creative outlets that help you express what words sometimes can't?"},
+    {"category": "support", "text": "Who is one person or community in your life that makes you feel heard or accepted as you are?"},
+    {"category": "self_care", "text": "What is one kind, forgiving thing you can give yourself permission to do (or not do) today?"},
+    {"category": "reflection", "text": "What is something on your mind right now that you haven't had a chance to say out loud?"},
+    {"category": "growth", "text": "Looking back over the past year, in what ways have you grown or learned more about what you need?"},
+    {"category": "grounding", "text": "If you could pause everything for an hour and do anything purely for your peace of mind, what would it be?"},
+    {"category": "processing", "text": "Is there a recurring worry or thought pattern you notice yourself returning to often?"},
+    {"category": "peace", "text": "What does feeling truly at peace look or feel like for you?"}
+]
+
 def extend_conversation_questions():
 
     existing_ids = {
@@ -2719,6 +2793,7 @@ def extend_conversation_questions():
     }
     new_questions = []
 
+    # 1. Exhaust any remaining structured questions from all question bank categories
     categories = [
         "daily_routine",
         "therapy_goals",
@@ -2745,20 +2820,42 @@ def extend_conversation_questions():
         if len(new_questions) >= 4:
             break
 
+    # 2. Draw from the continuous reflection questions catalog
+    if len(new_questions) < 4:
+        for idx, prompt_item in enumerate(CONTINUOUS_REFLECTION_QUESTIONS):
+            prompt_id = f"REFLECT_{idx + 1}"
+            if prompt_id not in existing_ids:
+                new_questions.append({
+                    "category": prompt_item.get("category", "open_reflection"),
+                    "id": prompt_id,
+                    "text": prompt_item["text"]
+                })
+                existing_ids.add(prompt_id)
+            if len(new_questions) >= 4:
+                break
+
+    # 3. Dynamic fallback generator so questions never run dry
     if not new_questions:
-        open_prompts = [
+        curr_len = len(st.session_state.selected_questions)
+        dynamic_prompts = [
             "What is something on your mind right now that you haven't had a chance to say out loud?",
             "If there is one thing you wish someone understood about what you're feeling, what would it be?",
             "What is something small that brought you even a little comfort recently?",
-            "Looking ahead, what is one kind thing you can do for yourself today?"
+            "Looking ahead, what is one kind thing you can do for yourself today?",
+            "How does your energy feel right at this moment?",
+            "What is a thought or feeling that has felt heavy this week?"
         ]
-        curr_len = len(st.session_state.selected_questions)
-        for i, text in enumerate(open_prompts):
-            new_questions.append({
-                "category": "open_reflection",
-                "id": f"OPEN_REFLECT_{curr_len + i + 1}",
-                "text": text
-            })
+        for i, text in enumerate(dynamic_prompts):
+            dyn_id = f"DYN_REFLECT_{curr_len + i + 1}"
+            if dyn_id not in existing_ids:
+                new_questions.append({
+                    "category": "open_reflection",
+                    "id": dyn_id,
+                    "text": text
+                })
+                existing_ids.add(dyn_id)
+            if len(new_questions) >= 4:
+                break
 
     st.session_state.selected_questions.extend(new_questions)
 
@@ -2767,11 +2864,12 @@ def show_continuation_check():
 
     show_previous_conversation()
 
+    time_choice = st.session_state.get("time_available", "our planned time")
     continuation_message = (
-        "We've gone through our planned check-in questions for today 🌸.\n\n"
-        "I want to make sure you have all the time and space you need, and our conversation "
-        "doesn't have to end here if you still have things on your mind.\n\n"
-        "Would you like to keep talking and explore more, or are you ready to wrap up our session for today?"
+        f"Our planned {time_choice} check-in time for today is complete 🌸.\n\n"
+        "Antara is your safe, unhurried space—our conversation never has to end abruptly. "
+        "If you still have things on your mind that you'd like to share or explore, Lia is right here with you.\n\n"
+        "Would you like to keep talking and continue our conversation, or are you ready to wrap up for today?"
     )
     display_message(continuation_message, "assistant")
 
@@ -2786,20 +2884,22 @@ def show_continuation_check():
 
     with col1:
         if st.button(
-            "💬 Keep Talking (Continue Conversation)",
-            key="btn_keep_talking_cont",
+            "💬 Keep Talking (+5 more minutes)",
+            key="btn_keep_talking_5m",
             use_container_width=True
         ):
+            st.session_state.chat_started_at = datetime.now().timestamp()
+            st.session_state.time_available = "5 minutes"
             extend_conversation_questions()
             st.session_state.conversation_step = "questions"
             st.session_state.responses.append({
-                "question_id": "CONT_EXTEND",
+                "question_id": "CONT_EXTEND_5M",
                 "category": "continuation",
                 "question": "Would you like to continue our conversation or wrap up?",
-                "original_answer": "I'd like to continue talking 💬",
-                "edited_answer": "I'd like to continue talking 💬",
+                "original_answer": "I'd like to keep talking (+5 minutes) 💬",
+                "edited_answer": "I'd like to keep talking (+5 minutes) 💬",
                 "status": "answered",
-                "lia_acknowledgement": "I'm really glad you want to stay and chat a bit longer. Let's keep going at whatever pace feels good 💗",
+                "lia_acknowledgement": "I'm so glad you want to stay and chat a bit longer. Let's keep going at whatever pace feels good 💗",
                 "followup_question": None,
                 "followup_answer": None,
                 "followup_skipped": False,
@@ -2809,6 +2909,34 @@ def show_continuation_check():
             st.rerun()
 
     with col2:
+        if st.button(
+            "✨ Keep Talking Freely (No Time Limit)",
+            key="btn_keep_talking_free",
+            use_container_width=True
+        ):
+            st.session_state.chat_started_at = datetime.now().timestamp()
+            st.session_state.time_available = "I have plenty of time"
+            extend_conversation_questions()
+            st.session_state.conversation_step = "questions"
+            st.session_state.responses.append({
+                "question_id": "CONT_EXTEND_FREE",
+                "category": "continuation",
+                "question": "Would you like to continue our conversation or wrap up?",
+                "original_answer": "I want to talk freely with no time limit ✨",
+                "edited_answer": "I want to talk freely with no time limit ✨",
+                "status": "answered",
+                "lia_acknowledgement": "Take all the time you need. I'm right here with you 🌿",
+                "followup_question": None,
+                "followup_answer": None,
+                "followup_skipped": False,
+                "was_edited": False
+            })
+            auto_save()
+            st.rerun()
+
+    col3, col4 = st.columns([1, 1])
+
+    with col3:
         if st.button(
             "🌿 Ready to Wrap Up for Today",
             key="btn_wrap_up_cont",
@@ -2828,6 +2956,16 @@ def show_continuation_check():
                 "followup_skipped": False,
                 "was_edited": False
             })
+            auto_save()
+            st.rerun()
+
+    with col4:
+        if st.button(
+            "🌷 Go Directly to Completion",
+            key="btn_direct_close_cont",
+            use_container_width=True
+        ):
+            st.session_state.conversation_step = "closing"
             auto_save()
             st.rerun()
 # ==========================================================
@@ -3008,45 +3146,62 @@ def show_closing():
         "You're almost done with your Antara session."
     )
 
-    if st.button(
-        "Complete My Session",
-        use_container_width=True
-    ):
+    btn_col1, btn_col2 = st.columns([1, 1])
 
-        try:
+    with btn_col1:
+        if st.button(
+            "💬 Continue Conversation Instead",
+            key="closing_back_to_chat",
+            use_container_width=True
+        ):
+            st.session_state.chat_started_at = datetime.now().timestamp()
+            st.session_state.time_available = "5 minutes"
+            extend_conversation_questions()
+            st.session_state.conversation_step = "questions"
+            auto_save()
+            st.rerun()
 
-            st.session_state.submitted = True
+    with btn_col2:
+        if st.button(
+            "Complete My Session 🌷",
+            key="btn_complete_session_final",
+            use_container_width=True
+        ):
 
-            if not auto_save():
+            try:
+
+                st.session_state.submitted = True
+
+                if not auto_save():
+
+                    st.session_state.submitted = False
+
+                    st.error(
+                        "Unable to save your session. Please try again."
+                    )
+
+                    return
+
+                complete_patient_session(
+                    st.session_state.patient_id,
+                    st.session_state.session_id
+                )
+
+                st.success(
+                    "Your session has been completed!"
+                )
+
+                st.rerun()
+
+            except Exception as error:
 
                 st.session_state.submitted = False
 
                 st.error(
-                    "Unable to save your session. Please try again."
+                    "Unable to complete your session."
                 )
 
-                return
-
-            complete_patient_session(
-                st.session_state.patient_id,
-                st.session_state.session_id
-            )
-
-            st.success(
-                "Your session has been completed!"
-            )
-
-            st.rerun()
-
-        except Exception as error:
-
-            st.session_state.submitted = False
-
-            st.error(
-                "Unable to complete your session."
-            )
-
-            print("SESSION COMPLETION ERROR:", error)
+                print("SESSION COMPLETION ERROR:", error)
 
 
 # ==========================================================
