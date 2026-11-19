@@ -27,15 +27,17 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Install dependencies and configure platform
+      - name: Configure Android platform
         working-directory: flutter_app
         run: |
-          flutter create --platforms=android --org com.antara .
+          rm -rf android
+          flutter create --platforms=android --org com.antara --project-name antara .
           flutter pub get
+          sed -i 's/<application/<application android:usesCleartextTraffic="true"/' android/app/src/main/AndroidManifest.xml
 
       - name: Build APK
         working-directory: flutter_app
-        run: flutter build apk --debug
+        run: flutter build apk --debug --android-skip-build-dependency-validation
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4

@@ -1,3 +1,8 @@
+
+
+
+
+
 # 📱 Antara Flutter Mobile App & FastAPI Backend Guide
 
 Welcome to the **Antara Native Mobile Application**! Antara has been upgraded from a web interface to a **100% Native Flutter Mobile Application** powered by a high-performance **Python FastAPI REST API**.
