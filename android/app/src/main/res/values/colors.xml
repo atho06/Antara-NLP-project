@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="primary">#6C5CE7</color>
+    <color name="primary_dark">#5647D0</color>
+    <color name="primary_light">#A29BFE</color>
+    <color name="primary_soft">#EDE7F6</color>
+    
+    <color name="background">#F8F7FF</color>
+    <color name="surface">#FFFFFF</color>
+    
+    <color name="text_primary">#2D3436</color>
+    <color name="text_secondary">#636E72</color>
+    <color name="text_muted">#B2BEC3</color>
+    
+    <color name="success">#00B894</color>
+    <color name="warning">#FDCB6E</color>
+    <color name="error">#FF7675</color>
+    <color name="sos_red">#D63031</color>
+    
+    <color name="bot_bubble">#F0EDF9</color>
+    <color name="bot_bubble_text">#311B92</color>
+    <color name="user_bubble">#6C5CE7</color>
+    <color name="user_bubble_text">#FFFFFF</color>
+</resources>

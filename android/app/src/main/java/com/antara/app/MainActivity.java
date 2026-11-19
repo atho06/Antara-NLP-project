@@ -1,172 +1,137 @@
 package com.antara.app;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
-import android.content.SharedPreferences;
-import android.graphics.Color;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
-import android.view.Gravity;
 import android.view.View;
-import android.view.ViewGroup;
-import android.webkit.WebResourceError;
-import android.webkit.WebResourceRequest;
-import android.webkit.WebSettings;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.EditText;
-import android.widget.FrameLayout;
 import android.widget.LinearLayout;
+import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
 
-public class MainActivity extends Activity {
+import androidx.appcompat.app.AppCompatActivity;
 
-    private WebView webView;
-    private SharedPreferences prefs;
-    private static final String PREF_NAME = "antara_prefs";
-    private static final String KEY_SERVER_URL = "server_url";
-    
-    // Default server URL pointing to your local Wi-Fi IP
-    private static final String DEFAULT_URL = "http://172.29.9.185:8501";
+import com.antara.app.data.SessionManager;
+
+import java.util.Calendar;
+
+public class MainActivity extends AppCompatActivity {
+
+    private TextView tvGreetingTime, tvUserName;
+    private Button btnSos, btnStartSession;
+    private Spinner spnDuration, spnCategory;
+    private LinearLayout navHome, navHistory, navSettings;
+    private SessionManager sessionManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
 
-        prefs = getSharedPreferences(PREF_NAME, MODE_PRIVATE);
-        String currentUrl = prefs.getString(KEY_SERVER_URL, DEFAULT_URL);
+        sessionManager = new SessionManager(this);
 
-        // Root container
-        FrameLayout rootLayout = new FrameLayout(this);
-        rootLayout.setLayoutParams(new FrameLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT
-        ));
+        tvGreetingTime = findViewById(R.id.tv_greeting_time);
+        tvUserName = findViewById(R.id.tv_user_name);
+        btnSos = findViewById(R.id.btn_sos_header);
+        btnStartSession = findViewById(R.id.btn_start_session);
+        spnDuration = findViewById(R.id.spn_duration);
+        spnCategory = findViewById(R.id.spn_category);
+        navHome = findViewById(R.id.nav_home);
+        navHistory = findViewById(R.id.nav_history);
+        navSettings = findViewById(R.id.nav_settings);
 
-        // WebView setup
-        webView = new WebView(this);
-        WebSettings settings = webView.getSettings();
-        settings.setJavaScriptEnabled(true);
-        settings.setDomStorageEnabled(true);
-        settings.setDatabaseEnabled(true);
-        settings.setLoadWithOverviewMode(true);
-        settings.setUseWideViewPort(true);
+        // Populate user name and greeting
+        tvUserName.setText(sessionManager.getUserName());
+        tvGreetingTime.setText(getGreetingTime() + ",");
 
-        webView.setWebViewClient(new WebViewClient() {
-            @Override
-            public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
-                super.onReceivedError(view, request, error);
-                if (request.isForMainFrame()) {
-                    showServerConfigDialog("Could not connect to server.\nPlease check if the server is running on your laptop and verify the URL:");
-                }
-            }
+        // Duration options
+        String[] durations = new String[]{"5 Minutes", "10 Minutes", "15 Minutes", "20 Minutes", "Open Reflection"};
+        ArrayAdapter<String> durAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, durations);
+        spnDuration.setAdapter(durAdapter);
 
-            @Override
-            public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
-                super.onReceivedError(view, errorCode, description, failingUrl);
-                showServerConfigDialog("Could not connect to server (" + description + ").\nPlease verify your server URL:");
-            }
-        });
+        // Topic categories
+        String[] categories = new String[]{"Daily Routine", "Stress & Overwhelm", "Low Energy / Sadness", "Relationships", "General Reflection"};
+        ArrayAdapter<String> catAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, categories);
+        spnCategory.setAdapter(catAdapter);
 
-        webView.setLayoutParams(new FrameLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT
-        ));
-        rootLayout.addView(webView);
-
-        // Small floating "⚙️ Server" button in the corner to change IP anytime
-        Button settingsBtn = new Button(this);
-        settingsBtn.setText("⚙️");
-        settingsBtn.setTextSize(14);
-        settingsBtn.setTextColor(Color.WHITE);
-        settingsBtn.setBackgroundColor(Color.parseColor("#806C5CE7"));
-        FrameLayout.LayoutParams btnParams = new FrameLayout.LayoutParams(
-            110, 110, Gravity.BOTTOM | Gravity.END
-        );
-        btnParams.setMargins(0, 0, 30, 40);
-        settingsBtn.setLayoutParams(btnParams);
-        settingsBtn.setOnClickListener(new View.OnClickListener() {
+        // Start Reflection Button
+        btnStartSession.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                showServerConfigDialog("Set Antara Server URL:");
+                int durationMins = 5;
+                int pos = spnDuration.getSelectedItemPosition();
+                if (pos == 0) durationMins = 5;
+                else if (pos == 1) durationMins = 10;
+                else if (pos == 2) durationMins = 15;
+                else if (pos == 3) durationMins = 20;
+                else if (pos == 4) durationMins = 0; // open
+
+                String categoryKey = "daily_routine";
+                int catPos = spnCategory.getSelectedItemPosition();
+                if (catPos == 0) categoryKey = "daily_routine";
+                else if (catPos == 1) categoryKey = "stress";
+                else if (catPos == 2) categoryKey = "sadness";
+                else if (catPos == 3) categoryKey = "relationships";
+                else if (catPos == 4) categoryKey = "general";
+
+                Intent intent = new Intent(MainActivity.this, ChatActivity.class);
+                intent.putExtra("duration_minutes", durationMins);
+                intent.putExtra("category", categoryKey);
+                startActivity(intent);
             }
         });
-        rootLayout.addView(settingsBtn);
 
-        setContentView(rootLayout);
-
-        // Load the configured URL
-        loadServerUrl(currentUrl);
-    }
-
-    private void loadServerUrl(String url) {
-        if (url == null || url.trim().isEmpty() || url.contains("YOUR-ANTARA-APP-URL")) {
-            showServerConfigDialog("Please enter your Antara server URL to begin:");
-            return;
-        }
-        webView.loadUrl(url.trim());
-    }
-
-    private void showServerConfigDialog(String promptMessage) {
-        String currentUrl = prefs.getString(KEY_SERVER_URL, DEFAULT_URL);
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Antara Server Connection 🌷");
-
-        LinearLayout layout = new LinearLayout(this);
-        layout.setOrientation(LinearLayout.VERTICAL);
-        layout.setPadding(40, 20, 40, 10);
-
-        TextView promptText = new TextView(this);
-        promptText.setText(promptMessage);
-        promptText.setPadding(0, 0, 0, 20);
-        layout.addView(promptText);
-
-        final EditText input = new EditText(this);
-        input.setHint("http://192.168.x.x:8501 or https://...");
-        input.setText(currentUrl);
-        input.setSingleLine(true);
-        layout.addView(input);
-
-        TextView hintText = new TextView(this);
-        hintText.setText("• Laptop Wi-Fi IP: http://172.29.9.185:8501\n• Free Tunnel (ngrok): https://xxx.ngrok.app\n• Cloud: https://xxx.streamlit.app");
-        hintText.setTextSize(12);
-        hintText.setTextColor(Color.GRAY);
-        hintText.setPadding(0, 15, 0, 0);
-        layout.addView(hintText);
-
-        builder.setView(layout);
-
-        builder.setPositiveButton("Connect", new DialogInterface.OnClickListener() {
+        // Emergency SOS
+        btnSos.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(DialogInterface dialog, int which) {
-                String newUrl = input.getText().toString().trim();
-                if (!newUrl.isEmpty()) {
-                    prefs.edit().putString(KEY_SERVER_URL, newUrl).apply();
-                    Toast.makeText(MainActivity.this, "Connecting to: " + newUrl, Toast.LENGTH_SHORT).show();
-                    webView.loadUrl(newUrl);
-                }
+            public void onClick(View v) {
+                showSosDialog();
             }
         });
 
-        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+        // Bottom Navigation
+        navHistory.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.cancel();
+            public void onClick(View v) {
+                startActivity(new Intent(MainActivity.this, HistoryActivity.class));
             }
         });
 
-        builder.show();
+        navSettings.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(MainActivity.this, SettingsActivity.class));
+            }
+        });
     }
 
-    @Override
-    public void onBackPressed() {
-        if (webView.canGoBack()) {
-            webView.goBack();
-        } else {
-            super.onBackPressed();
-        }
+    private String getGreetingTime() {
+        int hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
+        if (hour < 12) return "Good morning";
+        if (hour < 17) return "Good afternoon";
+        return "Good evening";
+    }
+
+    private void showSosDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle("🆘 Immediate Emergency Helplines")
+                .setMessage("If you are feeling overwhelmed or in crisis, immediate confidential support is available 24/7:\n\n"
+                        + "• Tele-MANAS (Govt. of India): 14416 (Toll-Free)\n"
+                        + "• KIRAN Mental Health: 1800-599-0019 (Toll-Free)\n"
+                        + "• Vandrevala Foundation: +91 9999 666 555\n"
+                        + "• Emergency Medical: 112")
+                .setPositiveButton("Call Tele-MANAS", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Intent callIntent = new Intent(Intent.ACTION_DIAL);
+                        callIntent.setData(Uri.parse("tel:14416"));
+                        startActivity(callIntent);
+                    }
+                })
+                .setNegativeButton("Close", null)
+                .show();
     }
 }
