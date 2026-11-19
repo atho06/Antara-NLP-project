@@ -27,9 +27,11 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Install dependencies
+      - name: Install dependencies and configure platform
         working-directory: flutter_app
-        run: flutter pub get
+        run: |
+          flutter create --platforms=android --org com.antara .
+          flutter pub get
 
       - name: Build APK
         working-directory: flutter_app
