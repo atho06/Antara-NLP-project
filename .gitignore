@@ -33,6 +33,7 @@ downloads/
 eggs/
 .eggs/
 lib/
+!flutter_app/lib/
 lib64/
 parts/
 sdist/
