@@ -90,6 +90,28 @@ public class SettingsActivity extends AppCompatActivity {
         btnVerifyPhone.setOnClickListener(v -> showOtpDialog("Phone", AntaraDatabaseHelper.COL_USER_PHONE_VERIFIED, btnVerifyPhone));
         btnVerifyContact.setOnClickListener(v -> showOtpDialog("Emergency Contact", AntaraDatabaseHelper.COL_USER_CONTACT_VERIFIED, btnVerifyContact));
 
+        // 3. Navigation to Feedback and About Us
+        View rowFeedback = findViewById(R.id.row_settings_feedback);
+        View rowAbout = findViewById(R.id.row_settings_about);
+
+        if (rowFeedback != null) {
+            rowFeedback.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    startActivity(new Intent(SettingsActivity.this, FeedbackActivity.class));
+                }
+            });
+        }
+
+        if (rowAbout != null) {
+            rowAbout.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    startActivity(new Intent(SettingsActivity.this, AboutActivity.class));
+                }
+            });
+        }
+
         // Sign Out
         btnLogout.setOnClickListener(v -> {
             sessionManager.logout();

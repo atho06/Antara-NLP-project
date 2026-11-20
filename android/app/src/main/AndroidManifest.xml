@@ -56,6 +56,15 @@
             android:name=".HistoryActivity"
             android:screenOrientation="portrait" />
 
+        <activity
+            android:name=".FeedbackActivity"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustResize" />
+
+        <activity
+            android:name=".AboutActivity"
+            android:screenOrientation="portrait" />
+
         <receiver
             android:name=".NotificationReceiver"
             android:exported="false" />

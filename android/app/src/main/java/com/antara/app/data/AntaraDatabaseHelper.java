@@ -47,6 +47,15 @@ public class AntaraDatabaseHelper extends SQLiteOpenHelper {
     public static final String COL_SESS_EXCHANGES = "exchanges_count";
     public static final String COL_SESS_COMPLETED_AT = "completed_at";
 
+    // Table: Feedback
+    public static final String TABLE_FEEDBACK = "feedback";
+    public static final String COL_FEEDBACK_ID = "id";
+    public static final String COL_FEEDBACK_USER_ID = "user_id";
+    public static final String COL_FEEDBACK_CATEGORY = "category";
+    public static final String COL_FEEDBACK_RATING = "rating";
+    public static final String COL_FEEDBACK_TEXT = "feedback_text";
+    public static final String COL_FEEDBACK_CREATED_AT = "created_at";
+
     public AntaraDatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
@@ -77,8 +86,17 @@ public class AntaraDatabaseHelper extends SQLiteOpenHelper {
                 + COL_SESS_EXCHANGES + " INTEGER, "
                 + COL_SESS_COMPLETED_AT + " TEXT)";
 
+        String createFeedbackTable = "CREATE TABLE IF NOT EXISTS " + TABLE_FEEDBACK + " ("
+                + COL_FEEDBACK_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
+                + COL_FEEDBACK_USER_ID + " INTEGER, "
+                + COL_FEEDBACK_CATEGORY + " TEXT, "
+                + COL_FEEDBACK_RATING + " INTEGER, "
+                + COL_FEEDBACK_TEXT + " TEXT, "
+                + COL_FEEDBACK_CREATED_AT + " TEXT)";
+
         db.execSQL(createUsersTable);
         db.execSQL(createSessionsTable);
+        db.execSQL(createFeedbackTable);
     }
 
     @Override
@@ -88,6 +106,13 @@ public class AntaraDatabaseHelper extends SQLiteOpenHelper {
                 db.execSQL("ALTER TABLE " + TABLE_USERS + " ADD COLUMN " + COL_USER_CONTACT_EMAIL + " TEXT DEFAULT ''");
             } catch (Exception ignored) {}
         }
+        db.execSQL("CREATE TABLE IF NOT EXISTS " + TABLE_FEEDBACK + " ("
+                + COL_FEEDBACK_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
+                + COL_FEEDBACK_USER_ID + " INTEGER, "
+                + COL_FEEDBACK_CATEGORY + " TEXT, "
+                + COL_FEEDBACK_RATING + " INTEGER, "
+                + COL_FEEDBACK_TEXT + " TEXT, "
+                + COL_FEEDBACK_CREATED_AT + " TEXT)");
     }
 
     // Password Hashing
@@ -243,6 +268,18 @@ public class AntaraDatabaseHelper extends SQLiteOpenHelper {
         cv.put(COL_SESS_COMPLETED_AT, new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(new Date()));
 
         return db.insert(TABLE_SESSIONS, null, cv);
+    }
+
+    // Save Feedback
+    public long saveFeedback(long userId, String category, int rating, String text) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues cv = new ContentValues();
+        cv.put(COL_FEEDBACK_USER_ID, userId);
+        cv.put(COL_FEEDBACK_CATEGORY, category != null ? category : "General");
+        cv.put(COL_FEEDBACK_RATING, rating);
+        cv.put(COL_FEEDBACK_TEXT, text != null ? text.trim() : "");
+        cv.put(COL_FEEDBACK_CREATED_AT, new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date()));
+        return db.insert(TABLE_FEEDBACK, null, cv);
     }
 
     // Get Sessions for User
