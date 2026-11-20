@@ -1,11 +1,15 @@
 package com.antara.app;
 
 import android.Manifest;
+import android.app.AlarmManager;
 import android.app.AlertDialog;
+import android.app.PendingIntent;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -30,6 +34,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.antara.app.adapters.ChatAdapter;
 import com.antara.app.data.AntaraDatabaseHelper;
+import com.antara.app.data.DraftSessionManager;
 import com.antara.app.data.SessionManager;
 import com.antara.app.models.ChatMessage;
 import com.antara.app.nlp.CrisisClassifier;
@@ -67,6 +72,10 @@ public class ChatActivity extends AppCompatActivity {
     private boolean inSafetyHoldMode = false;
     private int safetySupportStep = 0;
 
+    // Interruption / Abrupt Exit Resumption State
+    private boolean isResumingInterruptionCheckIn = false;
+    private boolean isSessionFinished = false;
+
     private int durationMinutes;
     private String category;
     private int targetSeconds;
@@ -86,12 +95,6 @@ public class ChatActivity extends AppCompatActivity {
 
         dbHelper = new AntaraDatabaseHelper(this);
         sessionManager = new SessionManager(this);
-
-        durationMinutes = getIntent().getIntExtra("duration_minutes", 5);
-        category = getIntent().getStringExtra("category");
-        if (category == null) category = "daily_routine";
-
-        targetSeconds = durationMinutes * 60;
 
         tvTimer = findViewById(R.id.tv_chat_timer);
         btnFinish = findViewById(R.id.btn_chat_finish);
@@ -114,16 +117,57 @@ public class ChatActivity extends AppCompatActivity {
         rvChat.setLayoutManager(layoutManager);
         rvChat.setAdapter(chatAdapter);
 
-        // Initial welcome message
-        messageList.add(new ChatMessage("Hello, I am Antara 🌷. I am here to listen with full care, without any judgment. Let's begin whenever you are ready.", false));
-        
-        // Fetch first question with options
-        QuestionBank.QuestionItem firstQ = QuestionBank.getNextQuestion(category, askedQuestions);
-        messageList.add(new ChatMessage(firstQ.text, false));
-        chatAdapter.notifyDataSetChanged();
+        boolean isResume = getIntent().getBooleanExtra("is_resume", false);
+        DraftSessionManager.DraftSession draft = isResume ? DraftSessionManager.getDraft(this, sessionManager.getUserId()) : null;
 
-        // Display choice buttons for first question
-        displayOptionButtons(firstQ.options);
+        if (isResume && draft != null) {
+            // Restore previous conversation state
+            category = draft.category;
+            durationMinutes = draft.durationMinutes;
+            secondsElapsed = draft.secondsElapsed;
+            targetSeconds = durationMinutes * 60;
+            messageList.addAll(draft.messages);
+            turnCount = messageList.size() / 2;
+
+            // Cancel any pending 1-hour alarm notification
+            cancelInactivityAlarm();
+
+            // Set resumption check-in flag
+            isResumingInterruptionCheckIn = true;
+
+            // Antara asks why they left abruptly & if anything was wrong
+            messageList.add(new ChatMessage(
+                    "Welcome back 🌷. I noticed you had to step away from our conversation earlier. Was everything okay, or did the conversation feel overwhelming or heavy?",
+                    false
+            ));
+            chatAdapter.notifyDataSetChanged();
+
+            // Options for resumption
+            displayOptionButtons(Arrays.asList(
+                    "I got interrupted / busy",
+                    "It felt a bit overwhelming",
+                    "I lost my train of thought",
+                    "I just needed a breather",
+                    "I'm ready to continue now"
+            ));
+        } else {
+            // New conversation session
+            durationMinutes = getIntent().getIntExtra("duration_minutes", 5);
+            category = getIntent().getStringExtra("category");
+            if (category == null) category = "daily_routine";
+            targetSeconds = durationMinutes * 60;
+
+            // Initial welcome message
+            messageList.add(new ChatMessage("Hello, I am Antara 🌷. I am here to listen with full care, without any judgment. Let's begin whenever you are ready.", false));
+
+            // Fetch first question with options
+            QuestionBank.QuestionItem firstQ = QuestionBank.getNextQuestion(category, askedQuestions);
+            messageList.add(new ChatMessage(firstQ.text, false));
+            chatAdapter.notifyDataSetChanged();
+
+            // Display choice buttons for first question
+            displayOptionButtons(firstQ.options);
+        }
 
         // Send Button for custom typed input
         btnSend.setOnClickListener(new View.OnClickListener() {
@@ -211,18 +255,24 @@ public class ChatActivity extends AppCompatActivity {
             return;
         }
 
-        // 4. On-Device NLP Emotion Analysis
+        // 4. Interruption / Resumption Check-in Handler
+        if (isResumingInterruptionCheckIn) {
+            handleResumeCheckInReply(userText);
+            return;
+        }
+
+        // 5. On-Device NLP Emotion Analysis
         NLPEmotionAnalyzer.EmotionResult analysis = NLPEmotionAnalyzer.analyze(userText);
         emotionsLog.add(analysis.primaryEmotion);
 
-        // 5. Overwhelm / Fatigue Detection
+        // 6. Overwhelm / Fatigue Detection
         if (analysis.userFatigued && !isTimeUpPrompted) {
             isTimeUpPrompted = true;
             showContinuationDialog("I notice this might be feeling a bit heavy or tiring. There is zero pressure here. Would you like to take a break and finish, or keep talking?");
             return;
         }
 
-        // 6. Generate Connected, Contextual Dialogue using ConversationalEngine
+        // 7. Generate Connected, Contextual Dialogue using ConversationalEngine
         turnCount++;
         ConversationalEngine.DialogueResponse dialogResponse = 
                 ConversationalEngine.generateContextualResponse(userText, turnCount, previousTopics);
@@ -240,6 +290,31 @@ public class ChatActivity extends AppCompatActivity {
 
         // Update option buttons for the new contextual question
         displayOptionButtons(dialogResponse.options);
+    }
+
+    private void handleResumeCheckInReply(String userText) {
+        isResumingInterruptionCheckIn = false;
+        String lower = userText.toLowerCase(Locale.ROOT);
+
+        String acknowledgement;
+        if (lower.contains("overwhelm") || lower.contains("heavy") || lower.contains("too much") || lower.contains("stress") || lower.contains("hard")) {
+            acknowledgement = "Thank you so much for being honest with me. Stepping away when things feel heavy or overwhelming is actually a very healthy and kind act of self-care. There is zero pressure here—we can take everything as gently and slowly as you like.";
+        } else if (lower.contains("interrupt") || lower.contains("busy") || lower.contains("call") || lower.contains("work") || lower.contains("distract")) {
+            acknowledgement = "Life and interruptions happen all the time! I'm really glad you were able to carve out a moment to come back to this space for yourself.";
+        } else if (lower.contains("breather") || lower.contains("break") || lower.contains("pause") || lower.contains("rest") || lower.contains("train of thought")) {
+            acknowledgement = "Taking a breather or pausing to gather your thoughts is always completely welcome here. You are in full control of this conversation.";
+        } else {
+            acknowledgement = "Thank you for letting me know. I'm right here with you, and there is never any rush.";
+        }
+
+        QuestionBank.QuestionItem nextQ = QuestionBank.getNextQuestion(category, askedQuestions);
+        String continuationPrompt = acknowledgement + "\n\nWhenever you feel ready to continue: " + nextQ.text;
+
+        messageList.add(new ChatMessage(continuationPrompt, false));
+        chatAdapter.notifyItemInserted(messageList.size() - 1);
+        rvChat.smoothScrollToPosition(messageList.size() - 1);
+
+        displayOptionButtons(nextQ.options);
     }
 
     // --- Safety Support Mode & SMS Alert System ---
@@ -426,6 +501,55 @@ public class ChatActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        saveDraftAndScheduleAlarm();
+    }
+
+    private void saveDraftAndScheduleAlarm() {
+        if (!isSessionFinished && messageList != null && messageList.size() >= 2) {
+            long userId = sessionManager.getUserId();
+            DraftSessionManager.saveDraft(this, userId, category, durationMinutes, secondsElapsed, messageList);
+
+            // Schedule notification if away for > 1 hour (3,600,000 ms)
+            AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+            if (alarmManager != null) {
+                Intent notifyIntent = new Intent(this, NotificationReceiver.class);
+                PendingIntent pi = PendingIntent.getBroadcast(
+                        this,
+                        NotificationReceiver.NOTIFICATION_ID,
+                        notifyIntent,
+                        PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE : 0)
+                );
+                long triggerAt = System.currentTimeMillis() + (60 * 60 * 1000L); // 1 hour
+                try {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pi);
+                    } else {
+                        alarmManager.set(AlarmManager.RTC_WAKEUP, triggerAt, pi);
+                    }
+                } catch (SecurityException ignored) {
+                    alarmManager.set(AlarmManager.RTC_WAKEUP, triggerAt, pi);
+                }
+            }
+        }
+    }
+
+    private void cancelInactivityAlarm() {
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        if (alarmManager != null) {
+            Intent notifyIntent = new Intent(this, NotificationReceiver.class);
+            PendingIntent pi = PendingIntent.getBroadcast(
+                    this,
+                    NotificationReceiver.NOTIFICATION_ID,
+                    notifyIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE : 0)
+            );
+            alarmManager.cancel(pi);
+        }
+    }
+
     private void startTimer() {
         timerRunnable = new Runnable() {
             @Override
@@ -483,6 +607,10 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void finishSession() {
+        isSessionFinished = true;
+        cancelInactivityAlarm();
+        DraftSessionManager.clearDraft(this, sessionManager.getUserId());
+
         timerHandler.removeCallbacks(timerRunnable);
 
         // Calculate Dominant Emotion

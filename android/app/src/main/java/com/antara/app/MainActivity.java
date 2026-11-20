@@ -1,9 +1,12 @@
 package com.antara.app;
 
+import android.Manifest;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -13,18 +16,29 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.cardview.widget.CardView;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
+import com.antara.app.data.DraftSessionManager;
 import com.antara.app.data.SessionManager;
 
 import java.util.Calendar;
 
 public class MainActivity extends AppCompatActivity {
 
+    private static final int NOTIF_PERMISSION_REQ = 102;
+
     private TextView tvGreetingTime, tvUserName;
     private Button btnSos, btnStartSession;
     private Spinner spnDuration, spnCategory;
     private LinearLayout navHome, navHistory, navSettings;
     private SessionManager sessionManager;
+
+    // Resume session card views
+    private CardView cardResumeSession;
+    private TextView tvResumeTimeAgo, tvResumeDetails;
+    private Button btnResumeSession;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,6 +56,11 @@ public class MainActivity extends AppCompatActivity {
         navHome = findViewById(R.id.nav_home);
         navHistory = findViewById(R.id.nav_history);
         navSettings = findViewById(R.id.nav_settings);
+
+        cardResumeSession = findViewById(R.id.card_resume_session);
+        tvResumeTimeAgo = findViewById(R.id.tv_resume_time_ago);
+        tvResumeDetails = findViewById(R.id.tv_resume_details);
+        btnResumeSession = findViewById(R.id.btn_resume_session);
 
         // Populate user name and greeting
         tvUserName.setText(sessionManager.getUserName());
@@ -84,6 +103,16 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        // Resume Incomplete Session Button
+        btnResumeSession.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this, ChatActivity.class);
+                intent.putExtra("is_resume", true);
+                startActivity(intent);
+            }
+        });
+
         // Emergency SOS
         btnSos.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -106,6 +135,45 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(new Intent(MainActivity.this, SettingsActivity.class));
             }
         });
+
+        // Request POST_NOTIFICATIONS permission on Android 13+ if needed
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.POST_NOTIFICATIONS}, NOTIF_PERMISSION_REQ);
+            }
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        checkActiveDraft();
+    }
+
+    private void checkActiveDraft() {
+        long userId = sessionManager.getUserId();
+        if (DraftSessionManager.hasActiveDraft(this, userId)) {
+            long leftTimestamp = DraftSessionManager.getDraftLeftTimestamp(this, userId);
+            long diffMs = System.currentTimeMillis() - leftTimestamp;
+            // Show option to continue if user left and hasn't returned within 2 minutes (120,000 ms)
+            if (diffMs >= 2 * 60 * 1000) {
+                DraftSessionManager.DraftSession draft = DraftSessionManager.getDraft(this, userId);
+                if (draft != null) {
+                    cardResumeSession.setVisibility(View.VISIBLE);
+                    long minutesAgo = diffMs / (60 * 1000);
+                    if (minutesAgo < 60) {
+                        tvResumeTimeAgo.setText("Paused " + minutesAgo + "m ago");
+                    } else {
+                        long hoursAgo = minutesAgo / 60;
+                        tvResumeTimeAgo.setText("Paused " + hoursAgo + "h ago");
+                    }
+                    tvResumeDetails.setText("You stepped away from your " + draft.category.replace('_', ' ') 
+                            + " reflection. Would you like to resume where you left off?");
+                    return;
+                }
+            }
+        }
+        cardResumeSession.setVisibility(View.GONE);
     }
 
     private String getGreetingTime() {
