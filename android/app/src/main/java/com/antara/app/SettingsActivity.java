@@ -18,6 +18,7 @@ import androidx.core.content.ContextCompat;
 
 import com.antara.app.data.AntaraDatabaseHelper;
 import com.antara.app.data.SessionManager;
+import com.antara.app.utils.ThemeHelper;
 
 import java.util.Random;
 
@@ -26,6 +27,8 @@ public class SettingsActivity extends AppCompatActivity {
     private TextView tvAvatar, tvName, tvEmail, tvPhone;
     private TextView tvContactName, tvContactPhone, tvContactEmail;
     private Button btnEditProfile, btnEditContact;
+    private TextView tvCurrentTheme;
+    private Button btnChangeTheme;
     private TextView btnVerifyEmail, btnVerifyPhone, btnVerifyContact;
     private Button btnLogout;
 
@@ -51,6 +54,25 @@ public class SettingsActivity extends AppCompatActivity {
 
         btnEditProfile = findViewById(R.id.btn_edit_profile);
         btnEditContact = findViewById(R.id.btn_edit_contact);
+
+        tvCurrentTheme = findViewById(R.id.tv_current_theme);
+        btnChangeTheme = findViewById(R.id.btn_change_theme);
+        View rowTheme = findViewById(R.id.row_settings_theme);
+
+        int currentMode = ThemeHelper.getSavedTheme(this);
+        if (tvCurrentTheme != null) {
+            tvCurrentTheme.setText(ThemeHelper.getThemeName(currentMode));
+        }
+
+        View.OnClickListener themeClickListener = new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showThemeSelectionDialog();
+            }
+        };
+
+        if (btnChangeTheme != null) btnChangeTheme.setOnClickListener(themeClickListener);
+        if (rowTheme != null) rowTheme.setOnClickListener(themeClickListener);
 
         btnVerifyEmail = findViewById(R.id.btn_verify_email);
         btnVerifyPhone = findViewById(R.id.btn_verify_phone);
@@ -311,6 +333,38 @@ public class SettingsActivity extends AppCompatActivity {
                         } else {
                             Toast.makeText(SettingsActivity.this, "Invalid verification code", Toast.LENGTH_SHORT).show();
                         }
+                    }
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private void showThemeSelectionDialog() {
+        final String[] themeOptions = new String[]{
+                "☀️ Light Mode (Blossom)",
+                "🌙 Dark Mode (Midnight)",
+                "⚙️ Follow System Default"
+        };
+
+        int current = ThemeHelper.getSavedTheme(this);
+        final int[] selected = new int[]{current};
+
+        new AlertDialog.Builder(this)
+                .setTitle("🎨 Choose App Theme")
+                .setSingleChoiceItems(themeOptions, current, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        selected[0] = which;
+                    }
+                })
+                .setPositiveButton("Apply", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        ThemeHelper.setTheme(SettingsActivity.this, selected[0]);
+                        if (tvCurrentTheme != null) {
+                            tvCurrentTheme.setText(ThemeHelper.getThemeName(selected[0]));
+                        }
+                        Toast.makeText(SettingsActivity.this, "Theme applied! 🌸", Toast.LENGTH_SHORT).show();
                     }
                 })
                 .setNegativeButton("Cancel", null)

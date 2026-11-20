@@ -7,6 +7,7 @@
     
     <color name="background">#F8F7FF</color>
     <color name="surface">#FFFFFF</color>
+    <color name="border">#E0E0E0</color>
     
     <color name="text_primary">#2D3436</color>
     <color name="text_secondary">#636E72</color>
