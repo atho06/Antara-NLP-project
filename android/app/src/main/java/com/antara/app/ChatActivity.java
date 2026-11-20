@@ -30,6 +30,7 @@ import com.antara.app.models.ChatMessage;
 import com.antara.app.nlp.CrisisClassifier;
 import com.antara.app.nlp.NLPEmotionAnalyzer;
 import com.antara.app.nlp.QuestionBank;
+import com.antara.app.nlp.ConversationalEngine;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -51,6 +52,8 @@ public class ChatActivity extends AppCompatActivity {
     private ChatAdapter chatAdapter;
     private Set<String> askedQuestions;
     private List<String> emotionsLog;
+    private int turnCount = 0;
+    private Set<String> previousTopics;
 
     private int durationMinutes;
     private String category;
@@ -90,6 +93,8 @@ public class ChatActivity extends AppCompatActivity {
         messageList = new ArrayList<>();
         askedQuestions = new HashSet<>();
         emotionsLog = new ArrayList<>();
+        previousTopics = new HashSet<>();
+        turnCount = 0;
 
         chatAdapter = new ChatAdapter(messageList);
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
@@ -203,24 +208,24 @@ public class ChatActivity extends AppCompatActivity {
             return;
         }
 
-        // 5. Generate Next Gentle Acknowledgement and Question with its options
-        String[] acks = new String[]{
-                "Thank you for sharing that with me.",
-                "I hear you, and it makes complete sense that you feel this way.",
-                "Thank you for opening up—it takes courage to reflect like this.",
-                "I appreciate you expressing that so honestly."
-        };
-        String ack = acks[(int) (Math.random() * acks.length)];
+        // 5. Generate Connected, Contextual Dialogue using ConversationalEngine
+        turnCount++;
+        ConversationalEngine.DialogueResponse dialogResponse = 
+                ConversationalEngine.generateContextualResponse(userText, turnCount, previousTopics);
 
-        messageList.add(new ChatMessage(ack, false));
-        QuestionBank.QuestionItem nextQ = QuestionBank.getNextQuestion(category, askedQuestions);
-        messageList.add(new ChatMessage(nextQ.text, false));
+        int addedCount = 0;
+        if (dialogResponse.acknowledgement != null && !dialogResponse.acknowledgement.isEmpty()) {
+            messageList.add(new ChatMessage(dialogResponse.acknowledgement, false));
+            addedCount++;
+        }
+        messageList.add(new ChatMessage(dialogResponse.followUpQuestion, false));
+        addedCount++;
 
-        chatAdapter.notifyItemRangeInserted(messageList.size() - 2, 2);
+        chatAdapter.notifyItemRangeInserted(messageList.size() - addedCount, addedCount);
         rvChat.smoothScrollToPosition(messageList.size() - 1);
 
-        // Update option buttons for the new question
-        displayOptionButtons(nextQ.options);
+        // Update option buttons for the new contextual question
+        displayOptionButtons(dialogResponse.options);
     }
 
     private void startTimer() {
