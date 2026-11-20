@@ -174,6 +174,16 @@ public class AntaraDatabaseHelper extends SQLiteOpenHelper {
         return null;
     }
 
+    // Update Emergency Contact
+    public boolean updateEmergencyContact(long userId, String contactName, String contactPhone) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues cv = new ContentValues();
+        cv.put(COL_USER_CONTACT_NAME, contactName != null ? contactName.trim() : "");
+        cv.put(COL_USER_CONTACT_PHONE, contactPhone != null ? contactPhone.trim() : "");
+        int rows = db.update(TABLE_USERS, cv, COL_USER_ID + "=?", new String[]{String.valueOf(userId)});
+        return rows > 0;
+    }
+
     // Update Verification Status
     public boolean setVerification(long userId, String field, boolean verified) {
         SQLiteDatabase db = this.getWritableDatabase();

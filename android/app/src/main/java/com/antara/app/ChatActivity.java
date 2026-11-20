@@ -48,6 +48,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ChatActivity extends AppCompatActivity {
 
@@ -219,7 +221,7 @@ public class ChatActivity extends AppCompatActivity {
             btn.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    processUserMessage(option);
+                    handleOptionClick(option);
                 }
             });
 
@@ -235,8 +237,52 @@ public class ChatActivity extends AppCompatActivity {
         });
     }
 
+    private void handleOptionClick(String option) {
+        if ("➕ Add Emergency Contact".equals(option)) {
+            showAddEmergencyContactDialog();
+            return;
+        }
+
+        if (option.startsWith("📞 Call ")) {
+            if (option.contains("14416")) {
+                dialPhoneNumber("14416");
+                return;
+            }
+            long userId = sessionManager.getUserId();
+            AntaraDatabaseHelper.UserProfile profile = dbHelper.getUserProfile(userId);
+            if (profile != null && profile.trustedContactPhone != null && !profile.trustedContactPhone.trim().isEmpty()) {
+                dialPhoneNumber(profile.trustedContactPhone.trim());
+                return;
+            }
+        }
+
+        processUserMessage(option);
+    }
+
+    private void dialPhoneNumber(String phone) {
+        Intent intent = new Intent(Intent.ACTION_DIAL);
+        intent.setData(Uri.parse("tel:" + phone));
+        try {
+            startActivity(intent);
+        } catch (Exception e) {
+            Toast.makeText(this, "Could not open phone dialer", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private boolean hasSavedEmergencyContact() {
+        long userId = sessionManager.getUserId();
+        AntaraDatabaseHelper.UserProfile profile = dbHelper.getUserProfile(userId);
+        return profile != null && profile.trustedContactPhone != null && !profile.trustedContactPhone.trim().isEmpty();
+    }
+
     private void processUserMessage(String userText) {
         if (userText == null || userText.trim().isEmpty()) return;
+
+        // Check if user clicked or typed add emergency contact command
+        if ("➕ Add Emergency Contact".equals(userText.trim())) {
+            showAddEmergencyContactDialog();
+            return;
+        }
 
         // 1. Add User Message
         messageList.add(new ChatMessage(userText, true));
@@ -317,19 +363,32 @@ public class ChatActivity extends AppCompatActivity {
         displayOptionButtons(nextQ.options);
     }
 
-    // --- Safety Support Mode & SMS Alert System ---
+    // --- Safety Support Mode & Emergency Contact Flow ---
 
     private void triggerSafetySupportMode() {
         inSafetyHoldMode = true;
         safetySupportStep = 1;
 
-        // 1. Post Helpline Message
-        messageList.add(new ChatMessage(CrisisClassifier.SAFETY_MESSAGE, false, "crisis", true));
+        long userId = sessionManager.getUserId();
+        AntaraDatabaseHelper.UserProfile profile = dbHelper.getUserProfile(userId);
 
-        // 2. Dispatch Friendly Check-in Reminder SMS to Trusted Contact
-        dispatchEmergencyContactAlert();
+        boolean hasContact = (profile != null 
+                && profile.trustedContactPhone != null 
+                && !profile.trustedContactPhone.trim().isEmpty());
 
-        // 3. Post Immediate Holding Check-in
+        // 1. Post Crisis / Safety Message (Emergency contact FIRST, bigger)
+        if (hasContact) {
+            String crisisMsg = CrisisClassifier.buildCrisisMessageWithContact(profile.trustedContactName, profile.trustedContactPhone);
+            messageList.add(new ChatMessage(crisisMsg, false, "crisis", true));
+
+            // Dispatch Friendly Check-in Reminder SMS to Trusted Contact
+            dispatchEmergencyContactAlert();
+        } else {
+            String crisisMsg = CrisisClassifier.buildCrisisMessageWithoutContact();
+            messageList.add(new ChatMessage(crisisMsg, false, "crisis", true));
+        }
+
+        // 2. Post Immediate Holding Check-in
         messageList.add(new ChatMessage(
                 "I am staying right here with you. Take all the time you need—there is no rush at all.\n\n"
                 + "How are you feeling in this exact moment? Are you somewhere safe right now?",
@@ -339,13 +398,93 @@ public class ChatActivity extends AppCompatActivity {
         chatAdapter.notifyDataSetChanged();
         rvChat.smoothScrollToPosition(messageList.size() - 1);
 
-        // 4. Options for Safety Check-in
+        // 3. Dynamic options based on contact availability
+        List<String> options = new ArrayList<>();
+        if (!hasContact) {
+            options.add("➕ Add Emergency Contact");
+            options.add("📞 Call Tele-MANAS (14416)");
+            options.add("I am reaching out to someone I trust");
+        } else {
+            String callBtn = "📞 Call " + (profile.trustedContactName.isEmpty() ? "Contact" : profile.trustedContactName);
+            options.add(callBtn);
+            options.add("📞 Call Tele-MANAS (14416)");
+        }
+        options.add("I am in a safe space");
+        options.add("Can we do a breathing exercise?");
+        options.add("Still feeling overwhelmed");
+        options.add("Feeling a little calmer now");
+
+        displayOptionButtons(options);
+    }
+
+    private void showAddEmergencyContactDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("➕ Add Emergency Contact");
+        builder.setMessage("Please provide someone you trust who Antara can contact during heavy or overwhelming moments:");
+
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        int pad = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20, getResources().getDisplayMetrics());
+        layout.setPadding(pad, pad / 2, pad, pad / 2);
+
+        final EditText etName = new EditText(this);
+        etName.setHint("Contact Name (e.g. Mom, Best Friend, Partner)");
+        etName.setTextColor(ContextCompat.getColor(this, R.color.text_primary));
+        layout.addView(etName);
+
+        final EditText etPhone = new EditText(this);
+        etPhone.setHint("Phone Number (e.g. +91 9876543210)");
+        etPhone.setInputType(android.text.InputType.TYPE_CLASS_PHONE);
+        etPhone.setTextColor(ContextCompat.getColor(this, R.color.text_primary));
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        lp.topMargin = pad / 2;
+        etPhone.setLayoutParams(lp);
+        layout.addView(etPhone);
+
+        builder.setView(layout);
+
+        builder.setPositiveButton("Save Contact", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                String name = etName.getText().toString().trim();
+                String phone = etPhone.getText().toString().trim();
+                if (phone.isEmpty()) {
+                    Toast.makeText(ChatActivity.this, "Please enter a valid phone number", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if (name.isEmpty()) name = "Trusted Contact";
+                saveEmergencyContactAndNotify(name, phone);
+            }
+        });
+
+        builder.setNegativeButton("Cancel", null);
+        builder.show();
+    }
+
+    private void saveEmergencyContactAndNotify(String name, String phone) {
+        long userId = sessionManager.getUserId();
+        dbHelper.updateEmergencyContact(userId, name, phone);
+
+        // Notify in chat
+        messageList.add(new ChatMessage(
+                "✅ Emergency contact successfully saved:\n👤 " + name + "\n📞 " + phone + "\n\n"
+                + "A gentle check-in reminder SMS is being dispatched to them so they know to check on you. Thank you for taking this important step for your safety.",
+                false
+        ));
+        chatAdapter.notifyItemInserted(messageList.size() - 1);
+        rvChat.smoothScrollToPosition(messageList.size() - 1);
+
+        // Dispatch SMS
+        dispatchEmergencyContactAlert();
+
+        // Update option buttons
         displayOptionButtons(Arrays.asList(
+                "📞 Call " + name,
+                "📞 Call Tele-MANAS (14416)",
                 "I am in a safe space",
-                "I still feel completely overwhelmed",
                 "Can we do a breathing exercise?",
-                "I don't know what to do",
-                "I'm feeling a little calmer now"
+                "Feeling a little calmer now"
         ));
     }
 
@@ -385,6 +524,41 @@ public class ChatActivity extends AppCompatActivity {
 
     private void handleSafetySupportModeUserReply(String userText) {
         String lower = userText.toLowerCase(Locale.ROOT);
+
+        // Check if user is asking to add emergency contact via text
+        if (lower.contains("add emergency contact") || lower.contains("add contact") || lower.contains("set contact")) {
+            showAddEmergencyContactDialog();
+            return;
+        }
+
+        // Check if user typed phone number in safety mode to save as contact
+        Pattern phonePat = Pattern.compile("(\\+?\\d{1,3}[- ]?)?(\\d{10})");
+        Matcher m = phonePat.matcher(userText);
+        if (m.find() && (!hasSavedEmergencyContact() || lower.contains("contact") || lower.contains("phone") || lower.contains("mom") || lower.contains("dad") || lower.contains("friend") || lower.contains("number") || userText.length() < 30)) {
+            String extractedPhone = m.group();
+            String extractedName = userText.replace(extractedPhone, "").replaceAll("(?i)(my|emergency|contact|is|name|phone|number|save|add|:|trusted)", "").trim();
+            if (extractedName.isEmpty()) extractedName = "Trusted Contact";
+            saveEmergencyContactAndNotify(extractedName, extractedPhone);
+            return;
+        }
+
+        // Check if user said they reached out to someone they trust
+        if (lower.contains("reaching out") || lower.contains("someone i trust") || lower.contains("called a friend") || lower.contains("talking to family")) {
+            messageList.add(new ChatMessage(
+                    "I am so proud of you for reaching out to someone you trust. Having human connection right now makes all the difference.\n\n"
+                    + "I will stay right here quietly with you. Whenever you feel ready, would you like to take a few slow breaths together or rest?",
+                    false
+            ));
+            chatAdapter.notifyItemInserted(messageList.size() - 1);
+            rvChat.smoothScrollToPosition(messageList.size() - 1);
+
+            displayOptionButtons(Arrays.asList(
+                    "Can we do a breathing exercise?",
+                    "Feeling a little calmer now",
+                    "Let's wrap up and rest today"
+            ));
+            return;
+        }
 
         // Check if user confirmed they want to wrap up or resume after calming down
         if (safetySupportStep == 99) {
@@ -445,12 +619,15 @@ public class ChatActivity extends AppCompatActivity {
             chatAdapter.notifyItemInserted(messageList.size() - 1);
             rvChat.smoothScrollToPosition(messageList.size() - 1);
 
-            displayOptionButtons(Arrays.asList(
-                    "Breathing slowly with you",
-                    "Feeling a little calmer now",
-                    "Still feeling very shaky",
-                    "Can you stay with me?"
-            ));
+            List<String> opts = new ArrayList<>();
+            opts.add("Breathing slowly with you");
+            opts.add("Feeling a little calmer now");
+            opts.add("Still feeling very shaky");
+            if (!hasSavedEmergencyContact()) {
+                opts.add("➕ Add Emergency Contact");
+            }
+            opts.add("Can you stay with me?");
+            displayOptionButtons(opts);
             return;
         }
 
@@ -465,12 +642,15 @@ public class ChatActivity extends AppCompatActivity {
             chatAdapter.notifyItemInserted(messageList.size() - 1);
             rvChat.smoothScrollToPosition(messageList.size() - 1);
 
-            displayOptionButtons(Arrays.asList(
-                    "Took a sip of water",
-                    "Feeling a little calmer now",
-                    "Still feeling very heavy",
-                    "I just needed someone to listen"
-            ));
+            List<String> opts = new ArrayList<>();
+            opts.add("Took a sip of water");
+            opts.add("Feeling a little calmer now");
+            opts.add("Still feeling very heavy");
+            if (!hasSavedEmergencyContact()) {
+                opts.add("➕ Add Emergency Contact");
+            }
+            opts.add("I just needed someone to listen");
+            displayOptionButtons(opts);
             return;
         }
 
@@ -483,12 +663,15 @@ public class ChatActivity extends AppCompatActivity {
         chatAdapter.notifyItemInserted(messageList.size() - 1);
         rvChat.smoothScrollToPosition(messageList.size() - 1);
 
-        displayOptionButtons(Arrays.asList(
-                "Feeling a little calmer now",
-                "I am going to lie down and rest",
-                "I will call the helpline",
-                "Still feeling overwhelmed"
-        ));
+        List<String> fallbackOpts = new ArrayList<>();
+        fallbackOpts.add("Feeling a little calmer now");
+        fallbackOpts.add("I am going to lie down and rest");
+        fallbackOpts.add("📞 Call Tele-MANAS (14416)");
+        if (!hasSavedEmergencyContact()) {
+            fallbackOpts.add("➕ Add Emergency Contact");
+        }
+        fallbackOpts.add("Still feeling overwhelmed");
+        displayOptionButtons(fallbackOpts);
     }
 
     @Override
@@ -497,6 +680,8 @@ public class ChatActivity extends AppCompatActivity {
         if (requestCode == SMS_PERMISSION_REQ) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 dispatchEmergencyContactAlert();
+                chatAdapter.notifyDataSetChanged();
+                rvChat.smoothScrollToPosition(messageList.size() - 1);
             }
         }
     }

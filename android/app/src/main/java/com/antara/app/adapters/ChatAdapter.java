@@ -1,6 +1,9 @@
 package com.antara.app.adapters;
 
 import android.graphics.Color;
+import android.text.method.LinkMovementMethod;
+import android.text.util.Linkify;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -51,10 +54,17 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             BotViewHolder bvh = (BotViewHolder) holder;
             bvh.tvMessage.setText(message.getText());
             if (message.isCrisis()) {
-                bvh.tvMessage.setTextColor(Color.parseColor("#D63031"));
-                bvh.tvMessage.setBackgroundColor(Color.parseColor("#FFEBEE"));
+                bvh.tvMessage.setTextColor(Color.parseColor("#9B1C1C"));
+                bvh.tvMessage.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16.5f);
+                bvh.tvMessage.setBackgroundResource(R.drawable.bg_crisis_card);
+                bvh.tvMessage.setLineSpacing(8f, 1.0f);
+                Linkify.addLinks(bvh.tvMessage, Linkify.PHONE_NUMBERS);
+                bvh.tvMessage.setMovementMethod(LinkMovementMethod.getInstance());
             } else {
                 bvh.tvMessage.setTextColor(Color.parseColor("#311B92"));
+                bvh.tvMessage.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f);
+                bvh.tvMessage.setBackgroundResource(R.drawable.bg_bot_bubble);
+                bvh.tvMessage.setLineSpacing(3f, 1.0f);
             }
         }
     }
