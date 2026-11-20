@@ -543,7 +543,6 @@ public class ChatActivity extends AppCompatActivity {
             messageList.add(new ChatMessage("✉️ A friendly check-in reminder is ready for your trusted contact (" + contactName + ")" + emailSuffix + ". Tap '💬 Send Check-in SMS' below to dispatch it.", false));
         }
     }
-    }
 
     private void handleSafetySupportModeUserReply(String userText) {
         String lower = userText.toLowerCase(Locale.ROOT);
