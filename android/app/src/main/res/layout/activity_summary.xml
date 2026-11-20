@@ -4,6 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/background"
+    android:clipToPadding="false"
     android:fillViewport="true">
 
     <LinearLayout
@@ -162,32 +163,41 @@
         </androidx.cardview.widget.CardView>
 
         <!-- Affirmation Card -->
-        <LinearLayout
+        <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
-            android:background="@drawable/bg_bot_bubble"
-            android:orientation="horizontal"
-            android:padding="16dp">
+            app:cardBackgroundColor="@color/bot_bubble"
+            app:cardCornerRadius="18dp"
+            app:cardElevation="0dp">
 
-            <TextView
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="🌸"
-                android:textSize="22sp" />
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="16dp">
 
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
-                android:layout_weight="1"
-                android:lineSpacingExtra="2dp"
-                android:text="Be gentle with yourself today. Every small moment of self-reflection matters."
-                android:textColor="@color/text_primary"
-                android:textSize="13sp"
-                android:textStyle="italic" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🌸"
+                    android:textSize="22sp" />
 
-        </LinearLayout>
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_weight="1"
+                    android:lineSpacingExtra="3dp"
+                    android:text="Be gentle with yourself today. Every small moment of self-reflection matters."
+                    android:textColor="@color/text_primary"
+                    android:textSize="13sp"
+                    android:textStyle="italic" />
+
+            </LinearLayout>
+
+        </androidx.cardview.widget.CardView>
 
         <!-- Home Button -->
         <Button

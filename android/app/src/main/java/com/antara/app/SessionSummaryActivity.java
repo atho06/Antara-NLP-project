@@ -35,7 +35,20 @@ public class SessionSummaryActivity extends AppCompatActivity {
 
         tvDuration.setText(duration + " min");
         tvAnswers.setText(answers + " reflections");
-        tvEmotion.setText(emotion.replace('_', ' ').toUpperCase(Locale.ROOT));
+        String rawEmotion = emotion.toLowerCase(Locale.ROOT);
+        String displayEmotion;
+        if (rawEmotion.contains("joy") || rawEmotion.contains("humor") || rawEmotion.contains("laugh")) {
+            displayEmotion = "Joyful & Uplifted";
+        } else if (rawEmotion.contains("sad") || rawEmotion.contains("low")) {
+            displayEmotion = "Gently Reflective";
+        } else if (rawEmotion.contains("stress") || rawEmotion.contains("anxi")) {
+            displayEmotion = "Unburdening Stress";
+        } else if (rawEmotion.contains("anger") || rawEmotion.contains("frustrat")) {
+            displayEmotion = "Releasing Tension";
+        } else {
+            displayEmotion = "Calm & Grounded";
+        }
+        tvEmotion.setText(displayEmotion);
         tvSummaryText.setText(summary);
 
         btnHome.setOnClickListener(new View.OnClickListener() {

@@ -10,6 +10,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.antara.app.R;
@@ -61,7 +62,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 Linkify.addLinks(bvh.tvMessage, Linkify.PHONE_NUMBERS);
                 bvh.tvMessage.setMovementMethod(LinkMovementMethod.getInstance());
             } else {
-                bvh.tvMessage.setTextColor(Color.parseColor("#311B92"));
+                bvh.tvMessage.setTextColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.bot_bubble_text));
                 bvh.tvMessage.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f);
                 bvh.tvMessage.setBackgroundResource(R.drawable.bg_bot_bubble);
                 bvh.tvMessage.setLineSpacing(3f, 1.0f);

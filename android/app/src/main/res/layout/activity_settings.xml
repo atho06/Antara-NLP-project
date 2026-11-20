@@ -286,23 +286,31 @@
             android:textSize="15sp"
             android:textStyle="bold" />
 
-        <LinearLayout
+        <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:background="@drawable/bg_bot_bubble"
-            android:orientation="vertical"
-            android:padding="16dp">
+            app:cardBackgroundColor="@color/bot_bubble"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp">
 
-            <TextView
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:lineSpacingExtra="4dp"
-                android:text="• Tele-MANAS (Govt. of India): 14416 or 1800-891-4416\n• KIRAN Mental Health Helpline: 1800-599-0019\n• Vandrevala Foundation: +91 9999 666 555\n• Emergency Medical: 112"
-                android:textColor="@color/text_primary"
-                android:textSize="13sp" />
+                android:orientation="vertical"
+                android:padding="16dp">
 
-        </LinearLayout>
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:lineSpacingExtra="4dp"
+                    android:text="• Tele-MANAS (Govt. of India): 14416 or 1800-891-4416\n• KIRAN Mental Health Helpline: 1800-599-0019\n• Vandrevala Foundation: +91 9999 666 555 (24/7 Free)"
+                    android:textColor="@color/text_primary"
+                    android:textSize="13sp" />
+
+            </LinearLayout>
+
+        </androidx.cardview.widget.CardView>
 
         <!-- Appearance & Theme Card -->
         <TextView

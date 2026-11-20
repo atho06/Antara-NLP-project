@@ -18,8 +18,8 @@
     <color name="error">#FF7675</color>
     <color name="sos_red">#D63031</color>
     
-    <color name="bot_bubble">#F0EDF9</color>
-    <color name="bot_bubble_text">#311B92</color>
+    <color name="bot_bubble">#EDE8F8</color>
+    <color name="bot_bubble_text">#1F1646</color>
     <color name="user_bubble">#6C5CE7</color>
     <color name="user_bubble_text">#FFFFFF</color>
 </resources>

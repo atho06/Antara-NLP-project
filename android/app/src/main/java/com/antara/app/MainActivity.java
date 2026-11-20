@@ -189,8 +189,7 @@ public class MainActivity extends AppCompatActivity {
                 .setMessage("If you are feeling overwhelmed or in crisis, immediate confidential support is available 24/7:\n\n"
                         + "• Tele-MANAS (Govt. of India): 14416 (Toll-Free)\n"
                         + "• KIRAN Mental Health: 1800-599-0019 (Toll-Free)\n"
-                        + "• Vandrevala Foundation: +91 9999 666 555\n"
-                        + "• Emergency Medical: 112")
+                        + "• Vandrevala Foundation: +91 9999 666 555 (24/7 Free)")
                 .setPositiveButton("Call Tele-MANAS", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {

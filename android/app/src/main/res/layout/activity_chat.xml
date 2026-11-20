@@ -82,7 +82,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_above="@id/layout_chat_input"
-        android:background="#FAF8FF"
+        android:background="@color/surface"
         android:paddingStart="8dp"
         android:paddingTop="6dp"
         android:paddingEnd="8dp"

@@ -205,9 +205,10 @@ public class ChatActivity extends AppCompatActivity {
             TextView btn = new TextView(this);
             btn.setText(option);
             btn.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
-            btn.setTextColor(ContextCompat.getColor(this, R.color.primary));
+            btn.setTextColor(ContextCompat.getColor(this, R.color.text_primary));
             btn.setBackgroundResource(R.drawable.bg_option_button);
             btn.setGravity(Gravity.CENTER);
+            btn.setPadding(32, 18, 32, 18);
 
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,

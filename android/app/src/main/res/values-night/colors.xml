@@ -10,16 +10,16 @@
     <color name="border">#2E2A42</color>
     
     <color name="text_primary">#F5F6FA</color>
-    <color name="text_secondary">#A4B0BE</color>
-    <color name="text_muted">#747D8C</color>
+    <color name="text_secondary">#CBD3DE</color>
+    <color name="text_muted">#8A94A6</color>
     
     <color name="success">#2ED573</color>
     <color name="warning">#FFA502</color>
     <color name="error">#FF4757</color>
     <color name="sos_red">#FF4757</color>
     
-    <color name="bot_bubble">#27233B</color>
-    <color name="bot_bubble_text">#E4E0FA</color>
+    <color name="bot_bubble">#241F38</color>
+    <color name="bot_bubble_text">#FFFFFF</color>
     <color name="user_bubble">#6C5CE7</color>
     <color name="user_bubble_text">#FFFFFF</color>
 </resources>

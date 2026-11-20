@@ -83,7 +83,11 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_above="@id/bottom_nav"
-        android:padding="20dp">
+        android:clipToPadding="false"
+        android:paddingStart="20dp"
+        android:paddingTop="20dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="40dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -333,31 +337,41 @@
             </androidx.cardview.widget.CardView>
 
             <!-- Confidentiality Notice -->
-            <LinearLayout
+            <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
-                android:layout_marginBottom="16dp"
-                android:background="@drawable/bg_bot_bubble"
-                android:orientation="horizontal"
-                android:padding="14dp">
+                android:layout_marginBottom="24dp"
+                app:cardBackgroundColor="@color/bot_bubble"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp">
 
-                <TextView
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="🛡️"
-                    android:textSize="18sp" />
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:padding="16dp">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="10dp"
-                    android:lineSpacingExtra="2dp"
-                    android:text="100% Offline &amp; Confidential: All your personal reflections are processed and saved securely right on your phone."
-                    android:textColor="@color/text_primary"
-                    android:textSize="12sp" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🛡️"
+                        android:textSize="20sp" />
 
-            </LinearLayout>
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:layout_weight="1"
+                        android:lineSpacingExtra="3dp"
+                        android:text="100% Offline &amp; Confidential: All your personal reflections are processed and saved securely right on your phone."
+                        android:textColor="@color/text_primary"
+                        android:textSize="13sp" />
+
+                </LinearLayout>
+
+            </androidx.cardview.widget.CardView>
 
         </LinearLayout>
 
