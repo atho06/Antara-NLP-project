@@ -139,6 +139,41 @@ public class AntaraDatabaseHelper extends SQLiteOpenHelper {
         return userId;
     }
 
+    public static class UserProfile {
+        public final long id;
+        public final String fullName;
+        public final String email;
+        public final String phone;
+        public final String trustedContactName;
+        public final String trustedContactPhone;
+
+        public UserProfile(long id, String fullName, String email, String phone, String trustedContactName, String trustedContactPhone) {
+            this.id = id;
+            this.fullName = fullName != null ? fullName : "Antara Friend";
+            this.email = email != null ? email : "";
+            this.phone = phone != null ? phone : "";
+            this.trustedContactName = trustedContactName != null ? trustedContactName : "";
+            this.trustedContactPhone = trustedContactPhone != null ? trustedContactPhone : "";
+        }
+    }
+
+    public UserProfile getUserProfile(long userId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query(TABLE_USERS, null, COL_USER_ID + "=?", 
+                new String[]{String.valueOf(userId)}, null, null, null);
+        if (cursor != null && cursor.moveToFirst()) {
+            String name = cursor.getString(cursor.getColumnIndexOrThrow(COL_USER_NAME));
+            String email = cursor.getString(cursor.getColumnIndexOrThrow(COL_USER_EMAIL));
+            String phone = cursor.getString(cursor.getColumnIndexOrThrow(COL_USER_PHONE));
+            String contactName = cursor.getString(cursor.getColumnIndexOrThrow(COL_USER_CONTACT_NAME));
+            String contactPhone = cursor.getString(cursor.getColumnIndexOrThrow(COL_USER_CONTACT_PHONE));
+            cursor.close();
+            return new UserProfile(userId, name, email, phone, contactName, contactPhone);
+        }
+        if (cursor != null) cursor.close();
+        return null;
+    }
+
     // Update Verification Status
     public boolean setVerification(long userId, String field, boolean verified) {
         SQLiteDatabase db = this.getWritableDatabase();

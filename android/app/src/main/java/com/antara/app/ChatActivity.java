@@ -1,12 +1,15 @@
 package com.antara.app;
 
+import android.Manifest;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Color;
+import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.telephony.SmsManager;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
@@ -18,7 +21,9 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -33,12 +38,15 @@ import com.antara.app.nlp.QuestionBank;
 import com.antara.app.nlp.ConversationalEngine;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
 public class ChatActivity extends AppCompatActivity {
+
+    private static final int SMS_PERMISSION_REQ = 101;
 
     private TextView tvTimer;
     private Button btnFinish, btnSend;
@@ -54,6 +62,10 @@ public class ChatActivity extends AppCompatActivity {
     private List<String> emotionsLog;
     private int turnCount = 0;
     private Set<String> previousTopics;
+
+    // Safe Space De-Escalation State Machine
+    private boolean inSafetyHoldMode = false;
+    private int safetySupportStep = 0;
 
     private int durationMinutes;
     private String category;
@@ -187,28 +199,30 @@ public class ChatActivity extends AppCompatActivity {
         chatAdapter.notifyItemInserted(messageList.size() - 1);
         rvChat.smoothScrollToPosition(messageList.size() - 1);
 
-        // 2. On-Device NLP Crisis Check
-        if (CrisisClassifier.checkCrisis(userText)) {
-            layoutOptions.removeAllViews();
-            scrollOptions.setVisibility(View.GONE);
-            messageList.add(new ChatMessage(CrisisClassifier.SAFETY_MESSAGE, false, "crisis", true));
-            chatAdapter.notifyItemInserted(messageList.size() - 1);
-            rvChat.smoothScrollToPosition(messageList.size() - 1);
+        // 2. If already in Safe Space Hold Mode, handle de-escalation
+        if (inSafetyHoldMode) {
+            handleSafetySupportModeUserReply(userText);
             return;
         }
 
-        // 3. On-Device NLP Emotion Analysis
+        // 3. On-Device NLP Crisis & Extreme Emotion Check
+        if (CrisisClassifier.checkCrisis(userText)) {
+            triggerSafetySupportMode();
+            return;
+        }
+
+        // 4. On-Device NLP Emotion Analysis
         NLPEmotionAnalyzer.EmotionResult analysis = NLPEmotionAnalyzer.analyze(userText);
         emotionsLog.add(analysis.primaryEmotion);
 
-        // 4. Overwhelm / Fatigue Detection
+        // 5. Overwhelm / Fatigue Detection
         if (analysis.userFatigued && !isTimeUpPrompted) {
             isTimeUpPrompted = true;
             showContinuationDialog("I notice this might be feeling a bit heavy or tiring. There is zero pressure here. Would you like to take a break and finish, or keep talking?");
             return;
         }
 
-        // 5. Generate Connected, Contextual Dialogue using ConversationalEngine
+        // 6. Generate Connected, Contextual Dialogue using ConversationalEngine
         turnCount++;
         ConversationalEngine.DialogueResponse dialogResponse = 
                 ConversationalEngine.generateContextualResponse(userText, turnCount, previousTopics);
@@ -228,6 +242,190 @@ public class ChatActivity extends AppCompatActivity {
         displayOptionButtons(dialogResponse.options);
     }
 
+    // --- Safety Support Mode & SMS Alert System ---
+
+    private void triggerSafetySupportMode() {
+        inSafetyHoldMode = true;
+        safetySupportStep = 1;
+
+        // 1. Post Helpline Message
+        messageList.add(new ChatMessage(CrisisClassifier.SAFETY_MESSAGE, false, "crisis", true));
+
+        // 2. Dispatch Friendly Check-in Reminder SMS to Trusted Contact
+        dispatchEmergencyContactAlert();
+
+        // 3. Post Immediate Holding Check-in
+        messageList.add(new ChatMessage(
+                "I am staying right here with you. Take all the time you need—there is no rush at all.\n\n"
+                + "How are you feeling in this exact moment? Are you somewhere safe right now?",
+                false
+        ));
+
+        chatAdapter.notifyDataSetChanged();
+        rvChat.smoothScrollToPosition(messageList.size() - 1);
+
+        // 4. Options for Safety Check-in
+        displayOptionButtons(Arrays.asList(
+                "I am in a safe space",
+                "I still feel completely overwhelmed",
+                "Can we do a breathing exercise?",
+                "I don't know what to do",
+                "I'm feeling a little calmer now"
+        ));
+    }
+
+    private void dispatchEmergencyContactAlert() {
+        long userId = sessionManager.getUserId();
+        AntaraDatabaseHelper.UserProfile profile = dbHelper.getUserProfile(userId);
+
+        if (profile != null && profile.trustedContactPhone != null && !profile.trustedContactPhone.trim().isEmpty()) {
+            String contactName = profile.trustedContactName.isEmpty() ? "Trusted Contact" : profile.trustedContactName;
+            String contactPhone = profile.trustedContactPhone.trim();
+            String userName = profile.fullName.isEmpty() ? "Your friend" : profile.fullName;
+
+            String smsText = "Hello " + contactName + ", this is a gentle note from Antara. " 
+                    + userName + " is going through a very heavy moment today. " 
+                    + "Please reach out to have a friendly check-in with them.";
+
+            boolean sent = false;
+            try {
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.SEND_SMS) == PackageManager.PERMISSION_GRANTED) {
+                    SmsManager smsManager = SmsManager.getDefault();
+                    smsManager.sendTextMessage(contactPhone, null, smsText, null, null);
+                    sent = true;
+                } else {
+                    ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.SEND_SMS}, SMS_PERMISSION_REQ);
+                }
+            } catch (Exception e) {
+                sent = false;
+            }
+
+            if (sent) {
+                messageList.add(new ChatMessage("✉️ A friendly check-in reminder SMS was dispatched to your trusted emergency contact (" + contactName + ").", false));
+            } else {
+                messageList.add(new ChatMessage("✉️ Check-in alert note prepared for your trusted contact (" + contactName + "): \"Hello " + contactName + ", this is a gentle note from Antara. Please check in on " + userName + " today.\"", false));
+            }
+        }
+    }
+
+    private void handleSafetySupportModeUserReply(String userText) {
+        String lower = userText.toLowerCase(Locale.ROOT);
+
+        // Check if user confirmed they want to wrap up or resume after calming down
+        if (safetySupportStep == 99) {
+            if (lower.contains("wrap up") || lower.contains("rest today") || lower.contains("finish")) {
+                finishSession();
+                return;
+            } else if (lower.contains("continue") || lower.contains("ready") || lower.contains("gently")) {
+                inSafetyHoldMode = false;
+                safetySupportStep = 0;
+                // Resume with a warm, gentle reflection
+                QuestionBank.QuestionItem nextQ = QuestionBank.getNextQuestion("general", askedQuestions);
+                messageList.add(new ChatMessage(
+                        "I am so glad we took that gentle pause together. Whenever you feel comfortable, we can gently explore: " + nextQ.text,
+                        false
+                ));
+                chatAdapter.notifyItemInserted(messageList.size() - 1);
+                rvChat.smoothScrollToPosition(messageList.size() - 1);
+                displayOptionButtons(nextQ.options);
+                return;
+            }
+        }
+
+        // Check if user is feeling calmer / distress is subsiding
+        boolean feelingCalmer = (lower.contains("calm") || lower.contains("better") || lower.contains("safe space") || lower.contains("okay now") || lower.contains("lighter") || lower.contains("grounded"))
+                && !lower.contains("not safe") && !lower.contains("still") && !lower.contains("worse");
+
+        boolean wantsBreathing = lower.contains("breath") || lower.contains("breathing");
+
+        if (feelingCalmer) {
+            messageList.add(new ChatMessage(
+                    "I am so deeply glad you are feeling a little calmer and grounded now. That took so much courage to breathe through.\n\n"
+                    + "We can take everything very slowly from here. Would you like to gently resume a light reflection, or would you prefer to wrap up and rest for today?",
+                    false
+            ));
+            chatAdapter.notifyItemInserted(messageList.size() - 1);
+            rvChat.smoothScrollToPosition(messageList.size() - 1);
+
+            displayOptionButtons(Arrays.asList(
+                    "Let's wrap up and rest today",
+                    "I feel ready to gently continue",
+                    "I want to sit quietly for a bit"
+            ));
+
+            safetySupportStep = 99; // ready for decision
+            return;
+        }
+
+        // If distress still retains: Step 2 Breathing & Somatic Anchor
+        if (wantsBreathing || safetySupportStep == 1) {
+            safetySupportStep = 2;
+            messageList.add(new ChatMessage(
+                    "Let's anchor your body right now. You do not have to carry everything in this moment.\n\n"
+                    + "Can you feel your feet resting on the floor, or place one hand gently over your chest?\n\n"
+                    + "Let's breathe in slowly for 4 seconds... gently hold for 2... and let it out for 4.\n\n"
+                    + "How does your chest and heart feel right now?",
+                    false
+            ));
+            chatAdapter.notifyItemInserted(messageList.size() - 1);
+            rvChat.smoothScrollToPosition(messageList.size() - 1);
+
+            displayOptionButtons(Arrays.asList(
+                    "Breathing slowly with you",
+                    "Feeling a little calmer now",
+                    "Still feeling very shaky",
+                    "Can you stay with me?"
+            ));
+            return;
+        }
+
+        // If distress still retains: Step 3 Permission to Rest & Self-Compassion
+        if (safetySupportStep == 2) {
+            safetySupportStep = 3;
+            messageList.add(new ChatMessage(
+                    "There is zero pressure to 'fix' this right now. Whatever tears or heavy emotions are here, you are allowed to just let them exist.\n\n"
+                    + "You are not a burden, and this pain will pass. Can you take a sip of cool water, or wrap yourself in a warm blanket right now?",
+                    false
+            ));
+            chatAdapter.notifyItemInserted(messageList.size() - 1);
+            rvChat.smoothScrollToPosition(messageList.size() - 1);
+
+            displayOptionButtons(Arrays.asList(
+                    "Took a sip of water",
+                    "Feeling a little calmer now",
+                    "Still feeling very heavy",
+                    "I just needed someone to listen"
+            ));
+            return;
+        }
+
+        // Fallback Holding Space & Helpline Reassurance
+        messageList.add(new ChatMessage(
+                "I am right here with you, and remember you never have to be alone in this pain. You can also call Tele-MANAS toll-free at 14416 anytime—they are kind, trained people who will listen without judgment.\n\n"
+                + "Take it one breath at a time. What would feel most gentle for you right now?",
+                false
+        ));
+        chatAdapter.notifyItemInserted(messageList.size() - 1);
+        rvChat.smoothScrollToPosition(messageList.size() - 1);
+
+        displayOptionButtons(Arrays.asList(
+                "Feeling a little calmer now",
+                "I am going to lie down and rest",
+                "I will call the helpline",
+                "Still feeling overwhelmed"
+        ));
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == SMS_PERMISSION_REQ) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                dispatchEmergencyContactAlert();
+            }
+        }
+    }
+
     private void startTimer() {
         timerRunnable = new Runnable() {
             @Override
@@ -236,7 +434,7 @@ public class ChatActivity extends AppCompatActivity {
                 updateTimerUI();
 
                 // If clock-time duration reached
-                if (targetSeconds > 0 && secondsElapsed >= targetSeconds && !isTimeUpPrompted) {
+                if (targetSeconds > 0 && secondsElapsed >= targetSeconds && !isTimeUpPrompted && !inSafetyHoldMode) {
                     isTimeUpPrompted = true;
                     showContinuationDialog("We have reached your chosen " + durationMinutes + "-minute mark. You did great today. Would you like to wrap up or continue talking?");
                 }
