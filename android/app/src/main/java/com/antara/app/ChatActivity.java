@@ -53,8 +53,6 @@ import java.util.regex.Pattern;
 
 public class ChatActivity extends AppCompatActivity {
 
-    private static final int SMS_PERMISSION_REQ = 101;
-
     private TextView tvTimer;
     private Button btnFinish, btnSend;
     private ProgressBar pbTimer;
@@ -243,6 +241,19 @@ public class ChatActivity extends AppCompatActivity {
             return;
         }
 
+        if (option.startsWith("💬 Send Check-in")) {
+            long userId = sessionManager.getUserId();
+            AntaraDatabaseHelper.UserProfile profile = dbHelper.getUserProfile(userId);
+            if (profile != null && profile.trustedContactPhone != null && !profile.trustedContactPhone.trim().isEmpty()) {
+                String contactName = profile.trustedContactName.isEmpty() ? "Trusted Contact" : profile.trustedContactName;
+                String userName = profile.fullName.isEmpty() ? "Your friend" : profile.fullName;
+                String smsText = "Hello " + contactName + ", this is a gentle note from Antara. " 
+                        + userName + " is going through a very heavy moment today. Please reach out to have a friendly check-in with them.";
+                sendSmsViaIntent(profile.trustedContactPhone.trim(), smsText);
+                return;
+            }
+        }
+
         if (option.startsWith("📞 Call ")) {
             if (option.contains("14416")) {
                 dialPhoneNumber("14416");
@@ -257,6 +268,17 @@ public class ChatActivity extends AppCompatActivity {
         }
 
         processUserMessage(option);
+    }
+
+    private void sendSmsViaIntent(String phone, String text) {
+        Intent intent = new Intent(Intent.ACTION_SENDTO);
+        intent.setData(Uri.parse("smsto:" + Uri.encode(phone)));
+        intent.putExtra("sms_body", text);
+        try {
+            startActivity(intent);
+        } catch (Exception e) {
+            Toast.makeText(this, "Could not open messaging app", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void dialPhoneNumber(String phone) {
@@ -410,6 +432,7 @@ public class ChatActivity extends AppCompatActivity {
         } else {
             String callBtn = "📞 Call " + (profile.trustedContactName.isEmpty() ? "Contact" : profile.trustedContactName);
             options.add(callBtn);
+            options.add("💬 Send Check-in SMS");
             options.add("📞 Call Tele-MANAS (14416)");
         }
         options.add("I am in a safe space");
@@ -487,7 +510,7 @@ public class ChatActivity extends AppCompatActivity {
         if (email != null && !email.trim().isEmpty()) {
             sb.append("✉️ ").append(email.trim()).append("\n");
         }
-        sb.append("\nA gentle check-in reminder is being dispatched to them so they know to check on you. Thank you for taking this important step for your safety.");
+        sb.append("\nA gentle check-in reminder is ready for them. Thank you for taking this important step for your safety.");
 
         // Notify in chat
         messageList.add(new ChatMessage(sb.toString(), false));
@@ -500,6 +523,7 @@ public class ChatActivity extends AppCompatActivity {
         // Update option buttons
         displayOptionButtons(Arrays.asList(
                 "📞 Call " + name,
+                "💬 Send Check-in SMS",
                 "📞 Call Tele-MANAS (14416)",
                 "I am in a safe space",
                 "Can we do a breathing exercise?",
@@ -513,34 +537,12 @@ public class ChatActivity extends AppCompatActivity {
 
         if (profile != null && profile.trustedContactPhone != null && !profile.trustedContactPhone.trim().isEmpty()) {
             String contactName = profile.trustedContactName.isEmpty() ? "Trusted Contact" : profile.trustedContactName;
-            String contactPhone = profile.trustedContactPhone.trim();
             String contactEmail = profile.trustedContactEmail != null ? profile.trustedContactEmail.trim() : "";
-            String userName = profile.fullName.isEmpty() ? "Your friend" : profile.fullName;
-
-            String smsText = "Hello " + contactName + ", this is a gentle note from Antara. " 
-                    + userName + " is going through a very heavy moment today. " 
-                    + "Please reach out to have a friendly check-in with them.";
-
-            boolean sent = false;
-            try {
-                if (ContextCompat.checkSelfPermission(this, Manifest.permission.SEND_SMS) == PackageManager.PERMISSION_GRANTED) {
-                    SmsManager smsManager = SmsManager.getDefault();
-                    smsManager.sendTextMessage(contactPhone, null, smsText, null, null);
-                    sent = true;
-                } else {
-                    ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.SEND_SMS}, SMS_PERMISSION_REQ);
-                }
-            } catch (Exception e) {
-                sent = false;
-            }
 
             String emailSuffix = !contactEmail.isEmpty() ? " (and email alert prepared for " + contactEmail + ")" : "";
-            if (sent) {
-                messageList.add(new ChatMessage("✉️ A friendly check-in reminder SMS was dispatched to your trusted emergency contact (" + contactName + ")" + emailSuffix + ".", false));
-            } else {
-                messageList.add(new ChatMessage("✉️ Check-in alert note prepared for your trusted contact (" + contactName + ")" + emailSuffix + ": \"Hello " + contactName + ", this is a gentle note from Antara. Please check in on " + userName + " today.\"", false));
-            }
+            messageList.add(new ChatMessage("✉️ A friendly check-in reminder is ready for your trusted contact (" + contactName + ")" + emailSuffix + ". Tap '💬 Send Check-in SMS' below to dispatch it.", false));
         }
+    }
     }
 
     private void handleSafetySupportModeUserReply(String userText) {
@@ -696,18 +698,6 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == SMS_PERMISSION_REQ) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                dispatchEmergencyContactAlert();
-                chatAdapter.notifyDataSetChanged();
-                rvChat.smoothScrollToPosition(messageList.size() - 1);
-            }
-        }
-    }
-
-    @Override
     protected void onPause() {
         super.onPause();
         saveDraftAndScheduleAlarm();
@@ -729,15 +719,7 @@ public class ChatActivity extends AppCompatActivity {
                         PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE : 0)
                 );
                 long triggerAt = System.currentTimeMillis() + (60 * 60 * 1000L); // 1 hour
-                try {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                        alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pi);
-                    } else {
-                        alarmManager.set(AlarmManager.RTC_WAKEUP, triggerAt, pi);
-                    }
-                } catch (SecurityException ignored) {
-                    alarmManager.set(AlarmManager.RTC_WAKEUP, triggerAt, pi);
-                }
+                alarmManager.set(AlarmManager.RTC_WAKEUP, triggerAt, pi);
             }
         }
     }
