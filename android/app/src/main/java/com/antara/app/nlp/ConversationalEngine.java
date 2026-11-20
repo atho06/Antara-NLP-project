@@ -2,11 +2,12 @@ package com.antara.app.nlp;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ConversationalEngine {
 
@@ -31,42 +32,19 @@ public class ConversationalEngine {
         }
     }
 
-    // Keyword topic detectors
-    private static final String[] WORK_KEYWORDS = new String[]{
-            "work", "study", "studies", "exam", "exams", "test", "deadline", "assignment", 
-            "college", "job", "career", "boss", "rushed", "hectic", "pressure", "behind in life",
-            "fail", "failing", "marks", "grades"
-    };
+    // --- Entity & Relational Keywords ---
+    private static final String[] FAMILY_ENTITIES = {"mom", "mother", "dad", "father", "parents", "brother", "sister", "family"};
+    private static final String[] SOCIAL_ENTITIES = {"friend", "friends", "best friend", "roommate", "colleague", "classmate", "partner", "boyfriend", "girlfriend"};
+    private static final String[] ACADEMIC_ENTITIES = {"exam", "exams", "entrance exam", "test", "assignment", "college", "school", "project", "degree", "marks", "grades", "interview", "job", "career"};
 
-    private static final String[] SLEEP_TIRED_KEYWORDS = new String[]{
-            "sleep", "tired", "exhausted", "exhausting", "energy", "body", "drained", 
-            "headache", "insomnia", "bed", "restless", "fatigue", "nap", "waking up", "heavy"
-    };
-
-    private static final String[] LONELY_KEYWORDS = new String[]{
-            "lonely", "alone", "isolated", "disconnect", "disconnected", "nobody", "no one", 
-            "unseen", "unheard", "distance", "distant", "misunderstood", "left out"
-    };
-
-    private static final String[] ANXIETY_KEYWORDS = new String[]{
-            "anxious", "anxiety", "panic", "worried", "worry", "overthinking", "racing", 
-            "heartbeat", "paralysis", "scared", "fear", "nervous", "tension"
-    };
-
-    private static final String[] SADNESS_KEYWORDS = new String[]{
-            "sad", "sadness", "crying", "cry", "tears", "low", "hopeless", "empty", 
-            "grief", "hurting", "hurt", "depressed", "sorrow", "pain"
-    };
-
-    private static final String[] RELATIONSHIP_KEYWORDS = new String[]{
-            "friend", "friends", "family", "mother", "father", "parents", "partner", 
-            "relationship", "boyfriend", "girlfriend", "brother", "sister", "arguing", "conflict"
-    };
-
-    private static final String[] POSITIVE_KEYWORDS = new String[]{
-            "happy", "peaceful", "peace", "calm", "grateful", "good", "great", "smile", 
-            "tea", "coffee", "walk", "nature", "sunlight", "relief", "better", "accomplished"
-    };
+    // --- Emotional & Somatic Distortions ---
+    private static final String[] FAILURE_TERMS = {"failure", "disappointment", "disappointed", "let down", "ruined", "worthless", "not good enough", "loser", "useless"};
+    private static final String[] CONFLICT_TERMS = {"fight", "fought", "argued", "arguing", "yelled", "shouted", "screaming", "angry with me", "blamed", "cut off", "ignore"};
+    private static final String[] SOMATIC_CRYING_TERMS = {"crying", "cried", "tears", "shaking", "panic", "heart racing", "chest hurts", "can't breathe", "vomiting", "headache", "throwing up", "not eating", "haven't eaten"};
+    private static final String[] NUMB_TERMS = {"numb", "empty", "staring at the wall", "staring at the ceiling", "spaced out", "detached", "autopilot", "feel nothing", "can't feel"};
+    private static final String[] LONELINESS_TERMS = {"lonely", "alone", "isolated", "nobody", "no one", "no friends", "unseen", "unheard", "left out", "abandoned"};
+    private static final String[] EXHAUSTION_TERMS = {"exhausted", "tired", "drained", "can't do this anymore", "burnout", "burned out", "no energy", "bed all day", "sleep"};
+    private static final String[] POSITIVE_TERMS = {"happy", "peaceful", "peace", "calm", "grateful", "good", "great", "smile", "tea", "coffee", "walk", "nature", "sunlight", "relief", "better", "accomplished"};
 
     private static boolean containsAny(String text, String[] keywords) {
         String lower = text.toLowerCase(Locale.ROOT);
@@ -76,250 +54,225 @@ public class ConversationalEngine {
         return false;
     }
 
+    private static String findFirstMatch(String text, String[] keywords) {
+        String lower = text.toLowerCase(Locale.ROOT);
+        for (String k : keywords) {
+            if (lower.contains(k)) return k;
+        }
+        return null;
+    }
+
+    /**
+     * Inverts first-person statements to second-person reflective phrasing.
+     * e.g., "i feel so overwhelmed by my studies" -> "feeling so overwhelmed by your studies"
+     */
+    private static String invertPerspective(String text) {
+        if (text == null || text.trim().isEmpty()) return "";
+        String clean = text.replaceAll("[.,!?;:]", "").trim();
+
+        // Standard transformations
+        clean = clean.replaceAll("(?i)\\bI am\\b", "you are");
+        clean = clean.replaceAll("(?i)\\bI'm\\b", "you are");
+        clean = clean.replaceAll("(?i)\\bI feel\\b", "you feel");
+        clean = clean.replaceAll("(?i)\\bI have\\b", "you have");
+        clean = clean.replaceAll("(?i)\\bI was\\b", "you were");
+        clean = clean.replaceAll("(?i)\\bmy\\b", "your");
+        clean = clean.replaceAll("(?i)\\bme\\b", "you");
+        clean = clean.replaceAll("(?i)\\bmyself\\b", "yourself");
+        clean = clean.replaceAll("(?i)\\bI\\b", "you");
+
+        return clean;
+    }
+
     public static DialogueResponse generateContextualResponse(String userText, int turnCount, Set<String> previousTopics) {
         if (userText == null) userText = "";
-        String lower = userText.toLowerCase(Locale.ROOT);
+        String raw = userText.trim();
+        String lower = raw.toLowerCase(Locale.ROOT);
 
-        // 1. Detect Domain Topic from what user said
-        String topic = "GENERAL";
+        // --- 1. Specific High-Context Pattern Analysis ---
 
-        if (containsAny(lower, WORK_KEYWORDS)) {
-            topic = "WORK_PRESSURE";
-        } else if (containsAny(lower, SLEEP_TIRED_KEYWORDS)) {
-            topic = "EXHAUSTION_SLEEP";
-        } else if (containsAny(lower, LONELY_KEYWORDS)) {
-            topic = "LONELINESS";
-        } else if (containsAny(lower, ANXIETY_KEYWORDS)) {
-            topic = "ANXIETY";
-        } else if (containsAny(lower, SADNESS_KEYWORDS)) {
-            topic = "SADNESS";
-        } else if (containsAny(lower, RELATIONSHIP_KEYWORDS)) {
-            topic = "RELATIONSHIPS";
-        } else if (containsAny(lower, POSITIVE_KEYWORDS)) {
-            topic = "POSITIVE";
+        // A. Conflict with Family/Parents + Feeling like a Failure/Disappointment
+        if ((containsAny(lower, FAMILY_ENTITIES) || containsAny(lower, SOCIAL_ENTITIES)) 
+                && (containsAny(lower, CONFLICT_TERMS) || containsAny(lower, FAILURE_TERMS))) {
+            
+            String entity = findFirstMatch(lower, FAMILY_ENTITIES);
+            if (entity == null) entity = findFirstMatch(lower, SOCIAL_ENTITIES);
+            if (entity == null) entity = "someone you care about";
+
+            previousTopics.add("RELATIONAL_CONFLICT");
+            return new DialogueResponse(
+                    "Having a conflict with your " + entity + " and feeling that painful weight of being called or feeling like a disappointment hurts so deeply. That harsh judgment cuts right into your heart.",
+                    "When parental or relational expectations clash with where your energy is right now, it can make home feel like the hardest place to breathe. Do you feel they truly understand how much you're already carrying inside?",
+                    Arrays.asList(
+                            "They don't understand at all",
+                            "They want what's best, but it hurts",
+                            "I feel guilty and angry at the same time",
+                            "I feel completely alone in this",
+                            "I'm terrified of letting them down"
+                    ),
+                    "RELATIONAL_CONFLICT"
+            );
         }
 
-        previousTopics.add(topic);
+        // B. Somatic Distress & Crying / Bodily Overwhelm
+        if (containsAny(lower, SOMATIC_CRYING_TERMS)) {
+            previousTopics.add("SOMATIC_OVERLOAD");
+            return new DialogueResponse(
+                    "I hear how intensely this is impacting your body right now. Crying and physical shaking are your nervous system's honest way of releasing pressure when everything has been held in for too long.",
+                    "Right now, let's take things one quiet second at a time. What is one small, gentle comfort your body needs in this very moment?",
+                    Arrays.asList(
+                            "A glass of cool water",
+                            "To lie down in a quiet, dark room",
+                            "A slow, steady deep breath",
+                            "A warm blanket or comfortable hoodie",
+                            "Space to let the tears finish falling"
+                    ),
+                    "SOMATIC_OVERLOAD"
+            );
+        }
 
-        // 2. Progressive Dialogue Logic (Connected conversational flow)
-        switch (topic) {
+        // C. Academic & Career Overwhelm (Exams, Deadlines, Job, College)
+        if (containsAny(lower, ACADEMIC_ENTITIES)) {
+            String academicThing = findFirstMatch(lower, ACADEMIC_ENTITIES);
+            if (academicThing == null) academicThing = "studies";
 
-            case "WORK_PRESSURE":
-                if (turnCount <= 2) {
-                    return new DialogueResponse(
-                            "Academic and work pressure can feel like a suffocating weight, especially when expectations keep piling up.",
-                            "When that rush and pressure builds up, what is the loudest thought playing in your head?",
-                            Arrays.asList(
-                                    "Fear of disappointing others",
-                                    "Feeling behind compared to everyone",
-                                    "Pressure to make everything perfect",
-                                    "Feeling paralyzed & unable to start",
-                                    "Just wanting everything to pause"
-                            ),
-                            topic
-                    );
-                } else {
-                    return new DialogueResponse(
-                            "Carrying those high expectations for so long is deeply exhausting.",
-                            "If you were to gently lower your expectations for yourself today by just 10%, what could you give yourself permission to postpone or let go of?",
-                            Arrays.asList(
-                                    "Stop studying/working earlier tonight",
-                                    "Accept 'good enough' instead of perfect",
-                                    "Take a full, guilt-free break",
-                                    "Say no to non-essential demands",
-                                    "Forgive myself for feeling behind"
-                            ),
-                            topic
-                    );
-                }
+            previousTopics.add("ACADEMIC_PRESSURE");
+            return new DialogueResponse(
+                    "The relentless pressure around " + academicThing + " can make it feel like your entire future and self-worth are on trial every single day. That is an exhausting weight to carry.",
+                    "When you look at this pressure right now, what is the loudest fear or worry running through your mind?",
+                    Arrays.asList(
+                            "Fear of failing and falling behind",
+                            "Disappointing my parents or family",
+                            "Feeling like I have no time or guidance",
+                            "Feeling completely burned out & paralyzed",
+                            "Worrying that my best isn't good enough"
+                    ),
+                    "ACADEMIC_PRESSURE"
+            );
+        }
 
-            case "EXHAUSTION_SLEEP":
-                if (turnCount <= 2) {
-                    return new DialogueResponse(
-                            "When your body and mind are this drained, even small daily routines can take twice the energy.",
-                            "Does this tiredness feel more like physical fatigue in your body, or is it your mind that won't stop running?",
-                            Arrays.asList(
-                                    "Mostly physical body exhaustion",
-                                    "My mind is constantly racing",
-                                    "Both mind and body feel empty",
-                                    "Feeling numb and unmotivated",
-                                    "Restless and unable to settle"
-                            ),
-                            topic
-                    );
-                } else {
-                    return new DialogueResponse(
-                            "It makes complete sense that your body is asking for deep rest right now.",
-                            "What is one tiny, gentle comfort you can give your body before today ends?",
-                            Arrays.asList(
-                                    "An early night with no phone screens",
-                                    "A warm drink or comforting meal",
-                                    "Lying down in quiet darkness for 20 mins",
-                                    "A slow, warm shower or bath",
-                                    "Soft, comfortable clothes & cozy blanket"
-                            ),
-                            topic
-                    );
-                }
+        // D. Numbness, Apathy & Dissociation ("staring at wall", "feel numb", "empty")
+        if (containsAny(lower, NUMB_TERMS)) {
+            previousTopics.add("NUMBNESS_DISSOCIATION");
+            return new DialogueResponse(
+                    "Sitting in that numbness or finding yourself staring into space is often your mind's protective emergency brake when emotions have been running too high for too long. You are not broken for feeling this way.",
+                    "When you are in that quiet, empty space, does it feel more like a heavy fog you can't push through, or like you are totally detached from the world around you?",
+                    Arrays.asList(
+                            "Like a heavy mental fog",
+                            "Totally detached & on autopilot",
+                            "Just zero motivation to do anything",
+                            "Wanting to sleep and shut everything off",
+                            "Feeling confused about why I feel this way"
+                    ),
+                    "NUMBNESS_DISSOCIATION"
+            );
+        }
 
-            case "LONELINESS":
-                if (turnCount <= 2) {
-                    return new DialogueResponse(
-                            "Feeling lonely or disconnected is such a quiet, aching feeling to sit with.",
-                            "Do you notice this distance mostly when you're by yourself, or does it happen even when you are surrounded by people?",
-                            Arrays.asList(
-                                    "Even when surrounded by people",
-                                    "Mostly when I am alone in my room",
-                                    "Feeling like no one truly understands me",
-                                    "I find myself pulling away & isolating",
-                                    "It comes in unexpected waves"
-                            ),
-                            topic
-                    );
-                } else {
-                    return new DialogueResponse(
-                            "Feeling unseen around others is often the loneliest place of all.",
-                            "If there was one person who could sit with you right now without any expectations, who would you feel safest around?",
-                            Arrays.asList(
-                                    "A close friend who listens without advice",
-                                    "A family member or partner",
-                                    "A pet or just quiet nature",
-                                    "Prefer to be alone, but feel heard here",
-                                    "I haven't found that person yet"
-                            ),
-                            topic
-                    );
-                }
+        // E. Loneliness & Isolation ("no one understands", "nobody cares", "alone")
+        if (containsAny(lower, LONELINESS_TERMS)) {
+            previousTopics.add("LONELINESS");
+            return new DialogueResponse(
+                    "Feeling like you are carrying your thoughts all by yourself in a world where nobody truly hears you is such a quiet, aching loneliness to endure.",
+                    "When that disconnection feels heaviest, what kind of presence would feel safest or most comforting to you?",
+                    Arrays.asList(
+                            "Someone just sitting with me in silence",
+                            "Someone who listens without offering advice",
+                            "A reassuring reminder that I matter",
+                            "Space to be alone, but knowing someone cares",
+                            "I'm not sure, just less distant"
+                    ),
+                    "LONELINESS"
+            );
+        }
 
-            case "ANXIETY":
-                if (turnCount <= 2) {
-                    return new DialogueResponse(
-                            "Anxiety and that racing sensation in your chest can be so distressing to experience.",
-                            "When your mind starts spiraling with worry, where in your body do you notice that tension holding on the most?",
-                            Arrays.asList(
-                                    "Tightness in my chest or throat",
-                                    "Shoulders, neck and jaw clenching",
-                                    "A churning feeling in my stomach",
-                                    "Shallow breathing or trembling",
-                                    "A foggy, racing headache"
-                            ),
-                            topic
-                    );
-                } else {
-                    return new DialogueResponse(
-                            "Let's soften your shoulders and take a slow, full breath right now together. You are safe in this moment.",
-                            "Would it feel comforting to try a short grounding pause, or do you prefer to keep expressing what triggered this?",
-                            Arrays.asList(
-                                    "Let's take a 1-minute slow breathing pause",
-                                    "I want to keep talking and express more",
-                                    "Help me untangle what's worrying me",
-                                    "I just need to know it's going to be okay",
-                                    "I feel a tiny bit lighter having shared"
-                            ),
-                            topic
-                    );
-                }
+        // F. Deep Exhaustion & Burnout ("can't do this anymore", "drained", "no energy")
+        if (containsAny(lower, EXHAUSTION_TERMS)) {
+            previousTopics.add("EXHAUSTION");
+            return new DialogueResponse(
+                    "When you reach this point of deep exhaustion, even making a simple decision or getting out of bed takes an enormous amount of willpower.",
+                    "If you were to give yourself a full permission slip today without any guilt, what would you let yourself put down?",
+                    Arrays.asList(
+                            "Stop studying/working earlier tonight",
+                            "Order food instead of worrying about chores",
+                            "Turn off notifications & sleep early",
+                            "Forgive myself for having low energy today",
+                            "Take a full, uninterrupted rest"
+                    ),
+                    "EXHAUSTION"
+            );
+        }
 
-            case "SADNESS":
-                if (turnCount <= 2) {
-                    return new DialogueResponse(
-                            "I hear the heavy sorrow in what you're feeling, and it is completely okay to not be okay right now.",
-                            "Have you been carrying this sadness quietly on your own, or has anyone around you noticed?",
-                            Arrays.asList(
-                                    "Hiding it completely from everyone",
-                                    "A few people noticed I'm quiet",
-                                    "Trying to act normal on the outside",
-                                    "Too exhausted to even pretend today",
-                                    "I've shared a little bit with someone"
-                            ),
-                            topic
-                    );
-                } else {
-                    return new DialogueResponse(
-                            "Putting on a brave face every day takes so much hidden strength. You don't have to pretend here.",
-                            "If you could give yourself one kind, forgiving permission slip today, what would it say?",
-                            Arrays.asList(
-                                    "'It is okay to cry and feel sad'",
-                                    "'You don't have to fix everything today'",
-                                    "'You are worthy of care, even when low'",
-                                    "'Rest is not something you have to earn'",
-                                    "'Take it one breath at a time'"
-                            ),
-                            topic
-                    );
-                }
+        // G. Positive Moments / Glimmers of Relief
+        if (containsAny(lower, POSITIVE_TERMS)) {
+            previousTopics.add("POSITIVE");
+            return new DialogueResponse(
+                    "There is so much quiet beauty and relief in that. In the middle of everything, pausing to savor even a small gentle moment is a powerful form of self-care.",
+                    "When you experienced that peaceful moment, what did it feel like in your chest or mind? Did it give you a little breathing room?",
+                    Arrays.asList(
+                            "Gave me real breathing room",
+                            "Felt brief, but reminded me I can be okay",
+                            "Made me want to protect moments like that",
+                            "Helped reset my mind for a while",
+                            "Felt warm and comforting"
+                    ),
+                    "POSITIVE"
+            );
+        }
 
-            case "RELATIONSHIPS":
-                if (turnCount <= 2) {
-                    return new DialogueResponse(
-                            "Relationships are often our biggest source of joy, but also where we feel the most vulnerability and hurt.",
-                            "In this dynamic, do you feel like your thoughts and feelings are being given enough space?",
-                            Arrays.asList(
-                                    "I feel silenced or dismissed",
-                                    "I end up prioritizing their feelings first",
-                                    "There is a lot of unspoken tension",
-                                    "It feels warm, but we've drifted apart",
-                                    "I find it hard to express my real needs"
-                            ),
-                            topic
-                    );
-                } else {
-                    return new DialogueResponse(
-                            "It takes so much emotional energy to constantly navigate other people's needs.",
-                            "What is one small boundary or space you might need to preserve for yourself right now?",
-                            Arrays.asList(
-                                    "Not responding to messages immediately",
-                                    "Taking some quiet time alone",
-                                    "Saying an honest 'no' without guilt",
-                                    "Speaking my mind gently but firmly",
-                                    "Letting go of trying to fix their mood"
-                            ),
-                            topic
-                    );
-                }
+        // --- 2. Dynamic Grammatical Rogerian Parsing (For ANY Custom Typed Answer) ---
+        // If the user typed an arbitrary sentence that didn't trigger a hardcoded keyword,
+        // we parse their exact clause and mirror it back!
 
-            case "POSITIVE":
-                return new DialogueResponse(
-                        "There is so much quiet warmth in that. It's beautiful to pause and notice moments that bring relief.",
-                        "When you experienced that calm or peaceful moment, how did it shift how you felt inside?",
-                        Arrays.asList(
-                                "My chest felt lighter and looser",
-                                "Gave me breathing room for a while",
-                                "Felt brief, but reminded me I can feel okay",
-                                "Made me want to protect moments like that",
-                                "Helped me reset my mind"
-                        ),
-                        topic
-                );
+        String inverted = invertPerspective(raw);
+        if (inverted.length() > 60) {
+            inverted = inverted.substring(0, 57) + "...";
+        }
 
-            default: // GENERAL
-                if (turnCount <= 2) {
-                    return new DialogueResponse(
-                            "Thank you for sharing that with me so honestly. It takes real courage to open up.",
-                            "When you think about where you are right now, what is the biggest thing you wish someone understood about what you're going through?",
-                            Arrays.asList(
-                                    "How exhausted I truly am inside",
-                                    "That I'm trying my best even when it's hard",
-                                    "That I just need a listening ear, not advice",
-                                    "That I feel uncertain about my future",
-                                    "That a little gentleness would mean the world"
-                            ),
-                            topic
-                    );
-                } else {
-                    return new DialogueResponse(
-                            "I hear you completely, and your feelings are completely valid.",
-                            "Looking ahead to the rest of your day, what is one kind thing you can do purely for your peace of mind?",
-                            Arrays.asList(
-                                    "Take an early, quiet rest tonight",
-                                    "Do something simple that makes me smile",
-                                    "Put down all work and just breathe",
-                                    "Reach out to someone I trust",
-                                    "Be patient and gentle with myself"
-                            ),
-                            topic
-                    );
-                }
+        // Check sentiment polarity of the custom text
+        NLPEmotionAnalyzer.EmotionResult emotionAnalysis = NLPEmotionAnalyzer.analyze(raw);
+
+        if (emotionAnalysis.valence < -0.1) {
+            // Negative/Distressed custom input
+            return new DialogueResponse(
+                    "Thank you for expressing that. When you mention that " + inverted + ", it makes complete sense that you feel weighed down. It takes courage to say what you're truly carrying.",
+                    "When that thought or feeling is sitting with you, what feels like the hardest part to bear right now?",
+                    Arrays.asList(
+                            "Feeling like I have no control over it",
+                            "Feeling alone in dealing with it",
+                            "Worrying about what will happen next",
+                            "Feeling exhausted by how long it's lasted",
+                            "Just needing someone to truly listen"
+                    ),
+                    "CUSTOM_DISTRESS"
+            );
+        } else if (emotionAnalysis.valence > 0.1) {
+            // Positive custom input
+            return new DialogueResponse(
+                    "I really appreciate you sharing that. Noticing that " + inverted + " is such a gentle, hopeful reflection.",
+                    "What is one small way you can invite a little more of that peaceful energy into the rest of your day?",
+                    Arrays.asList(
+                            "Take a quiet walk or step outside",
+                            "Listen to some calming music",
+                            "Share this feeling with someone close",
+                            "Protect my evening for rest",
+                            "Keep this gentle reminder in mind"
+                    ),
+                    "CUSTOM_POSITIVE"
+            );
+        } else {
+            // Reflective / Ambiguous custom input
+            return new DialogueResponse(
+                    "I hear you, and I appreciate you putting that into words. Even when thoughts feel tangled or hard to explain, having a space to speak them matters.",
+                    "If you could ask for one thing purely for your own peace of mind right now, what would feel most supportive?",
+                    Arrays.asList(
+                            "A little quiet time to myself",
+                            "Someone who understands without judging",
+                            "A clear plan to tackle my worries",
+                            "Permission to take a complete break",
+                            "Just taking it one breath at a time"
+                    ),
+                    "CUSTOM_REFLECTIVE"
+            );
         }
     }
 }
