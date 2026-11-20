@@ -28,42 +28,51 @@
 
         <activity
             android:name=".LoginActivity"
+            android:exported="false"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustResize" />
 
         <activity
             android:name=".RegisterActivity"
+            android:exported="false"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustResize" />
 
         <activity
             android:name=".MainActivity"
+            android:exported="false"
             android:screenOrientation="portrait" />
 
         <activity
             android:name=".ChatActivity"
+            android:exported="false"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustResize" />
 
         <activity
             android:name=".SessionSummaryActivity"
+            android:exported="false"
             android:screenOrientation="portrait" />
 
         <activity
             android:name=".SettingsActivity"
+            android:exported="false"
             android:screenOrientation="portrait" />
 
         <activity
             android:name=".HistoryActivity"
+            android:exported="false"
             android:screenOrientation="portrait" />
 
         <activity
             android:name=".FeedbackActivity"
+            android:exported="false"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustResize" />
 
         <activity
             android:name=".AboutActivity"
+            android:exported="false"
             android:screenOrientation="portrait" />
 
         <receiver
