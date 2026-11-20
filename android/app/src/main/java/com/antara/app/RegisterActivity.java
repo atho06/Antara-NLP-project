@@ -15,7 +15,7 @@ import com.antara.app.data.SessionManager;
 
 public class RegisterActivity extends AppCompatActivity {
 
-    private EditText etName, etEmail, etPassword, etPhone, etContactName, etContactPhone;
+    private EditText etName, etEmail, etPassword, etPhone, etContactName, etContactPhone, etContactEmail;
     private Button btnSubmit;
     private TextView tvLogin;
     private AntaraDatabaseHelper dbHelper;
@@ -35,6 +35,7 @@ public class RegisterActivity extends AppCompatActivity {
         etPhone = findViewById(R.id.et_reg_phone);
         etContactName = findViewById(R.id.et_reg_contact_name);
         etContactPhone = findViewById(R.id.et_reg_contact_phone);
+        etContactEmail = findViewById(R.id.et_reg_contact_email);
         btnSubmit = findViewById(R.id.btn_reg_submit);
         tvLogin = findViewById(R.id.tv_reg_login);
 
@@ -60,6 +61,7 @@ public class RegisterActivity extends AppCompatActivity {
         String phone = etPhone.getText().toString().trim();
         String contactName = etContactName.getText().toString().trim();
         String contactPhone = etContactPhone.getText().toString().trim();
+        String contactEmail = etContactEmail.getText().toString().trim();
 
         if (name.isEmpty() || email.isEmpty() || password.isEmpty()) {
             Toast.makeText(this, "Please fill in your name, email, and password", Toast.LENGTH_SHORT).show();
@@ -71,7 +73,7 @@ public class RegisterActivity extends AppCompatActivity {
             return;
         }
 
-        long userId = dbHelper.registerUser(name, email, password, phone, contactName, contactPhone);
+        long userId = dbHelper.registerUser(name, email, password, phone, contactName, contactPhone, contactEmail);
         if (userId != -1) {
             sessionManager.setLogin(userId, name, email);
             Toast.makeText(this, "Account created successfully! 🌸", Toast.LENGTH_SHORT).show();

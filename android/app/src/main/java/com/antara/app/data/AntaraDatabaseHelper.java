@@ -19,7 +19,7 @@ import java.util.Locale;
 public class AntaraDatabaseHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "antara_local.db";
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2;
 
     // Table: Users
     public static final String TABLE_USERS = "users";
@@ -30,6 +30,7 @@ public class AntaraDatabaseHelper extends SQLiteOpenHelper {
     public static final String COL_USER_PHONE = "phone";
     public static final String COL_USER_CONTACT_NAME = "trusted_contact_name";
     public static final String COL_USER_CONTACT_PHONE = "trusted_contact_phone";
+    public static final String COL_USER_CONTACT_EMAIL = "trusted_contact_email";
     public static final String COL_USER_EMAIL_VERIFIED = "email_verified";
     public static final String COL_USER_PHONE_VERIFIED = "phone_verified";
     public static final String COL_USER_CONTACT_VERIFIED = "trusted_contact_verified";
@@ -60,6 +61,7 @@ public class AntaraDatabaseHelper extends SQLiteOpenHelper {
                 + COL_USER_PHONE + " TEXT, "
                 + COL_USER_CONTACT_NAME + " TEXT, "
                 + COL_USER_CONTACT_PHONE + " TEXT, "
+                + COL_USER_CONTACT_EMAIL + " TEXT, "
                 + COL_USER_EMAIL_VERIFIED + " INTEGER DEFAULT 0, "
                 + COL_USER_PHONE_VERIFIED + " INTEGER DEFAULT 0, "
                 + COL_USER_CONTACT_VERIFIED + " INTEGER DEFAULT 0, "
@@ -81,9 +83,11 @@ public class AntaraDatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_SESSIONS);
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_USERS);
-        onCreate(db);
+        if (oldVersion < 2) {
+            try {
+                db.execSQL("ALTER TABLE " + TABLE_USERS + " ADD COLUMN " + COL_USER_CONTACT_EMAIL + " TEXT DEFAULT ''");
+            } catch (Exception ignored) {}
+        }
     }
 
     // Password Hashing
@@ -106,6 +110,11 @@ public class AntaraDatabaseHelper extends SQLiteOpenHelper {
     // User Registration
     public long registerUser(String name, String email, String password, String phone, 
                              String contactName, String contactPhone) {
+        return registerUser(name, email, password, phone, contactName, contactPhone, "");
+    }
+
+    public long registerUser(String name, String email, String password, String phone, 
+                             String contactName, String contactPhone, String contactEmail) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(COL_USER_NAME, name);
@@ -114,6 +123,7 @@ public class AntaraDatabaseHelper extends SQLiteOpenHelper {
         values.put(COL_USER_PHONE, phone != null ? phone.trim() : "");
         values.put(COL_USER_CONTACT_NAME, contactName != null ? contactName.trim() : "");
         values.put(COL_USER_CONTACT_PHONE, contactPhone != null ? contactPhone.trim() : "");
+        values.put(COL_USER_CONTACT_EMAIL, contactEmail != null ? contactEmail.trim().toLowerCase(Locale.ROOT) : "");
         values.put(COL_USER_EMAIL_VERIFIED, 0);
         values.put(COL_USER_PHONE_VERIFIED, 0);
         values.put(COL_USER_CONTACT_VERIFIED, 0);
@@ -146,14 +156,17 @@ public class AntaraDatabaseHelper extends SQLiteOpenHelper {
         public final String phone;
         public final String trustedContactName;
         public final String trustedContactPhone;
+        public final String trustedContactEmail;
 
-        public UserProfile(long id, String fullName, String email, String phone, String trustedContactName, String trustedContactPhone) {
+        public UserProfile(long id, String fullName, String email, String phone, 
+                           String trustedContactName, String trustedContactPhone, String trustedContactEmail) {
             this.id = id;
             this.fullName = fullName != null ? fullName : "Antara Friend";
             this.email = email != null ? email : "";
             this.phone = phone != null ? phone : "";
             this.trustedContactName = trustedContactName != null ? trustedContactName : "";
             this.trustedContactPhone = trustedContactPhone != null ? trustedContactPhone : "";
+            this.trustedContactEmail = trustedContactEmail != null ? trustedContactEmail : "";
         }
     }
 
@@ -167,8 +180,15 @@ public class AntaraDatabaseHelper extends SQLiteOpenHelper {
             String phone = cursor.getString(cursor.getColumnIndexOrThrow(COL_USER_PHONE));
             String contactName = cursor.getString(cursor.getColumnIndexOrThrow(COL_USER_CONTACT_NAME));
             String contactPhone = cursor.getString(cursor.getColumnIndexOrThrow(COL_USER_CONTACT_PHONE));
+            
+            String contactEmail = "";
+            int emailIdx = cursor.getColumnIndex(COL_USER_CONTACT_EMAIL);
+            if (emailIdx != -1) {
+                contactEmail = cursor.getString(emailIdx);
+            }
+
             cursor.close();
-            return new UserProfile(userId, name, email, phone, contactName, contactPhone);
+            return new UserProfile(userId, name, email, phone, contactName, contactPhone, contactEmail);
         }
         if (cursor != null) cursor.close();
         return null;
@@ -176,10 +196,26 @@ public class AntaraDatabaseHelper extends SQLiteOpenHelper {
 
     // Update Emergency Contact
     public boolean updateEmergencyContact(long userId, String contactName, String contactPhone) {
+        return updateEmergencyContact(userId, contactName, contactPhone, "");
+    }
+
+    public boolean updateEmergencyContact(long userId, String contactName, String contactPhone, String contactEmail) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues cv = new ContentValues();
         cv.put(COL_USER_CONTACT_NAME, contactName != null ? contactName.trim() : "");
         cv.put(COL_USER_CONTACT_PHONE, contactPhone != null ? contactPhone.trim() : "");
+        cv.put(COL_USER_CONTACT_EMAIL, contactEmail != null ? contactEmail.trim().toLowerCase(Locale.ROOT) : "");
+        int rows = db.update(TABLE_USERS, cv, COL_USER_ID + "=?", new String[]{String.valueOf(userId)});
+        return rows > 0;
+    }
+
+    // Update User Profile Details
+    public boolean updateUserProfile(long userId, String fullName, String email, String phone) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues cv = new ContentValues();
+        cv.put(COL_USER_NAME, fullName != null ? fullName.trim() : "");
+        cv.put(COL_USER_EMAIL, email != null ? email.trim().toLowerCase(Locale.ROOT) : "");
+        cv.put(COL_USER_PHONE, phone != null ? phone.trim() : "");
         int rows = db.update(TABLE_USERS, cv, COL_USER_ID + "=?", new String[]{String.valueOf(userId)});
         return rows > 0;
     }

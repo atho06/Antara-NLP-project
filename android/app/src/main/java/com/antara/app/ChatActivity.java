@@ -378,7 +378,10 @@ public class ChatActivity extends AppCompatActivity {
 
         // 1. Post Crisis / Safety Message (Emergency contact FIRST, bigger)
         if (hasContact) {
-            String crisisMsg = CrisisClassifier.buildCrisisMessageWithContact(profile.trustedContactName, profile.trustedContactPhone);
+            String crisisMsg = CrisisClassifier.buildCrisisMessageWithContact(
+                    profile.trustedContactName, 
+                    profile.trustedContactPhone, 
+                    profile.trustedContactEmail);
             messageList.add(new ChatMessage(crisisMsg, false, "crisis", true));
 
             // Dispatch Friendly Check-in Reminder SMS to Trusted Contact
@@ -442,6 +445,16 @@ public class ChatActivity extends AppCompatActivity {
         etPhone.setLayoutParams(lp);
         layout.addView(etPhone);
 
+        final EditText etEmail = new EditText(this);
+        etEmail.setHint("Contact Email Address (Optional)");
+        etEmail.setInputType(android.text.InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
+        etEmail.setTextColor(ContextCompat.getColor(this, R.color.text_primary));
+        LinearLayout.LayoutParams lpEmail = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        lpEmail.topMargin = pad / 2;
+        etEmail.setLayoutParams(lpEmail);
+        layout.addView(etEmail);
+
         builder.setView(layout);
 
         builder.setPositiveButton("Save Contact", new DialogInterface.OnClickListener() {
@@ -449,12 +462,13 @@ public class ChatActivity extends AppCompatActivity {
             public void onClick(DialogInterface dialog, int which) {
                 String name = etName.getText().toString().trim();
                 String phone = etPhone.getText().toString().trim();
+                String email = etEmail.getText().toString().trim();
                 if (phone.isEmpty()) {
                     Toast.makeText(ChatActivity.this, "Please enter a valid phone number", Toast.LENGTH_SHORT).show();
                     return;
                 }
                 if (name.isEmpty()) name = "Trusted Contact";
-                saveEmergencyContactAndNotify(name, phone);
+                saveEmergencyContactAndNotify(name, phone, email);
             }
         });
 
@@ -462,16 +476,21 @@ public class ChatActivity extends AppCompatActivity {
         builder.show();
     }
 
-    private void saveEmergencyContactAndNotify(String name, String phone) {
+    private void saveEmergencyContactAndNotify(String name, String phone, String email) {
         long userId = sessionManager.getUserId();
-        dbHelper.updateEmergencyContact(userId, name, phone);
+        dbHelper.updateEmergencyContact(userId, name, phone, email);
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("✅ Emergency contact successfully saved:\n");
+        sb.append("👤 ").append(name).append("\n");
+        sb.append("📞 ").append(phone).append("\n");
+        if (email != null && !email.trim().isEmpty()) {
+            sb.append("✉️ ").append(email.trim()).append("\n");
+        }
+        sb.append("\nA gentle check-in reminder is being dispatched to them so they know to check on you. Thank you for taking this important step for your safety.");
 
         // Notify in chat
-        messageList.add(new ChatMessage(
-                "✅ Emergency contact successfully saved:\n👤 " + name + "\n📞 " + phone + "\n\n"
-                + "A gentle check-in reminder SMS is being dispatched to them so they know to check on you. Thank you for taking this important step for your safety.",
-                false
-        ));
+        messageList.add(new ChatMessage(sb.toString(), false));
         chatAdapter.notifyItemInserted(messageList.size() - 1);
         rvChat.smoothScrollToPosition(messageList.size() - 1);
 
@@ -495,6 +514,7 @@ public class ChatActivity extends AppCompatActivity {
         if (profile != null && profile.trustedContactPhone != null && !profile.trustedContactPhone.trim().isEmpty()) {
             String contactName = profile.trustedContactName.isEmpty() ? "Trusted Contact" : profile.trustedContactName;
             String contactPhone = profile.trustedContactPhone.trim();
+            String contactEmail = profile.trustedContactEmail != null ? profile.trustedContactEmail.trim() : "";
             String userName = profile.fullName.isEmpty() ? "Your friend" : profile.fullName;
 
             String smsText = "Hello " + contactName + ", this is a gentle note from Antara. " 
@@ -514,10 +534,11 @@ public class ChatActivity extends AppCompatActivity {
                 sent = false;
             }
 
+            String emailSuffix = !contactEmail.isEmpty() ? " (and email alert prepared for " + contactEmail + ")" : "";
             if (sent) {
-                messageList.add(new ChatMessage("✉️ A friendly check-in reminder SMS was dispatched to your trusted emergency contact (" + contactName + ").", false));
+                messageList.add(new ChatMessage("✉️ A friendly check-in reminder SMS was dispatched to your trusted emergency contact (" + contactName + ")" + emailSuffix + ".", false));
             } else {
-                messageList.add(new ChatMessage("✉️ Check-in alert note prepared for your trusted contact (" + contactName + "): \"Hello " + contactName + ", this is a gentle note from Antara. Please check in on " + userName + " today.\"", false));
+                messageList.add(new ChatMessage("✉️ Check-in alert note prepared for your trusted contact (" + contactName + ")" + emailSuffix + ": \"Hello " + contactName + ", this is a gentle note from Antara. Please check in on " + userName + " today.\"", false));
             }
         }
     }
@@ -538,7 +559,7 @@ public class ChatActivity extends AppCompatActivity {
             String extractedPhone = m.group();
             String extractedName = userText.replace(extractedPhone, "").replaceAll("(?i)(my|emergency|contact|is|name|phone|number|save|add|:|trusted)", "").trim();
             if (extractedName.isEmpty()) extractedName = "Trusted Contact";
-            saveEmergencyContactAndNotify(extractedName, extractedPhone);
+            saveEmergencyContactAndNotify(extractedName, extractedPhone, "");
             return;
         }
 
