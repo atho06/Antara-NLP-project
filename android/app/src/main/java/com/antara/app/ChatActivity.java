@@ -3,17 +3,23 @@ package com.antara.app;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.HorizontalScrollView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -38,6 +44,8 @@ public class ChatActivity extends AppCompatActivity {
     private ProgressBar pbTimer;
     private RecyclerView rvChat;
     private EditText etInput;
+    private HorizontalScrollView scrollOptions;
+    private LinearLayout layoutOptions;
 
     private List<ChatMessage> messageList;
     private ChatAdapter chatAdapter;
@@ -76,6 +84,8 @@ public class ChatActivity extends AppCompatActivity {
         pbTimer = findViewById(R.id.pb_chat_time);
         rvChat = findViewById(R.id.rv_chat);
         etInput = findViewById(R.id.et_chat_input);
+        scrollOptions = findViewById(R.id.scroll_options);
+        layoutOptions = findViewById(R.id.layout_options);
 
         messageList = new ArrayList<>();
         askedQuestions = new HashSet<>();
@@ -87,17 +97,26 @@ public class ChatActivity extends AppCompatActivity {
         rvChat.setLayoutManager(layoutManager);
         rvChat.setAdapter(chatAdapter);
 
-        // Initial welcome messages
+        // Initial welcome message
         messageList.add(new ChatMessage("Hello, I am Antara 🌷. I am here to listen with full care, without any judgment. Let's begin whenever you are ready.", false));
-        String firstQ = QuestionBank.getNextQuestion(category, askedQuestions);
-        messageList.add(new ChatMessage(firstQ, false));
+        
+        // Fetch first question with options
+        QuestionBank.QuestionItem firstQ = QuestionBank.getNextQuestion(category, askedQuestions);
+        messageList.add(new ChatMessage(firstQ.text, false));
         chatAdapter.notifyDataSetChanged();
 
-        // Send Button
+        // Display choice buttons for first question
+        displayOptionButtons(firstQ.options);
+
+        // Send Button for custom typed input
         btnSend.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                handleSendMessage();
+                String typedText = etInput.getText().toString().trim();
+                if (!typedText.isEmpty()) {
+                    etInput.setText("");
+                    processUserMessage(typedText);
+                }
             }
         });
 
@@ -110,6 +129,98 @@ public class ChatActivity extends AppCompatActivity {
         });
 
         startTimer();
+    }
+
+    private void displayOptionButtons(List<String> options) {
+        layoutOptions.removeAllViews();
+        if (options == null || options.isEmpty()) {
+            scrollOptions.setVisibility(View.GONE);
+            return;
+        }
+
+        scrollOptions.setVisibility(View.VISIBLE);
+
+        for (final String option : options) {
+            TextView btn = new TextView(this);
+            btn.setText(option);
+            btn.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
+            btn.setTextColor(ContextCompat.getColor(this, R.color.primary));
+            btn.setBackgroundResource(R.drawable.bg_option_button);
+            btn.setGravity(Gravity.CENTER);
+
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+            );
+            params.setMargins(8, 4, 8, 4);
+            btn.setLayoutParams(params);
+
+            btn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    processUserMessage(option);
+                }
+            });
+
+            layoutOptions.addView(btn);
+        }
+
+        // Scroll back to start
+        scrollOptions.post(new Runnable() {
+            @Override
+            public void run() {
+                scrollOptions.fullScroll(HorizontalScrollView.FOCUS_LEFT);
+            }
+        });
+    }
+
+    private void processUserMessage(String userText) {
+        if (userText == null || userText.trim().isEmpty()) return;
+
+        // 1. Add User Message
+        messageList.add(new ChatMessage(userText, true));
+        chatAdapter.notifyItemInserted(messageList.size() - 1);
+        rvChat.smoothScrollToPosition(messageList.size() - 1);
+
+        // 2. On-Device NLP Crisis Check
+        if (CrisisClassifier.checkCrisis(userText)) {
+            layoutOptions.removeAllViews();
+            scrollOptions.setVisibility(View.GONE);
+            messageList.add(new ChatMessage(CrisisClassifier.SAFETY_MESSAGE, false, "crisis", true));
+            chatAdapter.notifyItemInserted(messageList.size() - 1);
+            rvChat.smoothScrollToPosition(messageList.size() - 1);
+            return;
+        }
+
+        // 3. On-Device NLP Emotion Analysis
+        NLPEmotionAnalyzer.EmotionResult analysis = NLPEmotionAnalyzer.analyze(userText);
+        emotionsLog.add(analysis.primaryEmotion);
+
+        // 4. Overwhelm / Fatigue Detection
+        if (analysis.userFatigued && !isTimeUpPrompted) {
+            isTimeUpPrompted = true;
+            showContinuationDialog("I notice this might be feeling a bit heavy or tiring. There is zero pressure here. Would you like to take a break and finish, or keep talking?");
+            return;
+        }
+
+        // 5. Generate Next Gentle Acknowledgement and Question with its options
+        String[] acks = new String[]{
+                "Thank you for sharing that with me.",
+                "I hear you, and it makes complete sense that you feel this way.",
+                "Thank you for opening up—it takes courage to reflect like this.",
+                "I appreciate you expressing that so honestly."
+        };
+        String ack = acks[(int) (Math.random() * acks.length)];
+
+        messageList.add(new ChatMessage(ack, false));
+        QuestionBank.QuestionItem nextQ = QuestionBank.getNextQuestion(category, askedQuestions);
+        messageList.add(new ChatMessage(nextQ.text, false));
+
+        chatAdapter.notifyItemRangeInserted(messageList.size() - 2, 2);
+        rvChat.smoothScrollToPosition(messageList.size() - 1);
+
+        // Update option buttons for the new question
+        displayOptionButtons(nextQ.options);
     }
 
     private void startTimer() {
@@ -145,53 +256,6 @@ public class ChatActivity extends AppCompatActivity {
             int percent = (int) (((float) secondsElapsed / targetSeconds) * 100);
             pbTimer.setProgress(Math.min(100, percent));
         }
-    }
-
-    private void handleSendMessage() {
-        String text = etInput.getText().toString().trim();
-        if (text.isEmpty()) return;
-
-        etInput.setText("");
-
-        // 1. Add User Message
-        messageList.add(new ChatMessage(text, true));
-        chatAdapter.notifyItemInserted(messageList.size() - 1);
-        rvChat.smoothScrollToPosition(messageList.size() - 1);
-
-        // 2. On-Device NLP Crisis Check
-        if (CrisisClassifier.checkCrisis(text)) {
-            messageList.add(new ChatMessage(CrisisClassifier.SAFETY_MESSAGE, false, "crisis", true));
-            chatAdapter.notifyItemInserted(messageList.size() - 1);
-            rvChat.smoothScrollToPosition(messageList.size() - 1);
-            return;
-        }
-
-        // 3. On-Device NLP Emotion Analysis
-        NLPEmotionAnalyzer.EmotionResult analysis = NLPEmotionAnalyzer.analyze(text);
-        emotionsLog.add(analysis.primaryEmotion);
-
-        // 4. Overwhelm / Fatigue Detection
-        if (analysis.userFatigued && !isTimeUpPrompted) {
-            isTimeUpPrompted = true;
-            showContinuationDialog("I notice this might be feeling a bit heavy or tiring. There is zero pressure here. Would you like to take a break and finish, or keep talking?");
-            return;
-        }
-
-        // 5. Generate Next Gentle Acknowledgement and Question
-        String[] acks = new String[]{
-                "Thank you for sharing that with me.",
-                "I hear you, and it makes complete sense that you feel this way.",
-                "Thank you for opening up—it takes courage to reflect like this.",
-                "I appreciate you expressing that so honestly."
-        };
-        String ack = acks[(int) (Math.random() * acks.length)];
-
-        messageList.add(new ChatMessage(ack, false));
-        String nextQ = QuestionBank.getNextQuestion(category, askedQuestions);
-        messageList.add(new ChatMessage(nextQ, false));
-
-        chatAdapter.notifyItemRangeInserted(messageList.size() - 2, 2);
-        rvChat.smoothScrollToPosition(messageList.size() - 1);
     }
 
     private void showContinuationDialog(String message) {
