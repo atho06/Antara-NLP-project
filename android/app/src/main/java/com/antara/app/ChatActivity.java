@@ -268,6 +268,11 @@ public class ChatActivity extends AppCompatActivity {
             }
         }
 
+        if (option.contains("Ready to finish") || option.contains("finish session") || option.contains("Finish Reflection")) {
+            finishSession();
+            return;
+        }
+
         processUserMessage(option);
     }
 
@@ -344,7 +349,7 @@ public class ChatActivity extends AppCompatActivity {
         // 7. Generate Connected, Contextual Dialogue using ConversationalEngine
         turnCount++;
         ConversationalEngine.DialogueResponse dialogResponse = 
-                ConversationalEngine.generateContextualResponse(userText, turnCount, previousTopics);
+                ConversationalEngine.generateContextualResponse(userText, turnCount, category, askedQuestions, previousTopics);
 
         int addedCount = 0;
         if (dialogResponse.acknowledgement != null && !dialogResponse.acknowledgement.isEmpty()) {
