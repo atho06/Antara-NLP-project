@@ -29,6 +29,8 @@ public class SettingsActivity extends AppCompatActivity {
     private Button btnEditProfile, btnEditContact;
     private TextView tvCurrentTheme;
     private Button btnChangeTheme;
+    private TextView tvCurrentCycle;
+    private Button btnChangeCycle;
     private TextView btnVerifyEmail, btnVerifyPhone, btnVerifyContact;
     private Button btnLogout;
 
@@ -73,6 +75,20 @@ public class SettingsActivity extends AppCompatActivity {
 
         if (btnChangeTheme != null) btnChangeTheme.setOnClickListener(themeClickListener);
         if (rowTheme != null) rowTheme.setOnClickListener(themeClickListener);
+
+        tvCurrentCycle = findViewById(R.id.tv_current_cycle);
+        btnChangeCycle = findViewById(R.id.btn_change_cycle);
+        View rowCycle = findViewById(R.id.row_settings_cycle);
+
+        View.OnClickListener cycleClickListener = new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showCycleSelectionDialog();
+            }
+        };
+
+        if (btnChangeCycle != null) btnChangeCycle.setOnClickListener(cycleClickListener);
+        if (rowCycle != null) rowCycle.setOnClickListener(cycleClickListener);
 
         btnVerifyEmail = findViewById(R.id.btn_verify_email);
         btnVerifyPhone = findViewById(R.id.btn_verify_phone);
@@ -166,7 +182,26 @@ public class SettingsActivity extends AppCompatActivity {
                 tvContactPhone.setText("📞 Phone: None");
                 tvContactEmail.setText("✉️ Email: None");
             }
+
+            if (tvCurrentCycle != null) {
+                tvCurrentCycle.setText(formatCyclePhase(profile.menstrualPhase));
+            }
         }
+    }
+
+    private String formatCyclePhase(String phaseKey) {
+        if (phaseKey == null || phaseKey.equals("not_tracking") || phaseKey.isEmpty()) {
+            return "❌ Not Tracking";
+        } else if (phaseKey.equals("menstrual_period")) {
+            return "🌸 Menstrual Phase (Rest & Somatic Care)";
+        } else if (phaseKey.equals("follicular")) {
+            return "🌱 Follicular Phase (Rising Energy)";
+        } else if (phaseKey.equals("ovulation")) {
+            return "☀️ Ovulation Phase (Peak Vitality)";
+        } else if (phaseKey.equals("luteal_pms")) {
+            return "🍂 Luteal / PMS Phase (Gentle Sensitivity)";
+        }
+        return phaseKey.replace('_', ' ');
     }
 
     private void promptEmailVerificationForAction(final String actionTarget, final Runnable onVerifiedSuccess) {
@@ -341,12 +376,15 @@ public class SettingsActivity extends AppCompatActivity {
 
     private void showThemeSelectionDialog() {
         final String[] themeOptions = new String[]{
-                "☀️ Light Mode (Blossom)",
+                "🌸 Light Mode (Blossom)",
                 "🌙 Dark Mode (Midnight)",
-                "⚙️ Follow System Default"
+                "⚙️ Follow System Default",
+                "🌅 Amber Sunrise (Mood Uplift)",
+                "🌿 Serene Sage (Stress Relief)"
         };
 
         int current = ThemeHelper.getSavedTheme(this);
+        if (current < 0 || current >= themeOptions.length) current = ThemeHelper.THEME_SYSTEM;
         final int[] selected = new int[]{current};
 
         new AlertDialog.Builder(this)
@@ -365,6 +403,60 @@ public class SettingsActivity extends AppCompatActivity {
                             tvCurrentTheme.setText(ThemeHelper.getThemeName(selected[0]));
                         }
                         Toast.makeText(SettingsActivity.this, "Theme applied! 🌸", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private void showCycleSelectionDialog() {
+        final String[] cycleLabels = new String[]{
+                "❌ Not Tracking",
+                "🌸 Menstrual Phase (Days 1-5: Rest & Somatic Care)",
+                "🌱 Follicular Phase (Days 6-13: Rising Energy)",
+                "☀️ Ovulation Phase (Days 14-17: Peak Vitality)",
+                "🍂 Luteal / PMS Phase (Days 18-28: Gentle Sensitivity)"
+        };
+
+        final String[] cycleKeys = new String[]{
+                "not_tracking",
+                "menstrual_period",
+                "follicular",
+                "ovulation",
+                "luteal_pms"
+        };
+
+        long userId = sessionManager.getUserId();
+        AntaraDatabaseHelper.UserProfile profile = dbHelper.getUserProfile(userId);
+        int currentIdx = 0;
+        if (profile != null && profile.menstrualPhase != null) {
+            for (int i = 0; i < cycleKeys.length; i++) {
+                if (cycleKeys[i].equalsIgnoreCase(profile.menstrualPhase)) {
+                    currentIdx = i;
+                    break;
+                }
+            }
+        }
+
+        final int[] selected = new int[]{currentIdx};
+
+        new AlertDialog.Builder(this)
+                .setTitle("🌸 Menstrual Cycle & Rhythm")
+                .setSingleChoiceItems(cycleLabels, currentIdx, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        selected[0] = which;
+                    }
+                })
+                .setPositiveButton("Save", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        String chosenKey = cycleKeys[selected[0]];
+                        dbHelper.updateMenstrualPhase(userId, chosenKey);
+                        if (tvCurrentCycle != null) {
+                            tvCurrentCycle.setText(formatCyclePhase(chosenKey));
+                        }
+                        Toast.makeText(SettingsActivity.this, "Cycle phase updated! 🌸", Toast.LENGTH_SHORT).show();
                     }
                 })
                 .setNegativeButton("Cancel", null)

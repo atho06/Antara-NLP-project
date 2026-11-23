@@ -37,6 +37,26 @@
         </LinearLayout>
 
         <LinearLayout
+            android:id="@+id/nav_analytics"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="vertical">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="📊"
+                android:textSize="18sp" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Analytics"
+                android:textColor="@color/text_secondary"
+                android:textSize="11sp" />
+        </LinearLayout>
+
+        <LinearLayout
             android:id="@+id/nav_history"
             android:layout_width="0dp"
             android:layout_height="match_parent"
@@ -170,6 +190,78 @@
                         android:textColor="@color/text_primary"
                         android:textSize="14sp"
                         android:textStyle="italic" />
+
+                </LinearLayout>
+
+            </androidx.cardview.widget.CardView>
+
+            <!-- Streak & Mindful Progress Dashboard Card -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/card_streak_dashboard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                app:cardBackgroundColor="@color/surface"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="2dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <TextView
+                            android:id="@+id/tv_streak_title"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="🔥 1-Day Streak"
+                            android:textColor="#E17055"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tv_streak_level"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentEnd="true"
+                            android:text="🌱 Sprout Level"
+                            android:textColor="@color/primary"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+
+                    </RelativeLayout>
+
+                    <!-- Visual Weekly Progress Indicators -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:gravity="center"
+                        android:orientation="horizontal">
+
+                        <TextView android:id="@+id/dot_mon" android:layout_width="0dp" android:layout_height="32dp" android:layout_weight="1" android:layout_margin="2dp" android:background="@drawable/bg_option_button" android:gravity="center" android:text="M" android:textColor="@color/text_secondary" android:textSize="11sp" android:textStyle="bold" />
+                        <TextView android:id="@+id/dot_tue" android:layout_width="0dp" android:layout_height="32dp" android:layout_weight="1" android:layout_margin="2dp" android:background="@drawable/bg_option_button" android:gravity="center" android:text="T" android:textColor="@color/text_secondary" android:textSize="11sp" android:textStyle="bold" />
+                        <TextView android:id="@+id/dot_wed" android:layout_width="0dp" android:layout_height="32dp" android:layout_weight="1" android:layout_margin="2dp" android:background="@drawable/bg_option_button" android:gravity="center" android:text="W" android:textColor="@color/text_secondary" android:textSize="11sp" android:textStyle="bold" />
+                        <TextView android:id="@+id/dot_thu" android:layout_width="0dp" android:layout_height="32dp" android:layout_weight="1" android:layout_margin="2dp" android:background="@drawable/bg_option_button" android:gravity="center" android:text="T" android:textColor="@color/text_secondary" android:textSize="11sp" android:textStyle="bold" />
+                        <TextView android:id="@+id/dot_fri" android:layout_width="0dp" android:layout_height="32dp" android:layout_weight="1" android:layout_margin="2dp" android:background="@drawable/bg_option_button" android:gravity="center" android:text="F" android:textColor="@color/text_secondary" android:textSize="11sp" android:textStyle="bold" />
+                        <TextView android:id="@+id/dot_sat" android:layout_width="0dp" android:layout_height="32dp" android:layout_weight="1" android:layout_margin="2dp" android:background="@drawable/bg_option_button" android:gravity="center" android:text="S" android:textColor="@color/text_secondary" android:textSize="11sp" android:textStyle="bold" />
+                        <TextView android:id="@+id/dot_sun" android:layout_width="0dp" android:layout_height="32dp" android:layout_weight="1" android:layout_margin="2dp" android:background="@drawable/bg_option_button" android:gravity="center" android:text="S" android:textColor="@color/text_secondary" android:textSize="11sp" android:textStyle="bold" />
+
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/tv_streak_sub"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="Consistency is a quiet act of kindness to your future self."
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp" />
 
                 </LinearLayout>
 
@@ -330,6 +422,191 @@
                         android:textAllCaps="false"
                         android:textColor="@android:color/white"
                         android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                </LinearLayout>
+
+            </androidx.cardview.widget.CardView>
+
+            <!-- Menstrual Cycle & Music Support Card -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/card_cycle_support"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp"
+                app:cardBackgroundColor="@color/surface"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="2dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:id="@+id/tv_cycle_home_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🌸 Cycle Rhythm &amp; Soothing"
+                        android:textColor="@color/primary"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tv_cycle_home_tip"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:lineSpacingExtra="2dp"
+                        android:text="Tracking your cycle helps Antara tailor compassion and somatic comfort to your hormones."
+                        android:textColor="@color/text_primary"
+                        android:textSize="13sp" />
+
+                    <Button
+                        android:id="@+id/btn_open_music_home"
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
+                        android:layout_marginTop="10dp"
+                        android:backgroundTint="@color/primary"
+                        android:text="🎵 Listen to Calming Music for Regulation"
+                        android:textAllCaps="false"
+                        android:textColor="@android:color/white"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                </LinearLayout>
+
+            </androidx.cardview.widget.CardView>
+
+            <!-- Evidence-Based Psychology Fact -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp"
+                app:cardBackgroundColor="@color/surface"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="2dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="💡 Evidence-Based Insight"
+                        android:textColor="#0984E3"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tv_fact_text"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:lineSpacingExtra="2dp"
+                        android:text="Putting feelings into words (affect labeling) reduces amygdala reactivity by up to 40% and activates prefrontal regions that restore emotional regulation."
+                        android:textColor="@color/text_primary"
+                        android:textSize="13sp" />
+
+                </LinearLayout>
+
+            </androidx.cardview.widget.CardView>
+
+            <!-- Peer Testimonial Card -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp"
+                app:cardBackgroundColor="@color/bot_bubble"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="0dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="💬 You Are Not Alone"
+                        android:textColor="@color/primary"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tv_testimonial_quote"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:lineSpacingExtra="2dp"
+                        android:text="&quot;I used to feel so guilty for taking time to rest. Reflecting here reminded me that taking a pause isn't falling behind—it is survival.&quot;"
+                        android:textColor="@color/text_primary"
+                        android:textSize="13sp"
+                        android:textStyle="italic" />
+
+                    <TextView
+                        android:id="@+id/tv_testimonial_author"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:text="— A student peer navigating exam anxiety"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp" />
+
+                </LinearLayout>
+
+            </androidx.cardview.widget.CardView>
+
+            <!-- Community Supporter / Antara Patron Card -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/card_supporter_preview"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp"
+                android:visibility="gone"
+                app:cardBackgroundColor="@color/surface"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="2dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="✨ Antara Patron • 100% Free Forever"
+                        android:textColor="#6C5CE7"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:lineSpacingExtra="2dp"
+                        android:text="You've been checking in regularly! Antara is completely free, private, and offline forever for students. Support our mental health mission or sponsor a friend's reflection journey."
+                        android:textColor="@color/text_primary"
+                        android:textSize="13sp" />
+
+                    <Button
+                        android:id="@+id/btn_supporter_learn"
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
+                        android:layout_marginTop="10dp"
+                        android:backgroundTint="#6C5CE7"
+                        android:text="Learn About Community Support 🌷"
+                        android:textAllCaps="false"
+                        android:textColor="@android:color/white"
+                        android:textSize="13sp"
                         android:textStyle="bold" />
 
                 </LinearLayout>

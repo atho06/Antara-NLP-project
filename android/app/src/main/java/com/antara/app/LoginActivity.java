@@ -60,8 +60,12 @@ public class LoginActivity extends AppCompatActivity {
 
         long userId = dbHelper.authenticateUser(email, password);
         if (userId != -1) {
-            sessionManager.setLogin(userId, "Antara Friend", email);
-            Toast.makeText(this, "Welcome to Antara 🌷", Toast.LENGTH_SHORT).show();
+            AntaraDatabaseHelper.UserProfile profile = dbHelper.getUserProfile(userId);
+            String userName = (profile != null && profile.fullName != null && !profile.fullName.trim().isEmpty())
+                    ? profile.fullName.trim()
+                    : "Friend";
+            sessionManager.setLogin(userId, userName, email);
+            Toast.makeText(this, "Welcome back, " + userName + "! 🌷", Toast.LENGTH_LONG).show();
             Intent intent = new Intent(LoginActivity.this, MainActivity.class);
             startActivity(intent);
             finish();

@@ -78,6 +78,7 @@ public class ChatActivity extends AppCompatActivity {
 
     private int durationMinutes;
     private String category;
+    private boolean isProcessingMessage = false;
     private int targetSeconds;
     private int secondsElapsed = 0;
     private boolean isTimeUpPrompted = false;
@@ -237,8 +238,22 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void handleOptionClick(String option) {
+        if (isProcessingMessage) return;
+        isProcessingMessage = true;
+
+        // Immediately remove and hide option buttons to prevent double-clicks
+        layoutOptions.removeAllViews();
+        scrollOptions.setVisibility(View.GONE);
+
         if ("➕ Add Emergency Contact".equals(option)) {
+            isProcessingMessage = false;
             showAddEmergencyContactDialog();
+            return;
+        }
+
+        if (option.contains("Open Music App") || option.contains("Listen to Music") || option.contains("Music Player")) {
+            isProcessingMessage = false;
+            openMusicApp();
             return;
         }
 
@@ -251,29 +266,57 @@ public class ChatActivity extends AppCompatActivity {
                 String smsText = "Hello " + contactName + ", this is a gentle note from Antara. " 
                         + userName + " is going through a very heavy moment today. Please reach out to have a friendly check-in with them.";
                 sendSmsViaIntent(profile.trustedContactPhone.trim(), smsText);
+                isProcessingMessage = false;
                 return;
             }
         }
 
         if (option.startsWith("📞 Call ")) {
             if (option.contains("14416")) {
+                isProcessingMessage = false;
                 dialPhoneNumber("14416");
+                return;
+            } else if (option.contains("1800-599-0019") || option.contains("KIRAN")) {
+                isProcessingMessage = false;
+                dialPhoneNumber("18005990019");
+                return;
+            } else if (option.contains("9999 666 555") || option.contains("Vandrevala")) {
+                isProcessingMessage = false;
+                dialPhoneNumber("9999666555");
                 return;
             }
             long userId = sessionManager.getUserId();
             AntaraDatabaseHelper.UserProfile profile = dbHelper.getUserProfile(userId);
             if (profile != null && profile.trustedContactPhone != null && !profile.trustedContactPhone.trim().isEmpty()) {
+                isProcessingMessage = false;
                 dialPhoneNumber(profile.trustedContactPhone.trim());
                 return;
             }
         }
 
         if (option.contains("Ready to finish") || option.contains("finish session") || option.contains("Finish Reflection")) {
+            isProcessingMessage = false;
             finishSession();
             return;
         }
 
         processUserMessage(option);
+        isProcessingMessage = false;
+    }
+
+    private void openMusicApp() {
+        Intent intent = new Intent(Intent.ACTION_MAIN);
+        intent.addCategory(Intent.CATEGORY_APP_MUSIC);
+        try {
+            startActivity(intent);
+        } catch (Exception e) {
+            try {
+                Intent web = new Intent(Intent.ACTION_VIEW, Uri.parse("https://open.spotify.com/genre/wellness-page"));
+                startActivity(web);
+            } catch (Exception ex) {
+                Toast.makeText(this, "Could not open music app", Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 
     private void sendSmsViaIntent(String phone, String text) {
@@ -323,6 +366,18 @@ public class ChatActivity extends AppCompatActivity {
             return;
         }
 
+        // Check if user requested to talk to a real person / human helpline
+        String lower = userText.toLowerCase(Locale.ROOT);
+        if (lower.contains("talk to a real person") || lower.contains("real person") || 
+            lower.contains("talk to a human") || lower.contains("speak to a human") || 
+            lower.contains("counselor") || lower.contains("therapist") || 
+            lower.contains("talk to someone real") || lower.contains("call someone") || 
+            lower.contains("real counselor") || lower.contains("human support") || 
+            lower.contains("speak to someone")) {
+            handleTalkToRealPersonRequest();
+            return;
+        }
+
         // 3. On-Device NLP Crisis & Extreme Emotion Check
         if (CrisisClassifier.checkCrisis(userText)) {
             triggerSafetySupportMode();
@@ -339,14 +394,7 @@ public class ChatActivity extends AppCompatActivity {
         NLPEmotionAnalyzer.EmotionResult analysis = NLPEmotionAnalyzer.analyze(userText);
         emotionsLog.add(analysis.primaryEmotion);
 
-        // 6. Overwhelm / Fatigue Detection
-        if (analysis.userFatigued && !isTimeUpPrompted) {
-            isTimeUpPrompted = true;
-            showContinuationDialog("I notice this might be feeling a bit heavy or tiring. There is zero pressure here. Would you like to take a break and finish, or keep talking?");
-            return;
-        }
-
-        // 7. Generate Connected, Contextual Dialogue using ConversationalEngine
+        // 6. Generate Connected, Contextual Dialogue using ConversationalEngine
         turnCount++;
         ConversationalEngine.DialogueResponse dialogResponse = 
                 ConversationalEngine.generateContextualResponse(userText, turnCount, category, askedQuestions, previousTopics);
@@ -778,25 +826,80 @@ public class ChatActivity extends AppCompatActivity {
         }
     }
 
+    private void handleTalkToRealPersonRequest() {
+        String botMsg = "I completely understand. While I am here as an AI companion, speaking with a real, compassionate person can make all the difference.\n\n"
+                + "Here are free, confidential helplines available 24/7 to listen and support you without judgment:\n"
+                + "• Tele-MANAS (Govt. of India): 14416 (Toll-Free)\n"
+                + "• KIRAN Mental Health: 1800-599-0019 (Toll-Free)\n"
+                + "• Vandrevala Foundation: +91 9999 666 555 (24/7 Free)";
+
+        messageList.add(new ChatMessage(botMsg, false));
+        chatAdapter.notifyItemInserted(messageList.size() - 1);
+        rvChat.smoothScrollToPosition(messageList.size() - 1);
+
+        List<String> options = new ArrayList<>();
+        options.add("📞 Call Tele-MANAS (14416)");
+        options.add("📞 Call KIRAN (1800-599-0019)");
+        options.add("📞 Call Vandrevala (+91 9999 666 555)");
+
+        long userId = sessionManager.getUserId();
+        AntaraDatabaseHelper.UserProfile profile = dbHelper.getUserProfile(userId);
+        if (profile != null && profile.trustedContactPhone != null && !profile.trustedContactPhone.trim().isEmpty()) {
+            options.add("📞 Call " + (profile.trustedContactName.isEmpty() ? "Emergency Contact" : profile.trustedContactName));
+        }
+
+        options.add("I'd like to continue reflecting here");
+        options.add("I am going to call now");
+        displayOptionButtons(options);
+    }
+
     private void showContinuationDialog(String message) {
-        new AlertDialog.Builder(this)
-                .setTitle("⏱️ Time Check-in")
-                .setMessage(message)
-                .setPositiveButton("Wrap Up & Finish", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
+        final String[] choices = new String[]{
+                "+2 Minutes (Brief pause)",
+                "+5 Minutes (Gentle reflection)",
+                "+10 Minutes (Deeper dive)",
+                "Open Reflection (No time limit)",
+                "Wrap Up & View Summary 🌷"
+        };
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("⏱️ Reflection Time Check-in");
+        builder.setMessage(message + "\n\nWould you like more time to reflect?");
+        builder.setItems(choices, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                switch (which) {
+                    case 0:
+                        targetSeconds += 120;
+                        durationMinutes += 2;
+                        isTimeUpPrompted = false;
+                        Toast.makeText(ChatActivity.this, "Added +2 minutes. Take your time 🌸", Toast.LENGTH_SHORT).show();
+                        break;
+                    case 1:
+                        targetSeconds += 300;
+                        durationMinutes += 5;
+                        isTimeUpPrompted = false;
+                        Toast.makeText(ChatActivity.this, "Added +5 minutes. Take your time 🌸", Toast.LENGTH_SHORT).show();
+                        break;
+                    case 2:
+                        targetSeconds += 600;
+                        durationMinutes += 10;
+                        isTimeUpPrompted = false;
+                        Toast.makeText(ChatActivity.this, "Added +10 minutes. Take your time 🌸", Toast.LENGTH_SHORT).show();
+                        break;
+                    case 3:
+                        targetSeconds = 0;
+                        isTimeUpPrompted = false;
+                        Toast.makeText(ChatActivity.this, "Timer set to Open Reflection 🌸", Toast.LENGTH_SHORT).show();
+                        break;
+                    case 4:
                         finishSession();
-                    }
-                })
-                .setNegativeButton("Keep Talking", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        targetSeconds = 0; // extend indefinitely
-                        dialog.dismiss();
-                    }
-                })
-                .setCancelable(false)
-                .show();
+                        break;
+                }
+            }
+        });
+        builder.setCancelable(false);
+        builder.show();
     }
 
     private void finishSession() {
@@ -817,9 +920,11 @@ public class ChatActivity extends AppCompatActivity {
                 + reflectionsCount + " thoughtful reflections. Your emotional tone centered around " 
                 + dominant.replace('_', ' ') + ". Thank you for showing up for yourself and taking this time to listen inward.";
 
-        // Save into local SQLite
+        // Save into local SQLite with emotions log and update streak
         long userId = sessionManager.getUserId();
-        dbHelper.saveSession(userId, durationMinutes, category, dominant, summary, reflectionsCount);
+        String emotionsJoined = android.text.TextUtils.join(",", emotionsLog);
+        dbHelper.saveSession(userId, durationMinutes, category, dominant, summary, reflectionsCount, emotionsJoined);
+        dbHelper.updateUserStreak(userId);
 
         // Open Summary Activity
         Intent intent = new Intent(ChatActivity.this, SessionSummaryActivity.class);

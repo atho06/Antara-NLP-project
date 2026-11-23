@@ -388,6 +388,91 @@
 
         </androidx.cardview.widget.CardView>
 
+        <!-- Menstrual Cycle & Somatic Rhythm Card -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="22dp"
+            android:text="🌸 Menstrual Cycle &amp; Somatic Rhythm"
+            android:textColor="@color/text_primary"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/card_settings_cycle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            app:cardBackgroundColor="@color/surface"
+            app:cardCornerRadius="18dp"
+            app:cardElevation="2dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <RelativeLayout
+                    android:id="@+id/row_settings_cycle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:background="?attr/selectableItemBackground">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Current Cycle Phase"
+                            android:textColor="@color/text_primary"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tv_current_cycle"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="Not Tracking"
+                            android:textColor="@color/primary"
+                            android:textSize="13sp" />
+
+                    </LinearLayout>
+
+                    <Button
+                        android:id="@+id/btn_change_cycle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="38dp"
+                        android:layout_alignParentEnd="true"
+                        android:layout_centerVertical="true"
+                        android:backgroundTint="@color/primary"
+                        android:text="Select 🌸"
+                        android:textAllCaps="false"
+                        android:textColor="@android:color/white"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
+
+                </RelativeLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:lineSpacingExtra="2dp"
+                    android:text="Syncs with your emotional reflection sessions to offer somatic soothing and music recommendations during sensitive phases."
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp" />
+
+            </LinearLayout>
+
+        </androidx.cardview.widget.CardView>
+
         <!-- Feedback & About Us Card -->
         <TextView
             android:layout_width="wrap_content"

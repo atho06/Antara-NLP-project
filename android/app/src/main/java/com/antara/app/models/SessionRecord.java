@@ -9,9 +9,15 @@ public class SessionRecord {
     private String summary;
     private int exchangesCount;
     private String completedAt;
+    private String emotionsLog;
 
     public SessionRecord(long id, long userId, int durationMinutes, String category, 
                          String dominantEmotion, String summary, int exchangesCount, String completedAt) {
+        this(id, userId, durationMinutes, category, dominantEmotion, summary, exchangesCount, completedAt, "");
+    }
+
+    public SessionRecord(long id, long userId, int durationMinutes, String category, 
+                         String dominantEmotion, String summary, int exchangesCount, String completedAt, String emotionsLog) {
         this.id = id;
         this.userId = userId;
         this.durationMinutes = durationMinutes;
@@ -20,6 +26,7 @@ public class SessionRecord {
         this.summary = summary;
         this.exchangesCount = exchangesCount;
         this.completedAt = completedAt;
+        this.emotionsLog = emotionsLog != null ? emotionsLog : "";
     }
 
     public long getId() { return id; }
@@ -30,4 +37,5 @@ public class SessionRecord {
     public String getSummary() { return summary; }
     public int getExchangesCount() { return exchangesCount; }
     public String getCompletedAt() { return completedAt; }
+    public String getEmotionsLog() { return emotionsLog; }
 }

@@ -85,6 +85,10 @@ public class ConversationalEngine {
             "tea", "coffee", "walk", "nature", "sunlight", "relief", "better", "accomplished", "content"
     };
 
+    private static final String[] MENSTRUAL_TERMS = {
+            "period", "menstrual", "cramps", "pms", "cycle", "hormonal", "bleed", "bleeding", "luteal", "ovulation"
+    };
+
     private static boolean containsAny(String text, String[] keywords) {
         String lower = text.toLowerCase(Locale.ROOT);
         for (String k : keywords) {
@@ -361,6 +365,64 @@ public class ConversationalEngine {
                             "Thank you, that gave me space"
                     ),
                     "ONE_BREATH",
+                    category,
+                    askedQuestions
+            );
+        }
+
+        // =========================================================================
+        // 2B. MENSTRUAL CYCLE, SOMATIC CARE & MUSIC REGULATION
+        // =========================================================================
+        if (containsAny(lower, MENSTRUAL_TERMS)) {
+            previousTopics.add("MENSTRUAL_CARE");
+            return makeResponse(
+                    "Your body and nervous system are navigating real physiological shifts right now. Hormonal changes naturally alter emotional resilience and energy—whatever you are feeling today is biologically valid. You deserve unconditional gentleness.",
+                    "What feels most soothing for your body right now? Listening to calming music or soft frequencies can also help regulate your nervous system.",
+                    Arrays.asList(
+                            "🎵 Open Music App",
+                            "Resting with a warm blanket / heating pad",
+                            "Permission to do nothing today",
+                            "Slow, gentle breathing",
+                            "Drinking warm water or tea"
+                    ),
+                    "MENSTRUAL_CARE",
+                    category,
+                    askedQuestions
+            );
+        }
+
+        // =========================================================================
+        // 2C. RELATIONSHIP DYNAMICS & CONNECTION
+        // =========================================================================
+        if (lower.contains("warm & supportive") || (lower.contains("supportive") && lower.contains("connection"))) {
+            return makeResponse(
+                    "Having people who hold a safe, supportive space for you is a genuine blessing for your mental peace. Savoring that warmth can be a wonderful emotional anchor.",
+                    "What is one small way you could express appreciation for that connection or nurture it today?",
+                    Arrays.asList(
+                            "Send a quick loving text",
+                            "Make time for a short call or catchup",
+                            "Just feel quietly grateful",
+                            "Plan a relaxed get-together",
+                            "Remind myself I am worthy of support"
+                    ),
+                    "RELATIONSHIP_SUPPORT",
+                    category,
+                    askedQuestions
+            );
+        }
+
+        if (lower.contains("a little distant") || lower.contains("strained & stressful") || lower.contains("strained")) {
+            return makeResponse(
+                    "When relationships feel distant or strained, the uncertainty can take up so much background bandwidth in your mind. It's painful feeling disconnected from people you care about.",
+                    "What feels like the most challenging part of that dynamic right now?",
+                    Arrays.asList(
+                            "Feeling like I have to walk on eggshells",
+                            "Unspoken hurt or misunderstandings",
+                            "Feeling like effort is one-sided",
+                            "Needing space to breathe",
+                            "Fear of conflict or confrontation"
+                    ),
+                    "RELATIONSHIP_STRAIN",
                     category,
                     askedQuestions
             );
