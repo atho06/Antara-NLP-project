@@ -328,7 +328,7 @@ public class AntaraDatabaseHelper extends SQLiteOpenHelper {
     }
 
     // Streak Calculation
-    private void updateUserStreak(long userId) {
+    public void updateUserStreak(long userId) {
         try {
             SQLiteDatabase db = this.getWritableDatabase();
             Cursor cursor = db.query(TABLE_USERS, new String[]{COL_USER_STREAK_COUNT, COL_USER_LAST_STREAK_DATE}, 
