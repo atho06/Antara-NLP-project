@@ -292,13 +292,15 @@
 
         </androidx.cardview.widget.CardView>
 
-        <!-- Footer / Version -->
+        <!-- Footer / Version (Tap 5 times for Evaluator Dashboard) -->
         <TextView
+            android:id="@+id/tv_about_version"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="28dp"
             android:layout_marginBottom="32dp"
+            android:padding="8dp"
             android:text="Antara Mobile App • Version 1.0.0\nCrafted with compassion &amp; care 🌷"
             android:textAlignment="center"
             android:textColor="@color/text_secondary"

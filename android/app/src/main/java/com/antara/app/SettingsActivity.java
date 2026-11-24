@@ -95,6 +95,16 @@ public class SettingsActivity extends AppCompatActivity {
         btnVerifyContact = findViewById(R.id.btn_verify_contact);
         btnLogout = findViewById(R.id.btn_settings_logout);
 
+        TextView tvSettingsVersion = findViewById(R.id.tv_settings_version);
+        if (tvSettingsVersion != null) {
+            tvSettingsVersion.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    com.antara.app.utils.EvaluatorDashboardHelper.onVersionTapped(SettingsActivity.this, dbHelper);
+                }
+            });
+        }
+
         loadProfileData();
 
         // 1. Edit Personal Profile with Email Verification

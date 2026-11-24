@@ -568,13 +568,28 @@
             android:layout_width="match_parent"
             android:layout_height="52dp"
             android:layout_marginTop="28dp"
-            android:layout_marginBottom="32dp"
+            android:layout_marginBottom="16dp"
             android:backgroundTint="@color/sos_red"
             android:text="Sign Out"
             android:textAllCaps="false"
             android:textColor="@android:color/white"
             android:textSize="15sp"
             android:textStyle="bold" />
+
+        <!-- App Version Footer (Tap 5 times for Evaluator Dashboard) -->
+        <TextView
+            android:id="@+id/tv_settings_version"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="32dp"
+            android:gravity="center"
+            android:lineSpacingExtra="2dp"
+            android:padding="8dp"
+            android:text="Antara Mobile App • Version 1.0.0 🌷\n100% Offline &amp; Confidential"
+            android:textColor="@color/text_muted"
+            android:textSize="12sp" />
 
     </LinearLayout>
 

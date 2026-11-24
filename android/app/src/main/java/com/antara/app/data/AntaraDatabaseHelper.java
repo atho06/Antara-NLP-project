@@ -420,4 +420,100 @@ public class AntaraDatabaseHelper extends SQLiteOpenHelper {
         }
         return list;
     }
+
+    // =========================================================================
+    // Evaluator & Admin Metrics (Option A: Discreet Teacher Dashboard)
+    // =========================================================================
+
+    public static class AdminUserSummary {
+        public final long id;
+        public final String name;
+        public final String email;
+        public final String phone;
+        public final int streak;
+        public final int sessionCount;
+        public final String createdAt;
+
+        public AdminUserSummary(long id, String name, String email, String phone, int streak, int sessionCount, String createdAt) {
+            this.id = id;
+            this.name = name != null && !name.isEmpty() ? name : "Anonymous Student";
+            this.email = email != null ? email : "";
+            this.phone = phone != null ? phone : "";
+            this.streak = streak;
+            this.sessionCount = sessionCount;
+            this.createdAt = createdAt != null && !createdAt.isEmpty() ? createdAt : "Recently";
+        }
+    }
+
+    public int getTotalUserCount() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM " + TABLE_USERS, null);
+        int count = 0;
+        if (cursor != null && cursor.moveToFirst()) {
+            count = cursor.getInt(0);
+            cursor.close();
+        }
+        return count;
+    }
+
+    public int getTotalSessionsCount() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM " + TABLE_SESSIONS, null);
+        int count = 0;
+        if (cursor != null && cursor.moveToFirst()) {
+            count = cursor.getInt(0);
+            cursor.close();
+        }
+        return count;
+    }
+
+    public List<AdminUserSummary> getAllUsersSummary() {
+        List<AdminUserSummary> list = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query(TABLE_USERS, null, null, null, null, null, COL_USER_ID + " ASC");
+
+        if (cursor != null && cursor.moveToFirst()) {
+            do {
+                long id = cursor.getLong(cursor.getColumnIndexOrThrow(COL_USER_ID));
+                String name = cursor.getString(cursor.getColumnIndexOrThrow(COL_USER_NAME));
+                String email = cursor.getString(cursor.getColumnIndexOrThrow(COL_USER_EMAIL));
+                String phone = cursor.getString(cursor.getColumnIndexOrThrow(COL_USER_PHONE));
+                int streak = cursor.getInt(cursor.getColumnIndexOrThrow(COL_USER_STREAK_COUNT));
+                String createdAt = cursor.getString(cursor.getColumnIndexOrThrow(COL_USER_CREATED_AT));
+
+                // Count sessions completed by this specific user
+                int sessCount = 0;
+                Cursor sCur = db.rawQuery("SELECT COUNT(*) FROM " + TABLE_SESSIONS + " WHERE " + COL_SESS_USER_ID + "=?", new String[]{String.valueOf(id)});
+                if (sCur != null && sCur.moveToFirst()) {
+                    sessCount = sCur.getInt(0);
+                    sCur.close();
+                }
+
+                list.add(new AdminUserSummary(id, name, email, phone, streak, sessCount, createdAt));
+            } while (cursor.moveToNext());
+            cursor.close();
+        }
+        return list;
+    }
+
+    public long createDemoUser(String name, String email) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues cv = new ContentValues();
+        cv.put(COL_USER_NAME, name);
+        cv.put(COL_USER_EMAIL, email);
+        cv.put(COL_USER_PASSWORD, "demo_pass_123");
+        cv.put(COL_USER_PHONE, "+91 9876543210");
+        cv.put(COL_USER_CONTACT_NAME, "Mentor / Friend");
+        cv.put(COL_USER_CONTACT_PHONE, "+91 9876543211");
+        cv.put(COL_USER_STREAK_COUNT, 2);
+        cv.put(COL_USER_CREATED_AT, new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date()));
+        long newUserId = db.insertWithOnConflict(TABLE_USERS, null, cv, SQLiteDatabase.CONFLICT_IGNORE);
+        
+        // Add sample demo session if successfully inserted
+        if (newUserId != -1) {
+            saveSession(newUserId, 5, "daily_routine", "calm_grounded", 
+                    "Demo reflection completed for evaluator demonstration.", 4, "calm_grounded,reflective");
+        }
+        return newUserId;
+    }
 }
