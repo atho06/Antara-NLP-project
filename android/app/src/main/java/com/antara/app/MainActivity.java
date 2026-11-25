@@ -1,7 +1,6 @@
 package com.antara.app;
 
 import android.Manifest;
-import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -14,16 +13,20 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.cardview.widget.CardView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import com.antara.app.data.AntaraDatabaseHelper;
 import com.antara.app.data.DraftSessionManager;
 import com.antara.app.data.SessionManager;
+import com.antara.app.models.SessionRecord;
 
 import java.util.Calendar;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -34,31 +37,31 @@ public class MainActivity extends AppCompatActivity {
     private Spinner spnDuration, spnCategory;
     private LinearLayout navHome, navAnalytics, navHistory, navSettings;
     private SessionManager sessionManager;
-    private com.antara.app.data.AntaraDatabaseHelper dbHelper;
+    private AntaraDatabaseHelper dbHelper;
 
-    // Resume session card views
-    private CardView cardResumeSession;
+    // Resume session panel views
+    private View cardResumeSession;
     private TextView tvResumeTimeAgo, tvResumeDetails;
     private Button btnResumeSession;
 
-    // Streak Dashboard Views
-    private CardView cardStreakDashboard;
+    // Weekly check-in views
+    private View cardStreakDashboard;
     private TextView tvStreakTitle, tvStreakLevel, tvStreakSub;
     private TextView dotMon, dotTue, dotWed, dotThu, dotFri, dotSat, dotSun;
 
-    // Cycle & Music Support Views
-    private CardView cardCycleSupport;
+    // Cycle & music support views
+    private View cardCycleSupport;
     private TextView tvCycleHomeTitle, tvCycleHomeTip;
-    private Button btnOpenMusicHome;
+    private View btnOpenMusicHome;
 
-    // Facts & Figures Views
-    private TextView tvFactText;
+    // Small insight views
+    private TextView tvFactTitle, tvFactText;
 
-    // Testimonials Views
+    // Peer perspective views
     private TextView tvTestimonialQuote, tvTestimonialAuthor;
 
-    // Supporter Preview Views
-    private CardView cardSupporterPreview;
+    // Feedback / community card views
+    private View cardSupporterPreview;
     private Button btnSupporterLearn;
 
     @Override
@@ -67,7 +70,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         sessionManager = new SessionManager(this);
-        dbHelper = new com.antara.app.data.AntaraDatabaseHelper(this);
+        dbHelper = new AntaraDatabaseHelper(this);
 
         tvGreetingTime = findViewById(R.id.tv_greeting_time);
         tvUserName = findViewById(R.id.tv_user_name);
@@ -102,6 +105,7 @@ public class MainActivity extends AppCompatActivity {
         tvCycleHomeTip = findViewById(R.id.tv_cycle_home_tip);
         btnOpenMusicHome = findViewById(R.id.btn_open_music_home);
 
+        tvFactTitle = findViewById(R.id.tv_fact_title);
         tvFactText = findViewById(R.id.tv_fact_text);
         tvTestimonialQuote = findViewById(R.id.tv_testimonial_quote);
         tvTestimonialAuthor = findViewById(R.id.tv_testimonial_author);
@@ -109,18 +113,38 @@ public class MainActivity extends AppCompatActivity {
         cardSupporterPreview = findViewById(R.id.card_supporter_preview);
         btnSupporterLearn = findViewById(R.id.btn_supporter_learn);
 
-        // Populate user name and greeting
-        tvUserName.setText(sessionManager.getUserName());
-        tvGreetingTime.setText(getGreetingTime() + ",");
+        // Populate greeting and user name
+        tvGreetingTime.setText(getGreetingLabel());
+        String rawName = sessionManager.getUserName();
+        if (rawName != null && !rawName.trim().isEmpty() && !"Friend".equalsIgnoreCase(rawName.trim())) {
+            String firstName = rawName.trim().split("\\s+")[0];
+            tvUserName.setText("Hi, " + firstName + ".");
+        } else {
+            tvUserName.setText("Hi there.");
+        }
 
         // Duration options
-        String[] durations = new String[]{"5 Minutes", "10 Minutes", "15 Minutes", "20 Minutes", "Open Reflection"};
-        ArrayAdapter<String> durAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, durations);
+        String[] durations = new String[]{
+                "5 minutes",
+                "10 minutes",
+                "15 minutes",
+                "20 minutes",
+                "Open reflection"
+        };
+        ArrayAdapter<String> durAdapter = new ArrayAdapter<>(this, R.layout.item_spinner_selected, durations);
+        durAdapter.setDropDownViewResource(R.layout.item_spinner_dropdown);
         spnDuration.setAdapter(durAdapter);
 
         // Topic categories
-        String[] categories = new String[]{"Daily Routine", "Stress & Overwhelm", "Low Energy / Sadness", "Relationships", "General Reflection"};
-        ArrayAdapter<String> catAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, categories);
+        String[] categories = new String[]{
+                "Daily routine",
+                "Stress and overwhelm",
+                "Low energy or sadness",
+                "Relationships",
+                "General reflection"
+        };
+        ArrayAdapter<String> catAdapter = new ArrayAdapter<>(this, R.layout.item_spinner_selected, categories);
+        catAdapter.setDropDownViewResource(R.layout.item_spinner_dropdown);
         spnCategory.setAdapter(catAdapter);
 
         // Start Reflection Button
@@ -160,7 +184,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // Emergency SOS
+        // Support / SOS Pill
         btnSos.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -205,7 +229,7 @@ public class MainActivity extends AppCompatActivity {
             btnSupporterLearn.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    showSupporterDialog();
+                    startActivity(new Intent(MainActivity.this, FeedbackActivity.class));
                 }
             });
         }
@@ -230,22 +254,35 @@ public class MainActivity extends AppCompatActivity {
     private void setupDashboardComponents() {
         long userId = sessionManager.getUserId();
 
-        // 1. Streak & Weekly Progress Indicator
+        // 1. Gentle check-in rhythm (non-pressuring)
         int streak = dbHelper.getUserStreak(userId);
         if (tvStreakTitle != null) {
-            tvStreakTitle.setText("🔥 " + streak + (streak == 1 ? "-Day Streak" : "-Day Streak"));
+            if (streak <= 0) {
+                tvStreakTitle.setText("One day at a time");
+            } else if (streak == 1) {
+                tvStreakTitle.setText("1 day of checking in");
+            } else {
+                tvStreakTitle.setText(streak + " days of checking in");
+            }
         }
         if (tvStreakLevel != null) {
             if (streak >= 7) {
-                tvStreakLevel.setText("🌳 Grounded Tree");
+                tvStreakLevel.setText("Steady rhythm");
             } else if (streak >= 3) {
-                tvStreakLevel.setText("🌿 Blooming Level");
+                tvStreakLevel.setText("Growing gently");
             } else {
-                tvStreakLevel.setText("🌱 Sprout Level");
+                tvStreakLevel.setText("Sprout level");
+            }
+        }
+        if (tvStreakSub != null) {
+            if (streak <= 0) {
+                tvStreakSub.setText("Your first reflection is a fresh beginning.");
+            } else {
+                tvStreakSub.setText("Showing up at your own pace is always enough.");
             }
         }
 
-        // Highlight today's day of week in weekly dots
+        // Highlight today's day of week
         Calendar cal = Calendar.getInstance();
         int dayOfWeek = cal.get(Calendar.DAY_OF_WEEK);
         highlightDot(dotSun, dayOfWeek == Calendar.SUNDAY);
@@ -256,50 +293,53 @@ public class MainActivity extends AppCompatActivity {
         highlightDot(dotFri, dayOfWeek == Calendar.FRIDAY);
         highlightDot(dotSat, dayOfWeek == Calendar.SATURDAY);
 
-        // 2. Menstrual Cycle Support & Music Redirection
-        com.antara.app.data.AntaraDatabaseHelper.UserProfile profile = dbHelper.getUserProfile(userId);
+        // 2. Cycle rhythm & calming music
+        AntaraDatabaseHelper.UserProfile profile = dbHelper.getUserProfile(userId);
         if (profile != null && profile.menstrualPhase != null && !profile.menstrualPhase.equals("not_tracking")) {
-            String p = profile.menstrualPhase.replace('_', ' ');
             if (tvCycleHomeTitle != null) {
-                tvCycleHomeTitle.setText("🌸 " + p.toUpperCase(java.util.Locale.ROOT) + " • Somatic Care");
+                tvCycleHomeTitle.setText("Moving with your cycle");
             }
             if (tvCycleHomeTip != null) {
                 if (profile.menstrualPhase.contains("period")) {
-                    tvCycleHomeTip.setText("Your body is in a restorative cycle right now. Physical energy naturally lowers; allow yourself gentle stillness, warm tea, and calming soundscapes.");
+                    tvCycleHomeTip.setText("Energy can feel lower right now. Give yourself room for stillness, something warm to drink, and quiet music.");
                 } else if (profile.menstrualPhase.contains("luteal")) {
-                    tvCycleHomeTip.setText("During the luteal phase, sensitivity and vulnerability can peak. Practice extra self-compassion and listen to grounding music to soothe tension.");
+                    tvCycleHomeTip.setText("Things can feel a little heavier during the luteal phase. Go gently with yourself today.");
                 } else {
-                    tvCycleHomeTip.setText("Honoring your hormonal rhythm helps maintain emotional equilibrium. Take 5 minutes to ground your mind.");
+                    tvCycleHomeTip.setText("Noticing your rhythm can help you choose a softer pace. You can update your cycle phase anytime in Settings.");
                 }
             }
         } else {
             if (tvCycleHomeTitle != null) {
-                tvCycleHomeTitle.setText("🌸 Cycle Rhythm & Music Regulation");
+                tvCycleHomeTitle.setText("Find your softer rhythm");
             }
             if (tvCycleHomeTip != null) {
-                tvCycleHomeTip.setText("Listening to calming soundscapes activates the vagus nerve and downregulates cortisol. You can also sync your cycle in Settings for tailored somatic support.");
+                tvCycleHomeTip.setText("Make room for rest with calming soundscapes and support that moves with your cycle.");
             }
         }
 
-        // 3. Evidence-Based Psychology & Neuroscience Facts
-        String[] facts = new String[]{
-                "Putting feelings into words (affect labeling) reduces amygdala reactivity by up to 40% and activates prefrontal regions that restore emotional regulation.",
-                "Practicing a 4-second inhale followed by a 6-second exhale activates the parasympathetic nervous system, lowering heart rate and signaling the brain that you are safe.",
-                "Research in cognitive psychology shows that writing down swirling worries takes them out of working memory, freeing mental bandwidth and reducing rumination.",
-                "Somatic grounding exercises like feeling feet on the floor stimulate mechanoreceptors that disrupt panic loops and return the mind to the present moment.",
-                "Neuroimaging studies show that giving yourself compassionate permission to rest restores dopamine baseline and prevents burnout."
+        // 3. Rotating quiet insights (non-clinical, no unsupported stats)
+        String[][] insights = new String[][]{
+                {"Rest is part of moving forward.", "Giving yourself permission to pause can ease stress and make space for what comes next."},
+                {"Naming a feeling softens it.", "Putting swirling thoughts into a few plain words can make them feel less crowded."},
+                {"One slow breath is a start.", "A longer exhale than inhale is a gentle way to remind your body that you can slow down."},
+                {"You don't need all the answers.", "Writing something down isn't about solving it right away—it's just setting it down for a moment."},
+                {"Come back to where your feet are.", "Noticing the chair beneath you or a sound in the room can help bring you back to the present."}
         };
         int dayOfYear = cal.get(Calendar.DAY_OF_YEAR);
+        int insightIdx = Math.abs(dayOfYear) % insights.length;
+        if (tvFactTitle != null) {
+            tvFactTitle.setText(insights[insightIdx][0]);
+        }
         if (tvFactText != null) {
-            tvFactText.setText(facts[Math.abs(dayOfYear) % facts.length]);
+            tvFactText.setText(insights[insightIdx][1]);
         }
 
-        // 4. Rotating Peer Testimonials ("You Are Not Alone")
+        // 4. Rotating peer reflections ("You're not alone")
         String[][] testimonials = new String[][]{
-                {"\"I used to feel so guilty for taking time to rest. Reflecting here reminded me that taking a pause isn't falling behind—it is survival.\"", "— A student peer navigating exam anxiety"},
-                {"\"When panic felt like a tidal wave, breaking it down into one breath at a time gave me my ground back.\"", "— Second-year engineering student"},
-                {"\"I realized that everyone around me seemed calm only because they were hiding their stress too. Admitting I was overwhelmed was the first step to feeling lighter.\"", "— College sophomore"},
-                {"\"Antara gave me a safe space where I didn't have to pretend everything was fine. Sometimes just being heard is all you need.\"", "— Anonymous peer"}
+                {"\"When panic felt like a tidal wave, taking it one breath at a time gave me my ground back.\"", "A fellow student, finding their way"},
+                {"\"I used to feel guilty for taking time to rest. Pausing reminded me that resting isn't falling behind.\"", "A student navigating exam stress"},
+                {"\"Admitting I was overwhelmed was the first step to feeling a little lighter.\"", "A college sophomore"},
+                {"\"Having a quiet place where I didn't have to pretend everything was fine helped more than I expected.\"", "A fellow student"}
         };
         int testIdx = Math.abs(dayOfYear) % testimonials.length;
         if (tvTestimonialQuote != null) {
@@ -309,8 +349,8 @@ public class MainActivity extends AppCompatActivity {
             tvTestimonialAuthor.setText(testimonials[testIdx][1]);
         }
 
-        // 5. Supporter Preview (after 2-3 sessions or usage)
-        java.util.List<com.antara.app.models.SessionRecord> userSessions = dbHelper.getUserSessions(userId);
+        // 5. Feedback card (shown after a couple of sessions)
+        List<SessionRecord> userSessions = dbHelper.getUserSessions(userId);
         if (cardSupporterPreview != null) {
             if (userSessions.size() >= 2 || streak >= 2) {
                 cardSupporterPreview.setVisibility(View.VISIBLE);
@@ -323,10 +363,10 @@ public class MainActivity extends AppCompatActivity {
     private void highlightDot(TextView dot, boolean isToday) {
         if (dot == null) return;
         if (isToday) {
-            dot.setBackgroundColor(ContextCompat.getColor(this, R.color.primary));
-            dot.setTextColor(android.graphics.Color.WHITE);
+            dot.setBackgroundResource(R.drawable.bg_day_circle_today);
+            dot.setTextColor(ContextCompat.getColor(this, R.color.on_primary));
         } else {
-            dot.setBackgroundResource(R.drawable.bg_option_button);
+            dot.setBackgroundResource(R.drawable.bg_day_circle);
             dot.setTextColor(ContextCompat.getColor(this, R.color.text_secondary));
         }
     }
@@ -341,21 +381,9 @@ public class MainActivity extends AppCompatActivity {
                 Intent web = new Intent(Intent.ACTION_VIEW, Uri.parse("https://open.spotify.com/genre/wellness-page"));
                 startActivity(web);
             } catch (Exception ex) {
-                android.widget.Toast.makeText(this, "Could not open music player", android.widget.Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Could not open a music app on this device", Toast.LENGTH_SHORT).show();
             }
         }
-    }
-
-    private void showSupporterDialog() {
-        new AlertDialog.Builder(this)
-                .setTitle("🌷 Antara Community Patron")
-                .setMessage("Antara is built with love as a 100% private, on-device mental wellness companion for students.\n\n"
-                        + "• Zero data tracking or ads\n"
-                        + "• 100% offline & confidential\n"
-                        + "• Free forever for students\n\n"
-                        + "Optional Patron support helps us keep serverless mental health resources freely accessible to learners worldwide.")
-                .setPositiveButton("I Love Antara 🌸", null)
-                .show();
     }
 
     private void checkActiveDraft() {
@@ -363,7 +391,6 @@ public class MainActivity extends AppCompatActivity {
         if (DraftSessionManager.hasActiveDraft(this, userId)) {
             long leftTimestamp = DraftSessionManager.getDraftLeftTimestamp(this, userId);
             long diffMs = System.currentTimeMillis() - leftTimestamp;
-            // Show option to continue if user left and hasn't returned within 2 minutes (120,000 ms)
             if (diffMs >= 2 * 60 * 1000) {
                 DraftSessionManager.DraftSession draft = DraftSessionManager.getDraft(this, userId);
                 if (draft != null) {
@@ -375,8 +402,8 @@ public class MainActivity extends AppCompatActivity {
                         long hoursAgo = minutesAgo / 60;
                         tvResumeTimeAgo.setText("Paused " + hoursAgo + "h ago");
                     }
-                    tvResumeDetails.setText("You stepped away from your " + draft.category.replace('_', ' ') 
-                            + " reflection. Would you like to resume where you left off?");
+                    tvResumeDetails.setText("You stepped away from your " + draft.category.replace('_', ' ')
+                            + " reflection. You can pick up where you left off whenever you're ready.");
                     return;
                 }
             }
@@ -384,20 +411,21 @@ public class MainActivity extends AppCompatActivity {
         cardResumeSession.setVisibility(View.GONE);
     }
 
-    private String getGreetingTime() {
+    private String getGreetingLabel() {
         int hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
-        if (hour < 12) return "Good morning";
-        if (hour < 17) return "Good afternoon";
-        return "Good evening";
+        if (hour < 12) return "Your morning exhale";
+        if (hour < 17) return "Your afternoon exhale";
+        return "Your daily exhale";
     }
 
     private void showSosDialog() {
         new AlertDialog.Builder(this)
-                .setTitle("🆘 Immediate Emergency Helplines")
-                .setMessage("If you are feeling overwhelmed or in crisis, immediate confidential support is available 24/7:\n\n"
-                        + "• Tele-MANAS (Govt. of India): 14416 (Toll-Free)\n"
-                        + "• KIRAN Mental Health: 1800-599-0019 (Toll-Free)\n"
-                        + "• Vandrevala Foundation: +91 9999 666 555 (24/7 Free)")
+                .setTitle("Support helplines")
+                .setMessage("If things feel overwhelming or you need to talk to someone right now, these external helplines are free and available 24/7:\n\n"
+                        + "• Tele-MANAS (Govt. of India): 14416 (toll-free)\n"
+                        + "• KIRAN Mental Health: 1800-599-0019 (toll-free)\n"
+                        + "• Vandrevala Foundation: +91 9999 666 555\n\n"
+                        + "Antara is a reflection companion, not an emergency service.")
                 .setPositiveButton("Call Tele-MANAS", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {

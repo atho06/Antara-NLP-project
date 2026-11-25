@@ -154,7 +154,7 @@ public class ConversationalEngine {
         if (turnCount >= 5 && !previousTopics.contains("WRAP_UP_ASKED")) {
             previousTopics.add("WRAP_UP_ASKED");
             return makeResponse(
-                    "You've shared some really honest, meaningful reflections with me today. Giving yourself this quiet space to listen inward takes genuine courage.",
+                    "You've shared some honest reflections today. Giving yourself a quiet space to check in takes real care.",
                     "As we come toward the close of our reflection, what is one kind reminder you want to carry with you for the rest of today?",
                     Arrays.asList(
                             "Be gentle with my energy today",
@@ -171,10 +171,10 @@ public class ConversationalEngine {
 
         if (previousTopics.contains("WRAP_UP_ASKED")) {
             return makeResponse(
-                    "Hold that reminder close. You are doing so much better than you give yourself credit for.",
-                    "Take a slow, deep breath and carry this peace with you. When you feel ready, tap 'Finish' in the top right to view your reflection summary.",
+                    "Hold that reminder close. You are doing better than you might give yourself credit for.",
+                    "Take a slow, deep breath and carry this calm with you. When you feel ready, tap 'Finish' in the top right to view your reflection summary.",
                     Arrays.asList(
-                            "Ready to finish session 🌷",
+                            "Ready to finish session",
                             "Feeling a lot calmer now",
                             "Thank you for listening, Antara"
                     ),
@@ -208,8 +208,8 @@ public class ConversationalEngine {
         if (lower.contains("morning start") || lower.contains("commuting") || lower.contains("mornings getting started")) {
             previousTopics.add("MORNING_RUSH");
             return makeResponse(
-                    "Waking up already feeling behind or having to rush through a chaotic commute sets your nervous system on high alert before the day has even properly started.",
-                    "What would make your morning feel even 10% more peaceful tomorrow?",
+                    "Waking up already feeling behind or rushing through a chaotic commute can leave you feeling on edge before the day has even started.",
+                    "What would make your morning feel even a little more peaceful tomorrow?",
                     Arrays.asList(
                             "Prepping things the night before",
                             "Waking up 15 minutes earlier just to sit quietly",
@@ -301,7 +301,7 @@ public class ConversationalEngine {
         if (lower.contains("permission to take a complete break") || lower.contains("complete break")) {
             previousTopics.add("PERMISSION_TO_REST");
             return makeResponse(
-                    "Consider this your full, unconditional permission slip right now. You are a human being, not a productivity machine. Taking a complete break without feeling guilty is not quitting; it is how your mind and body heal.",
+                    "You are a human being, not a productivity machine. Taking a real break without feeling guilty isn't quitting—it's how you recharge.",
                     "If you truly let yourself take a complete break tonight, what is the first restful thing you would let yourself do?",
                     Arrays.asList(
                             "Turn off all alarms and sleep early",
@@ -319,8 +319,8 @@ public class ConversationalEngine {
         if (lower.contains("a little quiet time to myself") || lower.contains("quiet time to myself")) {
             previousTopics.add("QUIET_TIME");
             return makeResponse(
-                    "Carving out even fifteen quiet minutes purely for your own mind is like giving your nervous system a sanctuary. In a world full of notifications and demands, quiet alone time is deeply restorative.",
-                    "What would your ideal quiet sanctuary moment look like today?",
+                    "Carving out even fifteen quiet minutes for yourself can be a real relief. Away from notifications and demands, a little alone time helps you catch your breath.",
+                    "What would your ideal quiet moment look like today?",
                     Arrays.asList(
                             "A quiet walk with no phone",
                             "Sitting with a warm cup of tea in peace",
@@ -337,7 +337,7 @@ public class ConversationalEngine {
         if (lower.contains("a clear plan to tackle my worries") || lower.contains("plan to tackle my worries")) {
             previousTopics.add("WORRY_PLAN");
             return makeResponse(
-                    "When worries swirl around in your head, they feel ten times bigger than they actually are. Seeing them clearly and breaking them down can bring immediate relief.",
+                    "When worries swirl around in your head, they can feel much bigger than they are. Seeing them clearly and breaking them down often makes them easier to handle.",
                     "If we were to look at what's worrying you, what is one single next step that is completely within your control today?",
                     Arrays.asList(
                             "Focusing only on the very next hour",
@@ -355,7 +355,7 @@ public class ConversationalEngine {
         if (lower.contains("just taking it one breath at a time") || lower.contains("one breath at a time")) {
             previousTopics.add("ONE_BREATH");
             return makeResponse(
-                    "That is the most grounding anchor you have. Every breath is a fresh opportunity to reset your nervous system and release whatever tension you were holding.",
+                    "Slowing down to focus on your breath can be a steady anchor. Many people find a few slow breaths help them feel a little more grounded.",
                     "Let's take a slow, calming breath together right now. Inhale gently for 4... exhale smoothly for 6. How is that feeling in your body?",
                     Arrays.asList(
                             "A little bit lighter",
@@ -376,10 +376,10 @@ public class ConversationalEngine {
         if (containsAny(lower, MENSTRUAL_TERMS)) {
             previousTopics.add("MENSTRUAL_CARE");
             return makeResponse(
-                    "Your body and nervous system are navigating real physiological shifts right now. Hormonal changes naturally alter emotional resilience and energy—whatever you are feeling today is biologically valid. You deserve unconditional gentleness.",
-                    "What feels most soothing for your body right now? Listening to calming music or soft frequencies can also help regulate your nervous system.",
+                    "Your body is going through a lot right now, and shifts in energy and mood during your cycle are completely understandable. Whatever you are feeling today is valid, and it's okay to take things gently.",
+                    "What feels most soothing for you right now? Many people find calming music or a quiet break helps them feel a little steadier.",
                     Arrays.asList(
-                            "🎵 Open Music App",
+                            "Open music app",
                             "Resting with a warm blanket / heating pad",
                             "Permission to do nothing today",
                             "Slow, gentle breathing",
@@ -396,7 +396,7 @@ public class ConversationalEngine {
         // =========================================================================
         if (lower.contains("warm & supportive") || (lower.contains("supportive") && lower.contains("connection"))) {
             return makeResponse(
-                    "Having people who hold a safe, supportive space for you is a genuine blessing for your mental peace. Savoring that warmth can be a wonderful emotional anchor.",
+                    "Having people who support you makes a real difference. Taking a moment to appreciate that warmth can be a steady anchor.",
                     "What is one small way you could express appreciation for that connection or nurture it today?",
                     Arrays.asList(
                             "Send a quick loving text",
@@ -434,7 +434,7 @@ public class ConversationalEngine {
         if (containsAny(lower, LAUGHTER_TERMS)) {
             previousTopics.add("JOY_HUMOR");
             return makeResponse(
-                    "I love hearing that! Sharing genuine laughter and cracking up is such a wonderful, uplifting breath of fresh air for your mind.",
+                    "That's great to hear. A good laugh can be a welcome breath of fresh air.",
                     "What was making you laugh so hard, or who was sharing that moment with you?",
                     Arrays.asList(
                             "A really funny friend",
@@ -455,8 +455,8 @@ public class ConversationalEngine {
         if (lower.contains("smooth & manageable") || lower.contains("smooth and manageable") || lower.equals("smooth")) {
             previousTopics.add("ROUTINE_SMOOTH");
             return makeResponse(
-                    "That is wonderful to hear. Having a steady, manageable rhythm gives your mind and body a calm foundation to truly thrive.",
-                    "What has been helping keep your everyday flow feeling so balanced lately?",
+                    "That's really good to hear. Having a steady, manageable rhythm gives you a calmer foundation for the day.",
+                    "What has been helping keep your everyday flow feeling balanced lately?",
                     Arrays.asList(
                             "Getting better sleep & rest",
                             "Staying organized and taking it slow",
@@ -473,7 +473,7 @@ public class ConversationalEngine {
         if (lower.contains("a bit rushed") || lower.equals("rushed") || lower.contains("busy schedule")) {
             previousTopics.add("ROUTINE_RUSHED");
             return makeResponse(
-                    "Rushing from one responsibility to the next can leave you feeling breathless before the day even ends. Your nervous system is working on high alert.",
+                    "Rushing from one responsibility to the next can leave you feeling drained before the day even ends. It's hard to stay calm when you're constantly on the go.",
                     "Where in your routine does that rush feel most intense or demanding?",
                     Arrays.asList(
                             "Mornings getting started & commuting",
@@ -509,7 +509,7 @@ public class ConversationalEngine {
         if (lower.contains("repetitive & dull") || lower.contains("repetitive & boring") || lower.contains("repetitive and dull") || lower.contains("repetitive")) {
             previousTopics.add("ROUTINE_REPETITIVE");
             return makeResponse(
-                    "When days blur together in repetition, it is very natural to feel restless, emotionally flat, or uninspired. Your soul is craving a little spark.",
+                    "When days blur together in repetition, it's natural to feel restless or flat. It makes sense to want a small change of pace.",
                     "What is one tiny change or comforting novelty that might bring a little fresh air into your routine?",
                     Arrays.asList(
                             "Taking a different walk or stepping outside",
@@ -529,7 +529,7 @@ public class ConversationalEngine {
         // =========================================================================
         if (lower.contains("a really funny friend") || lower.contains("funny friend")) {
             return makeResponse(
-                    "Having a friend who can make you laugh until your stomach hurts is truly one of the sweetest treasures in life. Those shared moments protect your mental wellbeing.",
+                    "Having a friend who can make you laugh like that is something special. Those shared moments can really lift a heavy week.",
                     "Did sharing that laughter give you a noticeable boost or a sense of relief?",
                     Arrays.asList(
                             "Yes, it completely made my day",
@@ -546,8 +546,8 @@ public class ConversationalEngine {
 
         if (lower.contains("breaking tasks into tiny single steps") || lower.contains("single steps")) {
             return makeResponse(
-                    "Shrinking a huge mountain down to one pebble at a time is the secret to surviving heavy days. When you only focus on the next 15 minutes, the overwhelm disappears.",
-                    "What is the single next task you want to gently conquer today, leaving the rest for later?",
+                    "Breaking a big workload down into one small step at a time can make heavy days much more manageable. Focusing on just the next 15 minutes often helps ease the overwhelm.",
+                    "What is the single next task you want to focus on today, leaving the rest for later?",
                     Arrays.asList(
                             "Finishing one important work/study task",
                             "Sending one important message",
@@ -563,7 +563,7 @@ public class ConversationalEngine {
 
         if (lower.contains("too much mental pressure") || lower.contains("mental pressure")) {
             return makeResponse(
-                    "When your mind is constantly holding a running list of worries, your nervous system never gets a true signal that it's safe to rest.",
+                    "When your mind is constantly holding a running list of worries, it's hard to truly switch off and rest.",
                     "If you could put down just one expectation for the remainder of today, what would give your head the most room to breathe?",
                     Arrays.asList(
                             "Stop studying or working earlier tonight",
@@ -601,8 +601,8 @@ public class ConversationalEngine {
         if (containsAny(lower, ANGER_TERMS)) {
             previousTopics.add("ANGER");
             return makeResponse(
-                    "It is completely valid to feel angry or frustrated. Anger is often our mind's natural protector - it signals that a boundary was crossed or something felt deeply unfair.",
-                    "Would it feel better right now to vent more of what happened, or would you like to explore ways to discharge that tense energy?",
+                    "It is completely valid to feel angry or frustrated. Often it's a sign that a boundary was crossed or something felt unfair.",
+                    "Would it feel better right now to vent more of what happened, or would you like to explore ways to let go of some of that tense energy?",
                     Arrays.asList(
                             "I just need to vent it all out",
                             "I feel like nobody listened to me",
@@ -649,8 +649,8 @@ public class ConversationalEngine {
         if (containsAny(lower, SOMATIC_CRYING_TERMS)) {
             previousTopics.add("SOMATIC_OVERLOAD");
             return makeResponse(
-                    "I hear how intensely your body is reacting right now. Crying and physical shaking are your nervous system's honest way of releasing built-up pressure when you've held things in for too long.",
-                    "Right now, let's take things one quiet second at a time. What is one small comfort your body needs in this very moment?",
+                    "I hear how intensely you're feeling this right now. When you've been holding a lot in, crying or feeling tense can be your body's way of letting some of that pressure out.",
+                    "Right now, let's take things one quiet moment at a time. What is one small comfort your body needs right now?",
                     Arrays.asList(
                             "A glass of cool water",
                             "To lie down in a quiet, dark room",
@@ -694,7 +694,7 @@ public class ConversationalEngine {
         if (containsAny(lower, NUMB_TERMS)) {
             previousTopics.add("NUMBNESS_DISSOCIATION");
             return makeResponse(
-                    "Sitting in that numbness or finding yourself staring into space is often your mind's protective emergency brake when emotions have been running too high for too long. You are not broken for feeling this way.",
+                    "Feeling numb or staring into space can happen when you've been carrying a lot for too long. You are not broken for feeling this way.",
                     "When you are in that quiet, empty space, does it feel more like a heavy fog you can't push through, or like you are totally detached from the world around you?",
                     Arrays.asList(
                             "Like a heavy mental fog",
@@ -757,7 +757,7 @@ public class ConversationalEngine {
         if (containsAny(lower, POSITIVE_TERMS)) {
             previousTopics.add("POSITIVE");
             return makeResponse(
-                    "There is so much quiet beauty in that. In the middle of everything, pausing to savor even a small gentle moment is a powerful form of self-care.",
+                    "It's good that you noticed that. In the middle of everything, pausing for even a small peaceful moment can help.",
                     "When you experienced that peaceful moment, what did it feel like in your chest or mind? Did it give you a little breathing room?",
                     Arrays.asList(
                             "Gave me real breathing room",

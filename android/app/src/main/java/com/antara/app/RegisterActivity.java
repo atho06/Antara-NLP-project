@@ -5,7 +5,6 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -17,7 +16,7 @@ public class RegisterActivity extends AppCompatActivity {
 
     private EditText etName, etEmail, etPassword, etPhone, etContactName, etContactPhone, etContactEmail;
     private Button btnSubmit;
-    private TextView tvLogin;
+    private Button tvLogin;
     private AntaraDatabaseHelper dbHelper;
     private SessionManager sessionManager;
 
@@ -64,25 +63,25 @@ public class RegisterActivity extends AppCompatActivity {
         String contactEmail = etContactEmail.getText().toString().trim();
 
         if (name.isEmpty() || email.isEmpty() || password.isEmpty()) {
-            Toast.makeText(this, "Please fill in your name, email, and password", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Please fill in your name, email, and password.", Toast.LENGTH_SHORT).show();
             return;
         }
 
         if (password.length() < 6) {
-            Toast.makeText(this, "Password must be at least 6 characters", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Password must be at least 6 characters.", Toast.LENGTH_SHORT).show();
             return;
         }
 
         long userId = dbHelper.registerUser(name, email, password, phone, contactName, contactPhone, contactEmail);
         if (userId != -1) {
             sessionManager.setLogin(userId, name, email);
-            Toast.makeText(this, "Account created successfully! 🌸", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Account created on this device.", Toast.LENGTH_SHORT).show();
             Intent intent = new Intent(RegisterActivity.this, MainActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);
             finish();
         } else {
-            Toast.makeText(this, "An account with this email already exists", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "An account with this email already exists on this device.", Toast.LENGTH_SHORT).show();
         }
     }
 }

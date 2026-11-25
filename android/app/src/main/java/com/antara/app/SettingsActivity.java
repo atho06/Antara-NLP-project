@@ -1,18 +1,18 @@
 package com.antara.app;
 
-import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.util.TypedValue;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
@@ -44,6 +44,11 @@ public class SettingsActivity extends AppCompatActivity {
 
         sessionManager = new SessionManager(this);
         dbHelper = new AntaraDatabaseHelper(this);
+
+        ImageButton btnBack = findViewById(R.id.btn_settings_back);
+        if (btnBack != null) {
+            btnBack.setOnClickListener(v -> finish());
+        }
 
         tvAvatar = findViewById(R.id.tv_settings_avatar);
         tvName = findViewById(R.id.tv_settings_name);
@@ -107,11 +112,11 @@ public class SettingsActivity extends AppCompatActivity {
 
         loadProfileData();
 
-        // 1. Edit Personal Profile with Email Verification
+        // 1. Edit personal details with local confirmation code
         btnEditProfile.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                promptEmailVerificationForAction("Personal Details", new Runnable() {
+                promptEmailVerificationForAction("personal details", new Runnable() {
                     @Override
                     public void run() {
                         showEditProfileDialog();
@@ -120,11 +125,11 @@ public class SettingsActivity extends AppCompatActivity {
             }
         });
 
-        // 2. Edit Emergency Contact with Email Verification
+        // 2. Edit support contact with local confirmation code
         btnEditContact.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                promptEmailVerificationForAction("Emergency Contact Details", new Runnable() {
+                promptEmailVerificationForAction("support contact", new Runnable() {
                     @Override
                     public void run() {
                         showEditEmergencyContactDialog();
@@ -133,12 +138,12 @@ public class SettingsActivity extends AppCompatActivity {
             }
         });
 
-        // Verification Badges
+        // Local verification checks
         btnVerifyEmail.setOnClickListener(v -> showOtpDialog("Email", AntaraDatabaseHelper.COL_USER_EMAIL_VERIFIED, btnVerifyEmail));
         btnVerifyPhone.setOnClickListener(v -> showOtpDialog("Phone", AntaraDatabaseHelper.COL_USER_PHONE_VERIFIED, btnVerifyPhone));
-        btnVerifyContact.setOnClickListener(v -> showOtpDialog("Emergency Contact", AntaraDatabaseHelper.COL_USER_CONTACT_VERIFIED, btnVerifyContact));
+        btnVerifyContact.setOnClickListener(v -> showOtpDialog("Support contact", AntaraDatabaseHelper.COL_USER_CONTACT_VERIFIED, btnVerifyContact));
 
-        // 3. Navigation to Feedback and About Us
+        // 3. Navigation to Feedback and About
         View rowFeedback = findViewById(R.id.row_settings_feedback);
         View rowAbout = findViewById(R.id.row_settings_about);
 
@@ -160,7 +165,7 @@ public class SettingsActivity extends AppCompatActivity {
             });
         }
 
-        // Sign Out
+        // Sign out
         btnLogout.setOnClickListener(v -> {
             sessionManager.logout();
             Intent intent = new Intent(SettingsActivity.this, LoginActivity.class);
@@ -177,20 +182,20 @@ public class SettingsActivity extends AppCompatActivity {
         if (profile != null) {
             tvName.setText(profile.fullName);
             tvEmail.setText(profile.email);
-            tvPhone.setText(!profile.phone.isEmpty() ? "📱 " + profile.phone : "📱 No phone number added");
+            tvPhone.setText(!profile.phone.isEmpty() ? profile.phone : "No phone number added");
 
             if (!profile.fullName.isEmpty()) {
                 tvAvatar.setText(String.valueOf(profile.fullName.charAt(0)).toUpperCase());
             }
 
             if (!profile.trustedContactName.isEmpty()) {
-                tvContactName.setText("👤 Name: " + profile.trustedContactName);
-                tvContactPhone.setText(!profile.trustedContactPhone.isEmpty() ? "📞 Phone: " + profile.trustedContactPhone : "📞 Phone: Not specified");
-                tvContactEmail.setText(!profile.trustedContactEmail.isEmpty() ? "✉️ Email: " + profile.trustedContactEmail : "✉️ Email: Not specified");
+                tvContactName.setText("Name: " + profile.trustedContactName);
+                tvContactPhone.setText(!profile.trustedContactPhone.isEmpty() ? "Phone: " + profile.trustedContactPhone : "Phone: Not specified");
+                tvContactEmail.setText(!profile.trustedContactEmail.isEmpty() ? "Email: " + profile.trustedContactEmail : "Email: Not specified");
             } else {
-                tvContactName.setText("👤 Name: Not configured yet");
-                tvContactPhone.setText("📞 Phone: None");
-                tvContactEmail.setText("✉️ Email: None");
+                tvContactName.setText("Name: Not added yet");
+                tvContactPhone.setText("Phone: Not added");
+                tvContactEmail.setText("Email: Not added");
             }
 
             if (tvCurrentCycle != null) {
@@ -201,15 +206,15 @@ public class SettingsActivity extends AppCompatActivity {
 
     private String formatCyclePhase(String phaseKey) {
         if (phaseKey == null || phaseKey.equals("not_tracking") || phaseKey.isEmpty()) {
-            return "❌ Not Tracking";
+            return "Not tracking";
         } else if (phaseKey.equals("menstrual_period")) {
-            return "🌸 Menstrual Phase (Rest & Somatic Care)";
+            return "Menstrual phase (rest and care)";
         } else if (phaseKey.equals("follicular")) {
-            return "🌱 Follicular Phase (Rising Energy)";
+            return "Follicular phase (rising energy)";
         } else if (phaseKey.equals("ovulation")) {
-            return "☀️ Ovulation Phase (Peak Vitality)";
+            return "Ovulation phase (steady energy)";
         } else if (phaseKey.equals("luteal_pms")) {
-            return "🍂 Luteal / PMS Phase (Gentle Sensitivity)";
+            return "Luteal / PMS phase (extra gentleness)";
         }
         return phaseKey.replace('_', ' ');
     }
@@ -218,25 +223,31 @@ public class SettingsActivity extends AppCompatActivity {
         final String userEmail = sessionManager.getUserEmail();
         final String generatedOtp = String.valueOf(100000 + new Random().nextInt(900000));
 
+        LinearLayout container = new LinearLayout(this);
+        container.setOrientation(LinearLayout.VERTICAL);
+        int pad = dpToPx(20);
+        container.setPadding(pad, dpToPx(8), pad, 0);
+
         final EditText input = new EditText(this);
-        input.setHint("Enter 6-digit verification code");
+        input.setHint("Enter 6-digit code");
         input.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);
         input.setSingleLine(true);
+        container.addView(input);
 
         new AlertDialog.Builder(this)
-                .setTitle("📧 Email Verification Required")
-                .setMessage("To protect your account security, a verification code was dispatched to your email (" 
-                        + userEmail + "). Please enter the code below to change your " + actionTarget + ":\n\nDemo Verification Code: " + generatedOtp)
-                .setView(input)
-                .setPositiveButton("Verify", new DialogInterface.OnClickListener() {
+                .setTitle("Confirm before editing")
+                .setMessage("Enter the local confirmation code below to update your " + actionTarget
+                        + ". This is an offline demo check (no email is sent to " + userEmail + ").\n\nCode: " + generatedOtp)
+                .setView(container)
+                .setPositiveButton("Continue", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         String entered = input.getText().toString().trim();
                         if (entered.equals(generatedOtp)) {
-                            Toast.makeText(SettingsActivity.this, "Email verified successfully! ✅", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(SettingsActivity.this, "Code confirmed.", Toast.LENGTH_SHORT).show();
                             onVerifiedSuccess.run();
                         } else {
-                            Toast.makeText(SettingsActivity.this, "Incorrect verification code. Access denied.", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(SettingsActivity.this, "That code didn't match. Please try again.", Toast.LENGTH_SHORT).show();
                         }
                     }
                 })
@@ -250,33 +261,33 @@ public class SettingsActivity extends AppCompatActivity {
         if (profile == null) return;
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("✏️ Edit Personal Details");
+        builder.setTitle("Edit personal details");
 
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL);
-        int pad = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20, getResources().getDisplayMetrics());
+        int pad = dpToPx(20);
         layout.setPadding(pad, pad / 2, pad, pad / 2);
 
         final EditText etName = new EditText(this);
-        etName.setHint("Full Name");
+        etName.setHint("Full name");
         etName.setText(profile.fullName);
         layout.addView(etName);
 
         final EditText etEmail = new EditText(this);
-        etEmail.setHint("Email Address");
+        etEmail.setHint("Email address");
         etEmail.setText(profile.email);
         etEmail.setInputType(android.text.InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
         layout.addView(etEmail);
 
         final EditText etPhone = new EditText(this);
-        etPhone.setHint("Phone Number");
+        etPhone.setHint("Phone number");
         etPhone.setText(profile.phone);
         etPhone.setInputType(android.text.InputType.TYPE_CLASS_PHONE);
         layout.addView(etPhone);
 
         builder.setView(layout);
 
-        builder.setPositiveButton("Save Changes", new DialogInterface.OnClickListener() {
+        builder.setPositiveButton("Save changes", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 String newName = etName.getText().toString().trim();
@@ -284,14 +295,14 @@ public class SettingsActivity extends AppCompatActivity {
                 String newPhone = etPhone.getText().toString().trim();
 
                 if (newName.isEmpty() || newEmail.isEmpty()) {
-                    Toast.makeText(SettingsActivity.this, "Name and Email cannot be empty", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(SettingsActivity.this, "Name and email are required.", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
                 dbHelper.updateUserProfile(userId, newName, newEmail, newPhone);
                 sessionManager.updateUserInfo(newName, newEmail);
                 loadProfileData();
-                Toast.makeText(SettingsActivity.this, "Personal details updated successfully! ✅", Toast.LENGTH_SHORT).show();
+                Toast.makeText(SettingsActivity.this, "Personal details updated.", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -304,33 +315,33 @@ public class SettingsActivity extends AppCompatActivity {
         AntaraDatabaseHelper.UserProfile profile = dbHelper.getUserProfile(userId);
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("✏️ Edit Emergency Contact Details");
+        builder.setTitle("Edit support contact");
 
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL);
-        int pad = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20, getResources().getDisplayMetrics());
+        int pad = dpToPx(20);
         layout.setPadding(pad, pad / 2, pad, pad / 2);
 
         final EditText etName = new EditText(this);
-        etName.setHint("Contact Name (e.g. Mom, Partner, Friend)");
+        etName.setHint("Contact name (e.g. Mom, partner, friend)");
         etName.setText(profile != null ? profile.trustedContactName : "");
         layout.addView(etName);
 
         final EditText etPhone = new EditText(this);
-        etPhone.setHint("Phone Number (e.g. +91 9876543210)");
+        etPhone.setHint("Phone number (e.g. +91 9876543210)");
         etPhone.setText(profile != null ? profile.trustedContactPhone : "");
         etPhone.setInputType(android.text.InputType.TYPE_CLASS_PHONE);
         layout.addView(etPhone);
 
         final EditText etEmail = new EditText(this);
-        etEmail.setHint("Contact Email Address (e.g. contact@example.com)");
+        etEmail.setHint("Contact email (e.g. contact@example.com)");
         etEmail.setText(profile != null ? profile.trustedContactEmail : "");
         etEmail.setInputType(android.text.InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
         layout.addView(etEmail);
 
         builder.setView(layout);
 
-        builder.setPositiveButton("Save Contact", new DialogInterface.OnClickListener() {
+        builder.setPositiveButton("Save contact", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 String newName = etName.getText().toString().trim();
@@ -338,15 +349,15 @@ public class SettingsActivity extends AppCompatActivity {
                 String newEmail = etEmail.getText().toString().trim();
 
                 if (newPhone.isEmpty() && newName.isEmpty()) {
-                    Toast.makeText(SettingsActivity.this, "Please enter at least a name and phone number", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(SettingsActivity.this, "Please enter at least a name or phone number.", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
-                if (newName.isEmpty()) newName = "Trusted Contact";
+                if (newName.isEmpty()) newName = "Trusted contact";
 
                 dbHelper.updateEmergencyContact(userId, newName, newPhone, newEmail);
                 loadProfileData();
-                Toast.makeText(SettingsActivity.this, "Emergency contact updated successfully! ✅", Toast.LENGTH_SHORT).show();
+                Toast.makeText(SettingsActivity.this, "Support contact updated.", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -357,26 +368,34 @@ public class SettingsActivity extends AppCompatActivity {
     private void showOtpDialog(String target, String dbField, TextView badgeView) {
         String generatedOtp = String.valueOf(100000 + new Random().nextInt(900000));
 
+        LinearLayout container = new LinearLayout(this);
+        container.setOrientation(LinearLayout.VERTICAL);
+        int pad = dpToPx(20);
+        container.setPadding(pad, dpToPx(8), pad, 0);
+
         final EditText input = new EditText(this);
         input.setHint("Enter 6-digit code");
+        input.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);
         input.setSingleLine(true);
+        container.addView(input);
 
         new AlertDialog.Builder(this)
-                .setTitle("🔐 Verify " + target)
-                .setMessage("A verification code was generated for your " + target + ":\n\nDemo OTP Code: " + generatedOtp)
-                .setView(input)
+                .setTitle("Verify " + target.toLowerCase())
+                .setMessage("Enter this local demo code to mark your " + target.toLowerCase()
+                        + " as verified on this device. No email or SMS is sent.\n\nCode: " + generatedOtp)
+                .setView(container)
                 .setPositiveButton("Verify", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         String entered = input.getText().toString().trim();
                         if (entered.equals(generatedOtp)) {
                             dbHelper.setVerification(sessionManager.getUserId(), dbField, true);
-                            badgeView.setText("Verified ✅");
-                            badgeView.setTextColor(Color.parseColor("#00B894"));
+                            badgeView.setText("Verified");
+                            badgeView.setTextColor(ContextCompat.getColor(SettingsActivity.this, R.color.success));
                             badgeView.setEnabled(false);
-                            Toast.makeText(SettingsActivity.this, target + " verified successfully! ✅", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(SettingsActivity.this, target + " marked as verified.", Toast.LENGTH_SHORT).show();
                         } else {
-                            Toast.makeText(SettingsActivity.this, "Invalid verification code", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(SettingsActivity.this, "That code didn't match.", Toast.LENGTH_SHORT).show();
                         }
                     }
                 })
@@ -386,11 +405,11 @@ public class SettingsActivity extends AppCompatActivity {
 
     private void showThemeSelectionDialog() {
         final String[] themeOptions = new String[]{
-                "🌸 Light Mode (Blossom)",
-                "🌙 Dark Mode (Midnight)",
-                "⚙️ Follow System Default",
-                "🌅 Amber Sunrise (Mood Uplift)",
-                "🌿 Serene Sage (Stress Relief)"
+                ThemeHelper.getThemeName(ThemeHelper.THEME_LIGHT),
+                ThemeHelper.getThemeName(ThemeHelper.THEME_DARK),
+                ThemeHelper.getThemeName(ThemeHelper.THEME_SYSTEM),
+                ThemeHelper.getThemeName(ThemeHelper.THEME_AMBER),
+                ThemeHelper.getThemeName(ThemeHelper.THEME_MINT)
         };
 
         int current = ThemeHelper.getSavedTheme(this);
@@ -398,7 +417,7 @@ public class SettingsActivity extends AppCompatActivity {
         final int[] selected = new int[]{current};
 
         new AlertDialog.Builder(this)
-                .setTitle("🎨 Choose App Theme")
+                .setTitle("Choose app theme")
                 .setSingleChoiceItems(themeOptions, current, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
@@ -412,7 +431,7 @@ public class SettingsActivity extends AppCompatActivity {
                         if (tvCurrentTheme != null) {
                             tvCurrentTheme.setText(ThemeHelper.getThemeName(selected[0]));
                         }
-                        Toast.makeText(SettingsActivity.this, "Theme applied! 🌸", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(SettingsActivity.this, "Theme updated.", Toast.LENGTH_SHORT).show();
                     }
                 })
                 .setNegativeButton("Cancel", null)
@@ -421,11 +440,11 @@ public class SettingsActivity extends AppCompatActivity {
 
     private void showCycleSelectionDialog() {
         final String[] cycleLabels = new String[]{
-                "❌ Not Tracking",
-                "🌸 Menstrual Phase (Days 1-5: Rest & Somatic Care)",
-                "🌱 Follicular Phase (Days 6-13: Rising Energy)",
-                "☀️ Ovulation Phase (Days 14-17: Peak Vitality)",
-                "🍂 Luteal / PMS Phase (Days 18-28: Gentle Sensitivity)"
+                "Not tracking",
+                "Menstrual phase (days 1-5: rest and care)",
+                "Follicular phase (days 6-13: rising energy)",
+                "Ovulation phase (days 14-17: steady energy)",
+                "Luteal / PMS phase (days 18-28: extra gentleness)"
         };
 
         final String[] cycleKeys = new String[]{
@@ -451,7 +470,7 @@ public class SettingsActivity extends AppCompatActivity {
         final int[] selected = new int[]{currentIdx};
 
         new AlertDialog.Builder(this)
-                .setTitle("🌸 Menstrual Cycle & Rhythm")
+                .setTitle("Current cycle phase")
                 .setSingleChoiceItems(cycleLabels, currentIdx, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
@@ -466,10 +485,15 @@ public class SettingsActivity extends AppCompatActivity {
                         if (tvCurrentCycle != null) {
                             tvCurrentCycle.setText(formatCyclePhase(chosenKey));
                         }
-                        Toast.makeText(SettingsActivity.this, "Cycle phase updated! 🌸", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(SettingsActivity.this, "Cycle phase updated.", Toast.LENGTH_SHORT).show();
                     }
                 })
                 .setNegativeButton("Cancel", null)
                 .show();
+    }
+
+    private int dpToPx(int dp) {
+        return (int) TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP, dp, getResources().getDisplayMetrics());
     }
 }

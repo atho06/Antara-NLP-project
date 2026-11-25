@@ -2,7 +2,7 @@ package com.antara.app;
 
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -26,11 +26,12 @@ public class AnalyticsActivity extends AppCompatActivity {
     private SessionManager sessionManager;
     private List<SessionRecord> allRecords;
 
-    private Button btnFilterAll, btnFilterWeek, btnFilterToday, btnBack;
+    private TextView btnFilterAll, btnFilterWeek, btnFilterToday;
+    private ImageButton btnBack;
     private TextView tvMinutes, tvStreak;
     private TextView tvPctCalm, tvPctJoy, tvPctSad, tvPctStress;
     private ProgressBar pbCalm, pbJoy, pbSad, pbStress;
-    private TextView tvCycleInsightText;
+    private TextView tvCycleInsightText, tvEmptyNote;
 
     private int currentFilter = 0; // 0 = all, 1 = week, 2 = today
 
@@ -61,21 +62,25 @@ public class AnalyticsActivity extends AppCompatActivity {
         pbStress = findViewById(R.id.pb_stress);
 
         tvCycleInsightText = findViewById(R.id.tv_cycle_insight_text);
+        tvEmptyNote = findViewById(R.id.tv_analytics_empty_note);
 
         long userId = sessionManager.getUserId();
         allRecords = dbHelper.getUserSessions(userId);
 
         int streak = dbHelper.getUserStreak(userId);
-        tvStreak.setText(streak + (streak == 1 ? " Day" : " Days"));
+        tvStreak.setText(streak + (streak == 1 ? " day" : " days"));
 
-        // Menstrual cycle correlation info
+        // Menstrual cycle context
         AntaraDatabaseHelper.UserProfile profile = dbHelper.getUserProfile(userId);
         if (profile != null && profile.menstrualPhase != null && !profile.menstrualPhase.equals("not_tracking")) {
-            String p = profile.menstrualPhase.replace('_', ' ');
-            tvCycleInsightText.setText("🌸 Currently in: " + p.toUpperCase(Locale.ROOT) 
-                    + "\nHormonal fluctuations in this phase can naturally impact physical energy and emotional bandwidth. Remember that mood dips during this time are biologically valid—prioritize hydration, gentle rest, and compassionate self-talk.");
+            String rawPhase = profile.menstrualPhase.replace('_', ' ').trim();
+            String formattedPhase = rawPhase.isEmpty()
+                    ? rawPhase
+                    : rawPhase.substring(0, 1).toUpperCase(Locale.ROOT) + rawPhase.substring(1).toLowerCase(Locale.ROOT);
+            tvCycleInsightText.setText("Currently noted: " + formattedPhase
+                    + ".\nEnergy and mood can naturally ebb and flow through different phases. Give yourself room for rest and a gentler pace when you need it.");
         } else {
-            tvCycleInsightText.setText("💡 Did you know? Hormonal changes across cycle phases directly influence neurotransmitters like serotonin and GABA. You can enable optional Cycle Sync in Settings to receive tailored reflection insights.");
+            tvCycleInsightText.setText("If you'd like, you can optionally note your cycle phase in Settings to tailor your reflection context.");
         }
 
         btnFilterAll.setOnClickListener(v -> setFilter(0));
@@ -90,9 +95,9 @@ public class AnalyticsActivity extends AppCompatActivity {
     private void setFilter(int filter) {
         currentFilter = filter;
 
-        btnFilterAll.setTextColor(ContextCompat.getColor(this, filter == 0 ? R.color.primary : R.color.text_secondary));
-        btnFilterWeek.setTextColor(ContextCompat.getColor(this, filter == 1 ? R.color.primary : R.color.text_secondary));
-        btnFilterToday.setTextColor(ContextCompat.getColor(this, filter == 2 ? R.color.primary : R.color.text_secondary));
+        styleFilterChip(btnFilterAll, filter == 0);
+        styleFilterChip(btnFilterWeek, filter == 1);
+        styleFilterChip(btnFilterToday, filter == 2);
 
         List<SessionRecord> filtered = new ArrayList<>();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
@@ -124,6 +129,11 @@ public class AnalyticsActivity extends AppCompatActivity {
         updateAnalyticsUI(filtered);
     }
 
+    private void styleFilterChip(TextView chip, boolean selected) {
+        chip.setBackgroundResource(selected ? R.drawable.bg_option_selected : R.drawable.bg_option_button);
+        chip.setTextColor(ContextCompat.getColor(this, selected ? R.color.primary_dark : R.color.text_secondary));
+    }
+
     private void updateAnalyticsUI(List<SessionRecord> list) {
         int totalMinutes = 0;
         int countCalm = 0, countJoy = 0, countSad = 0, countStress = 0;
@@ -145,6 +155,7 @@ public class AnalyticsActivity extends AppCompatActivity {
         tvMinutes.setText(totalMinutes + " min");
 
         if (totalEmotions == 0) {
+            tvEmptyNote.setVisibility(View.VISIBLE);
             tvPctCalm.setText("0%");
             tvPctJoy.setText("0%");
             tvPctSad.setText("0%");
@@ -156,6 +167,8 @@ public class AnalyticsActivity extends AppCompatActivity {
             pbStress.setProgress(0);
             return;
         }
+
+        tvEmptyNote.setVisibility(View.GONE);
 
         int pctCalm = (countCalm * 100) / totalEmotions;
         int pctJoy = (countJoy * 100) / totalEmotions;

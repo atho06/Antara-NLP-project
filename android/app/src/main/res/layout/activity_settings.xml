@@ -1,595 +1,487 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/background"
-    android:fillViewport="true">
+    style="@style/Antara.Screen.Scroll"
+    android:background="@color/background">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="20dp">
+        android:orientation="vertical">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="Settings &amp; Account ⚙️"
-            android:textColor="@color/text_primary"
-            android:textSize="24sp"
-            android:textStyle="bold" />
-
-        <!-- User Profile Card -->
-        <androidx.cardview.widget.CardView
+        <!-- Top bar -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            app:cardBackgroundColor="@color/surface"
-            app:cardCornerRadius="20dp"
-            app:cardElevation="2dp">
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageButton
+                android:id="@+id/btn_settings_back"
+                style="@style/Antara.IconButton"
+                android:contentDescription="@string/cd_back"
+                android:src="@drawable/ic_arrow_back" />
+        </LinearLayout>
+
+        <!-- Screen heading -->
+        <TextView
+            style="@style/Antara.Text.Display"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_section"
+            android:text="Settings" />
+
+        <TextView
+            style="@style/Antara.Text.Body"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_xs"
+            android:text="Manage your profile, appearance, and support options." />
+
+        <!-- Profile -->
+        <TextView
+            style="@style/Antara.Text.Label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_section"
+            android:text="Profile" />
+
+        <LinearLayout
+            style="@style/Antara.Card"
+            android:layout_marginTop="@dimen/space_group">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="18dp">
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/tv_settings_avatar"
+                    android:layout_width="52dp"
+                    android:layout_height="52dp"
+                    android:background="@drawable/bg_circle_soft"
+                    android:fontFamily="@font/nunito_extrabold"
+                    android:gravity="center"
+                    android:text="A"
+                    android:textColor="@color/primary_dark"
+                    android:textSize="20sp" />
 
                 <LinearLayout
-                    android:layout_width="match_parent"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
+                    android:layout_marginStart="@dimen/space_m"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
 
                     <TextView
-                        android:id="@+id/tv_settings_avatar"
-                        android:layout_width="56dp"
-                        android:layout_height="56dp"
-                        android:background="@drawable/bg_bot_bubble"
-                        android:gravity="center"
-                        android:text="A"
-                        android:textColor="@color/primary"
-                        android:textSize="22sp"
-                        android:textStyle="bold" />
-
-                    <LinearLayout
-                        android:layout_width="0dp"
+                        android:id="@+id/tv_settings_name"
+                        style="@style/Antara.Text.Subtitle"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="16dp"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
+                        android:text="Antara user" />
 
-                        <TextView
-                            android:id="@+id/tv_settings_name"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Antara User"
-                            android:textColor="@color/text_primary"
-                            android:textSize="18sp"
-                            android:textStyle="bold" />
+                    <TextView
+                        android:id="@+id/tv_settings_email"
+                        style="@style/Antara.Text.Small"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="user@example.com" />
 
-                        <TextView
-                            android:id="@+id/tv_settings_email"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:text="user@example.com"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="13sp" />
+                    <TextView
+                        android:id="@+id/tv_settings_phone"
+                        style="@style/Antara.Text.Small"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="No phone added" />
+                </LinearLayout>
+            </LinearLayout>
 
-                        <TextView
-                            android:id="@+id/tv_settings_phone"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:text="No phone added"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="13sp" />
+            <Button
+                android:id="@+id/btn_edit_profile"
+                style="@style/Antara.Button.Secondary"
+                android:layout_marginTop="@dimen/space_m"
+                android:text="Edit personal details" />
+        </LinearLayout>
 
-                    </LinearLayout>
+        <!-- Appearance -->
+        <TextView
+            style="@style/Antara.Text.Label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_section"
+            android:text="Appearance" />
 
+        <LinearLayout
+            android:id="@+id/card_settings_theme"
+            style="@style/Antara.Card"
+            android:layout_marginTop="@dimen/space_group">
+
+            <LinearLayout
+                android:id="@+id/row_settings_theme"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_list_row"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="@dimen/space_group"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        style="@style/Antara.Text.Subtitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="App theme" />
+
+                    <TextView
+                        android:id="@+id/tv_current_theme"
+                        style="@style/Antara.Text.Small"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="Match system"
+                        android:textColor="@color/primary" />
                 </LinearLayout>
 
                 <Button
-                    android:id="@+id/btn_edit_profile"
-                    android:layout_width="match_parent"
-                    android:layout_height="44dp"
-                    android:layout_marginTop="14dp"
-                    android:backgroundTint="@color/primary"
-                    android:text="✏️ Edit Personal Details"
-                    android:textAllCaps="false"
-                    android:textColor="@android:color/white"
-                    android:textSize="13sp"
-                    android:textStyle="bold" />
-
+                    android:id="@+id/btn_change_theme"
+                    style="@style/Antara.Button.Pill"
+                    android:text="Change" />
             </LinearLayout>
+        </LinearLayout>
 
-        </androidx.cardview.widget.CardView>
-
-        <!-- Emergency Contact Card -->
+        <!-- Cycle -->
         <TextView
+            style="@style/Antara.Text.Label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="22dp"
-            android:text="🆘 Emergency Contact Details"
-            android:textColor="@color/text_primary"
-            android:textSize="15sp"
-            android:textStyle="bold" />
+            android:layout_marginTop="@dimen/space_section"
+            android:text="Cycle" />
 
-        <androidx.cardview.widget.CardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            app:cardBackgroundColor="@color/surface"
-            app:cardCornerRadius="18dp"
-            app:cardElevation="2dp">
+        <LinearLayout
+            android:id="@+id/card_settings_cycle"
+            style="@style/Antara.Card"
+            android:layout_marginTop="@dimen/space_group">
 
             <LinearLayout
+                android:id="@+id/row_settings_cycle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
+                android:background="@drawable/bg_list_row"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
-                <TextView
-                    android:id="@+id/tv_contact_name"
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="👤 Name: Not configured"
-                    android:textColor="@color/text_primary"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
+                    android:layout_marginEnd="@dimen/space_group"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
 
-                <TextView
-                    android:id="@+id/tv_contact_phone"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:text="📞 Phone: None"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="13sp" />
+                    <TextView
+                        style="@style/Antara.Text.Subtitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Current cycle phase" />
 
-                <TextView
-                    android:id="@+id/tv_contact_email"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:text="✉️ Email: None"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="13sp" />
+                    <TextView
+                        android:id="@+id/tv_current_cycle"
+                        style="@style/Antara.Text.Small"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="Not tracking"
+                        android:textColor="@color/primary" />
+                </LinearLayout>
 
                 <Button
-                    android:id="@+id/btn_edit_contact"
-                    android:layout_width="match_parent"
-                    android:layout_height="44dp"
-                    android:layout_marginTop="14dp"
-                    android:backgroundTint="#B7791F"
-                    android:text="✏️ Edit Emergency Contact"
-                    android:textAllCaps="false"
-                    android:textColor="@android:color/white"
-                    android:textSize="13sp"
-                    android:textStyle="bold" />
-
+                    android:id="@+id/btn_change_cycle"
+                    style="@style/Antara.Button.Pill"
+                    android:text="Select" />
             </LinearLayout>
 
-        </androidx.cardview.widget.CardView>
+            <TextView
+                style="@style/Antara.Text.Small"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_group"
+                android:text="Optional. Used to tailor reflection prompts and calming suggestions during different phases." />
+        </LinearLayout>
 
-        <!-- Verification Badges Card -->
+        <!-- Support contact -->
         <TextView
+            style="@style/Antara.Text.Label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="22dp"
-            android:text="🔐 Verification Status"
-            android:textColor="@color/text_primary"
-            android:textSize="15sp"
-            android:textStyle="bold" />
+            android:layout_marginTop="@dimen/space_section"
+            android:text="Support contact" />
 
-        <androidx.cardview.widget.CardView
-            android:layout_width="match_parent"
+        <LinearLayout
+            style="@style/Antara.Card"
+            android:layout_marginTop="@dimen/space_group">
+
+            <TextView
+                android:id="@+id/tv_contact_name"
+                style="@style/Antara.Text.BodyStrong"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Name: Not added yet" />
+
+            <TextView
+                android:id="@+id/tv_contact_phone"
+                style="@style/Antara.Text.Small"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_xs"
+                android:text="Phone: Not added" />
+
+            <TextView
+                android:id="@+id/tv_contact_email"
+                style="@style/Antara.Text.Small"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_xs"
+                android:text="Email: Not added" />
+
+            <Button
+                android:id="@+id/btn_edit_contact"
+                style="@style/Antara.Button.Secondary"
+                android:layout_marginTop="@dimen/space_m"
+                android:text="Edit support contact" />
+        </LinearLayout>
+
+        <!-- External helplines -->
+        <LinearLayout
+            style="@style/Antara.Panel.Sage"
+            android:layout_marginTop="@dimen/space_group">
+
+            <TextView
+                style="@style/Antara.Text.Subtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="24/7 helplines" />
+
+            <TextView
+                style="@style/Antara.Text.Small"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_s"
+                android:text="• Tele-MANAS (Govt. of India): 14416 or 1800-891-4416\n• KIRAN Mental Health Helpline: 1800-599-0019\n• Vandrevala Foundation: +91 9999 666 555"
+                android:textColor="@color/text_primary" />
+
+            <TextView
+                style="@style/Antara.Text.Caption"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_s"
+                android:text="External services. Antara is not a substitute for professional care." />
+        </LinearLayout>
+
+        <!-- Local verification -->
+        <TextView
+            style="@style/Antara.Text.Label"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            app:cardBackgroundColor="@color/surface"
-            app:cardCornerRadius="18dp"
-            app:cardElevation="2dp">
+            android:layout_marginTop="@dimen/space_section"
+            android:text="Local verification" />
+
+        <LinearLayout
+            style="@style/Antara.Card"
+            android:layout_marginTop="@dimen/space_group">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="✉️ Email Address"
-                        android:textColor="@color/text_primary"
-                        android:textSize="14sp" />
-                    <TextView
-                        android:id="@+id/btn_verify_email"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentEnd="true"
-                        android:text="Verify Now ⚠️"
-                        android:textColor="@color/warning"
-                        android:textSize="12sp"
-                        android:textStyle="bold" />
-                </RelativeLayout>
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_marginTop="12dp"
-                    android:layout_marginBottom="12dp"
-                    android:background="#EEEEEE" />
-
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="📱 Phone Number"
-                        android:textColor="@color/text_primary"
-                        android:textSize="14sp" />
-                    <TextView
-                        android:id="@+id/btn_verify_phone"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentEnd="true"
-                        android:text="Verify Now ⚠️"
-                        android:textColor="@color/warning"
-                        android:textSize="12sp"
-                        android:textStyle="bold" />
-                </RelativeLayout>
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_marginTop="12dp"
-                    android:layout_marginBottom="12dp"
-                    android:background="#EEEEEE" />
-
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="🆘 Emergency Contact"
-                        android:textColor="@color/text_primary"
-                        android:textSize="14sp" />
-                    <TextView
-                        android:id="@+id/btn_verify_contact"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentEnd="true"
-                        android:text="Verify Now ⚠️"
-                        android:textColor="@color/warning"
-                        android:textSize="12sp"
-                        android:textStyle="bold" />
-                </RelativeLayout>
-
-            </LinearLayout>
-
-        </androidx.cardview.widget.CardView>
-
-        <!-- Emergency Hotlines Info -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="22dp"
-            android:text="🆘 Immediate 24/7 Helplines"
-            android:textColor="@color/text_primary"
-            android:textSize="15sp"
-            android:textStyle="bold" />
-
-        <androidx.cardview.widget.CardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            app:cardBackgroundColor="@color/bot_bubble"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="0dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
                 <TextView
-                    android:layout_width="match_parent"
+                    style="@style/Antara.Text.BodyStrong"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:lineSpacingExtra="4dp"
-                    android:text="• Tele-MANAS (Govt. of India): 14416 or 1800-891-4416\n• KIRAN Mental Health Helpline: 1800-599-0019\n• Vandrevala Foundation: +91 9999 666 555 (24/7 Free)"
-                    android:textColor="@color/text_primary"
-                    android:textSize="13sp" />
-
-            </LinearLayout>
-
-        </androidx.cardview.widget.CardView>
-
-        <!-- Appearance & Theme Card -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="22dp"
-            android:text="🎨 Appearance &amp; Theme"
-            android:textColor="@color/text_primary"
-            android:textSize="15sp"
-            android:textStyle="bold" />
-
-        <androidx.cardview.widget.CardView
-            android:id="@+id/card_settings_theme"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            app:cardBackgroundColor="@color/surface"
-            app:cardCornerRadius="18dp"
-            app:cardElevation="2dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <RelativeLayout
-                    android:id="@+id/row_settings_theme"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:background="?attr/selectableItemBackground">
-
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="App Theme"
-                            android:textColor="@color/text_primary"
-                            android:textSize="14sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/tv_current_theme"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:text="⚙️ Follow System Default"
-                            android:textColor="@color/primary"
-                            android:textSize="13sp" />
-
-                    </LinearLayout>
-
-                    <Button
-                        android:id="@+id/btn_change_theme"
-                        android:layout_width="wrap_content"
-                        android:layout_height="38dp"
-                        android:layout_alignParentEnd="true"
-                        android:layout_centerVertical="true"
-                        android:backgroundTint="@color/primary"
-                        android:text="Change 🎨"
-                        android:textAllCaps="false"
-                        android:textColor="@android:color/white"
-                        android:textSize="12sp"
-                        android:textStyle="bold" />
-
-                </RelativeLayout>
-
-            </LinearLayout>
-
-        </androidx.cardview.widget.CardView>
-
-        <!-- Menstrual Cycle & Somatic Rhythm Card -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="22dp"
-            android:text="🌸 Menstrual Cycle &amp; Somatic Rhythm"
-            android:textColor="@color/text_primary"
-            android:textSize="15sp"
-            android:textStyle="bold" />
-
-        <androidx.cardview.widget.CardView
-            android:id="@+id/card_settings_cycle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            app:cardBackgroundColor="@color/surface"
-            app:cardCornerRadius="18dp"
-            app:cardElevation="2dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <RelativeLayout
-                    android:id="@+id/row_settings_cycle"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:background="?attr/selectableItemBackground">
-
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Current Cycle Phase"
-                            android:textColor="@color/text_primary"
-                            android:textSize="14sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/tv_current_cycle"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:text="Not Tracking"
-                            android:textColor="@color/primary"
-                            android:textSize="13sp" />
-
-                    </LinearLayout>
-
-                    <Button
-                        android:id="@+id/btn_change_cycle"
-                        android:layout_width="wrap_content"
-                        android:layout_height="38dp"
-                        android:layout_alignParentEnd="true"
-                        android:layout_centerVertical="true"
-                        android:backgroundTint="@color/primary"
-                        android:text="Select 🌸"
-                        android:textAllCaps="false"
-                        android:textColor="@android:color/white"
-                        android:textSize="12sp"
-                        android:textStyle="bold" />
-
-                </RelativeLayout>
+                    android:layout_weight="1"
+                    android:text="Email address" />
 
                 <TextView
-                    android:layout_width="match_parent"
+                    android:id="@+id/btn_verify_email"
+                    style="@style/Antara.Text.Accent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:lineSpacingExtra="2dp"
-                    android:text="Syncs with your emotional reflection sessions to offer somatic soothing and music recommendations during sensitive phases."
-                    android:textColor="@color/text_secondary"
-                    android:textSize="12sp" />
-
+                    android:paddingStart="@dimen/space_s"
+                    android:paddingTop="@dimen/space_xs"
+                    android:paddingBottom="@dimen/space_xs"
+                    android:text="Verify"
+                    android:textColor="@color/warning" />
             </LinearLayout>
 
-        </androidx.cardview.widget.CardView>
-
-        <!-- Feedback & About Us Card -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="22dp"
-            android:text="🌷 Community &amp; Information"
-            android:textColor="@color/text_primary"
-            android:textSize="15sp"
-            android:textStyle="bold" />
-
-        <androidx.cardview.widget.CardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            app:cardBackgroundColor="@color/surface"
-            app:cardCornerRadius="18dp"
-            app:cardElevation="2dp">
+            <View
+                style="@style/Antara.Divider"
+                android:layout_marginTop="@dimen/space_group"
+                android:layout_marginBottom="@dimen/space_group" />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
-                <RelativeLayout
-                    android:id="@+id/row_settings_feedback"
-                    android:layout_width="match_parent"
+                <TextView
+                    style="@style/Antara.Text.BodyStrong"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:background="?attr/selectableItemBackground">
+                    android:layout_weight="1"
+                    android:text="Phone number" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="📝 Share Feedback &amp; Suggestions"
-                        android:textColor="@color/text_primary"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentEnd="true"
-                        android:text="→"
-                        android:textColor="@color/primary"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
-
-                </RelativeLayout>
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_marginTop="14dp"
-                    android:layout_marginBottom="14dp"
-                    android:background="#EEEEEE" />
-
-                <RelativeLayout
-                    android:id="@+id/row_settings_about"
-                    android:layout_width="match_parent"
+                <TextView
+                    android:id="@+id/btn_verify_phone"
+                    style="@style/Antara.Text.Accent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:background="?attr/selectableItemBackground">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="🌷 About Antara &amp; How It Helps"
-                        android:textColor="@color/text_primary"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentEnd="true"
-                        android:text="→"
-                        android:textColor="@color/primary"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
-
-                </RelativeLayout>
-
+                    android:paddingStart="@dimen/space_s"
+                    android:paddingTop="@dimen/space_xs"
+                    android:paddingBottom="@dimen/space_xs"
+                    android:text="Verify"
+                    android:textColor="@color/warning" />
             </LinearLayout>
 
-        </androidx.cardview.widget.CardView>
+            <View
+                style="@style/Antara.Divider"
+                android:layout_marginTop="@dimen/space_group"
+                android:layout_marginBottom="@dimen/space_group" />
 
-        <!-- Logout Button -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    style="@style/Antara.Text.BodyStrong"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Support contact" />
+
+                <TextView
+                    android:id="@+id/btn_verify_contact"
+                    style="@style/Antara.Text.Accent"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingStart="@dimen/space_s"
+                    android:paddingTop="@dimen/space_xs"
+                    android:paddingBottom="@dimen/space_xs"
+                    android:text="Verify"
+                    android:textColor="@color/warning" />
+            </LinearLayout>
+
+            <TextView
+                style="@style/Antara.Text.Caption"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_group"
+                android:text="Demo check on this device. No email or SMS is sent." />
+        </LinearLayout>
+
+        <!-- About -->
+        <TextView
+            style="@style/Antara.Text.Label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_section"
+            android:text="About" />
+
+        <LinearLayout
+            style="@style/Antara.Card"
+            android:layout_marginTop="@dimen/space_group">
+
+            <LinearLayout
+                android:id="@+id/row_settings_feedback"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_list_row"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingTop="@dimen/space_xs"
+                android:paddingBottom="@dimen/space_xs">
+
+                <TextView
+                    style="@style/Antara.Text.Subtitle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Share feedback" />
+
+                <ImageView
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_chevron_right" />
+            </LinearLayout>
+
+            <View
+                style="@style/Antara.Divider"
+                android:layout_marginTop="@dimen/space_group"
+                android:layout_marginBottom="@dimen/space_group" />
+
+            <LinearLayout
+                android:id="@+id/row_settings_about"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_list_row"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingTop="@dimen/space_xs"
+                android:paddingBottom="@dimen/space_xs">
+
+                <TextView
+                    style="@style/Antara.Text.Subtitle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="About Antara" />
+
+                <ImageView
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_chevron_right" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Sign out -->
         <Button
             android:id="@+id/btn_settings_logout"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:layout_marginTop="28dp"
-            android:layout_marginBottom="16dp"
-            android:backgroundTint="@color/sos_red"
-            android:text="Sign Out"
-            android:textAllCaps="false"
-            android:textColor="@android:color/white"
-            android:textSize="15sp"
-            android:textStyle="bold" />
+            style="@style/Antara.Button.Secondary"
+            android:layout_marginTop="@dimen/space_section"
+            android:text="Sign out"
+            android:textColor="@color/sos_text"
+            app:strokeColor="@color/crisis_stroke" />
 
         <!-- App Version Footer (Tap 5 times for Evaluator Dashboard) -->
         <TextView
             android:id="@+id/tv_settings_version"
-            android:layout_width="wrap_content"
+            style="@style/Antara.Text.Caption"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="32dp"
+            android:layout_marginTop="@dimen/space_m"
             android:gravity="center"
-            android:lineSpacingExtra="2dp"
-            android:padding="8dp"
-            android:text="Antara Mobile App • Version 1.0.0 🌷\n100% Offline &amp; Confidential"
-            android:textColor="@color/text_muted"
-            android:textSize="12sp" />
+            android:padding="@dimen/space_s"
+            android:text="Antara • Version 1.0.0\nSaved on this device in a local database. Not a substitute for professional care." />
 
     </LinearLayout>
 

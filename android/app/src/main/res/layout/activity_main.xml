@@ -1,657 +1,566 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    Home. Reference screen for the Antara design system.
+    Warm off-white background, sage reminder panel, white reflection card,
+    quiet circle motifs, 24dp between sections, 12dp within groups.
+-->
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/background">
 
-    <!-- Bottom Navigation Bar -->
+    <!-- Bottom navigation: text labels with a small dot for the current page -->
     <LinearLayout
         android:id="@+id/bottom_nav"
         android:layout_width="match_parent"
-        android:layout_height="60dp"
+        android:layout_height="64dp"
         android:layout_alignParentBottom="true"
         android:background="@color/surface"
-        android:elevation="8dp"
-        android:orientation="horizontal">
+        android:orientation="vertical">
+
+        <View style="@style/Antara.Divider" />
 
         <LinearLayout
-            android:id="@+id/nav_home"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:orientation="vertical">
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="🏠"
-                android:textSize="18sp" />
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Home"
-                android:textColor="@color/primary"
-                android:textSize="11sp"
-                android:textStyle="bold" />
-        </LinearLayout>
+            android:orientation="horizontal">
 
-        <LinearLayout
-            android:id="@+id/nav_analytics"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:orientation="vertical">
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="📊"
-                android:textSize="18sp" />
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Analytics"
-                android:textColor="@color/text_secondary"
-                android:textSize="11sp" />
-        </LinearLayout>
+            <LinearLayout
+                android:id="@+id/nav_home"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:gravity="center"
+                android:orientation="vertical">
 
-        <LinearLayout
-            android:id="@+id/nav_history"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:orientation="vertical">
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="📖"
-                android:textSize="18sp" />
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="History"
-                android:textColor="@color/text_secondary"
-                android:textSize="11sp" />
-        </LinearLayout>
+                <View
+                    android:layout_width="6dp"
+                    android:layout_height="6dp"
+                    android:background="@drawable/bg_nav_dot" />
 
-        <LinearLayout
-            android:id="@+id/nav_settings"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:orientation="vertical">
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="⚙️"
-                android:textSize="18sp" />
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Settings"
-                android:textColor="@color/text_secondary"
-                android:textSize="11sp" />
-        </LinearLayout>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:fontFamily="@font/nunito_bold"
+                    android:text="Home"
+                    android:textColor="@color/primary"
+                    android:textSize="12sp" />
+            </LinearLayout>
 
+            <LinearLayout
+                android:id="@+id/nav_analytics"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <View
+                    android:layout_width="6dp"
+                    android:layout_height="6dp"
+                    android:background="@drawable/bg_nav_dot"
+                    android:visibility="invisible" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:fontFamily="@font/nunito_semibold"
+                    android:text="Insights"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/nav_history"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <View
+                    android:layout_width="6dp"
+                    android:layout_height="6dp"
+                    android:background="@drawable/bg_nav_dot"
+                    android:visibility="invisible" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:fontFamily="@font/nunito_semibold"
+                    android:text="Journal"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/nav_settings"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <View
+                    android:layout_width="6dp"
+                    android:layout_height="6dp"
+                    android:background="@drawable/bg_nav_dot"
+                    android:visibility="invisible" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:fontFamily="@font/nunito_semibold"
+                    android:text="Settings"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp" />
+            </LinearLayout>
+        </LinearLayout>
     </LinearLayout>
 
-    <!-- Main Content Area -->
     <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_above="@id/bottom_nav"
-        android:clipToPadding="false"
-        android:paddingStart="20dp"
-        android:paddingTop="20dp"
-        android:paddingEnd="20dp"
-        android:paddingBottom="40dp">
+        style="@style/Antara.Screen.Scroll"
+        android:layout_above="@id/bottom_nav">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <!-- Header Row -->
-            <RelativeLayout
+            <!-- Header -->
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
                 <LinearLayout
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_weight="1"
                     android:orientation="vertical">
 
                     <TextView
                         android:id="@+id/tv_greeting_time"
+                        style="@style/Antara.Text.Label"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Good day,"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="15sp" />
+                        android:text="Your daily exhale" />
 
                     <TextView
                         android:id="@+id/tv_user_name"
+                        style="@style/Antara.Text.Display"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Friend"
-                        android:textColor="@color/text_primary"
-                        android:textSize="26sp"
-                        android:textStyle="bold" />
-
+                        android:layout_marginTop="4dp"
+                        android:text="Hi there."
+                        tools:text="Hi, Arjun." />
                 </LinearLayout>
 
                 <Button
                     android:id="@+id/btn_sos_header"
+                    style="@style/Antara.Button.Pill.Support"
+                    android:layout_height="36dp"
+                    android:minHeight="36dp"
+                    android:contentDescription="Get support now"
+                    android:text="SOS" />
+            </LinearLayout>
+
+            <!-- A gentle reminder -->
+            <LinearLayout
+                style="@style/Antara.Panel.Sage"
+                android:layout_marginTop="@dimen/space_section">
+
+                <TextView
+                    style="@style/Antara.Text.Label"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_alignParentEnd="true"
-                    android:layout_centerVertical="true"
-                    android:backgroundTint="@color/sos_red"
-                    android:text="🆘 SOS"
-                    android:textAllCaps="false"
-                    android:textColor="@android:color/white"
-                    android:textSize="13sp"
-                    android:textStyle="bold" />
+                    android:text="A gentle reminder" />
 
-            </RelativeLayout>
-
-            <!-- Daily Gentle Reminder Card -->
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                app:cardBackgroundColor="@color/bot_bubble"
-                app:cardCornerRadius="20dp"
-                app:cardElevation="0dp">
-
-                <LinearLayout
+                <TextView
+                    style="@style/Antara.Text.Title"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="18dp">
+                    android:layout_marginTop="@dimen/space_group"
+                    android:text="You don't have to figure it all out today." />
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="🌸 Gentle Reminder"
-                        android:textColor="@color/primary"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
+                <TextView
+                    style="@style/Antara.Text.Body"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_s"
+                    android:text="A little space for yourself is enough." />
+            </LinearLayout>
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="6dp"
-                        android:lineSpacingExtra="2dp"
-                        android:text="&quot;You don't have to have everything figured out today. Just taking 5 quiet minutes to check in with yourself is enough.&quot;"
-                        android:textColor="@color/text_primary"
-                        android:textSize="14sp"
-                        android:textStyle="italic" />
-
-                </LinearLayout>
-
-            </androidx.cardview.widget.CardView>
-
-            <!-- Streak & Mindful Progress Dashboard Card -->
-            <androidx.cardview.widget.CardView
+            <!-- One day at a time -->
+            <LinearLayout
                 android:id="@+id/card_streak_dashboard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                app:cardBackgroundColor="@color/surface"
-                app:cardCornerRadius="20dp"
-                app:cardElevation="2dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
-                    <RelativeLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content">
-
-                        <TextView
-                            android:id="@+id/tv_streak_title"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="🔥 1-Day Streak"
-                            android:textColor="#E17055"
-                            android:textSize="15sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/tv_streak_level"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_alignParentEnd="true"
-                            android:text="🌱 Sprout Level"
-                            android:textColor="@color/primary"
-                            android:textSize="12sp"
-                            android:textStyle="bold" />
-
-                    </RelativeLayout>
-
-                    <!-- Visual Weekly Progress Indicators -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        android:gravity="center"
-                        android:orientation="horizontal">
-
-                        <TextView android:id="@+id/dot_mon" android:layout_width="0dp" android:layout_height="32dp" android:layout_weight="1" android:layout_margin="2dp" android:background="@drawable/bg_option_button" android:gravity="center" android:text="M" android:textColor="@color/text_secondary" android:textSize="11sp" android:textStyle="bold" />
-                        <TextView android:id="@+id/dot_tue" android:layout_width="0dp" android:layout_height="32dp" android:layout_weight="1" android:layout_margin="2dp" android:background="@drawable/bg_option_button" android:gravity="center" android:text="T" android:textColor="@color/text_secondary" android:textSize="11sp" android:textStyle="bold" />
-                        <TextView android:id="@+id/dot_wed" android:layout_width="0dp" android:layout_height="32dp" android:layout_weight="1" android:layout_margin="2dp" android:background="@drawable/bg_option_button" android:gravity="center" android:text="W" android:textColor="@color/text_secondary" android:textSize="11sp" android:textStyle="bold" />
-                        <TextView android:id="@+id/dot_thu" android:layout_width="0dp" android:layout_height="32dp" android:layout_weight="1" android:layout_margin="2dp" android:background="@drawable/bg_option_button" android:gravity="center" android:text="T" android:textColor="@color/text_secondary" android:textSize="11sp" android:textStyle="bold" />
-                        <TextView android:id="@+id/dot_fri" android:layout_width="0dp" android:layout_height="32dp" android:layout_weight="1" android:layout_margin="2dp" android:background="@drawable/bg_option_button" android:gravity="center" android:text="F" android:textColor="@color/text_secondary" android:textSize="11sp" android:textStyle="bold" />
-                        <TextView android:id="@+id/dot_sat" android:layout_width="0dp" android:layout_height="32dp" android:layout_weight="1" android:layout_margin="2dp" android:background="@drawable/bg_option_button" android:gravity="center" android:text="S" android:textColor="@color/text_secondary" android:textSize="11sp" android:textStyle="bold" />
-                        <TextView android:id="@+id/dot_sun" android:layout_width="0dp" android:layout_height="32dp" android:layout_weight="1" android:layout_margin="2dp" android:background="@drawable/bg_option_button" android:gravity="center" android:text="S" android:textColor="@color/text_secondary" android:textSize="11sp" android:textStyle="bold" />
-
-                    </LinearLayout>
-
-                    <TextView
-                        android:id="@+id/tv_streak_sub"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:text="Consistency is a quiet act of kindness to your future self."
-                        android:textColor="@color/text_secondary"
-                        android:textSize="12sp" />
-
-                </LinearLayout>
-
-            </androidx.cardview.widget.CardView>
-
-            <!-- Resume Unfinished Conversation Card -->
-            <androidx.cardview.widget.CardView
-                android:id="@+id/card_resume_session"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:visibility="gone"
-                app:cardBackgroundColor="#FFF8E7"
-                app:cardCornerRadius="20dp"
-                app:cardElevation="3dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="18dp">
-
-                    <RelativeLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="⏳ Resume Reflection"
-                            android:textColor="#B7791F"
-                            android:textSize="15sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/tv_resume_time_ago"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_alignParentEnd="true"
-                            android:text="Paused earlier"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="12sp" />
-
-                    </RelativeLayout>
-
-                    <TextView
-                        android:id="@+id/tv_resume_details"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="6dp"
-                        android:lineSpacingExtra="2dp"
-                        android:text="You stepped away during your reflection. Would you like to resume where you left off?"
-                        android:textColor="@color/text_primary"
-                        android:textSize="13sp" />
-
-                    <Button
-                        android:id="@+id/btn_resume_session"
-                        android:layout_width="match_parent"
-                        android:layout_height="46dp"
-                        android:layout_marginTop="12dp"
-                        android:backgroundTint="#D69E2E"
-                        android:text="Continue Conversation 🌷"
-                        android:textAllCaps="false"
-                        android:textColor="@android:color/white"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-
-                </LinearLayout>
-
-            </androidx.cardview.widget.CardView>
-
-            <!-- Primary Action: Start Reflection Card -->
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                app:cardBackgroundColor="@color/surface"
-                app:cardCornerRadius="24dp"
-                app:cardElevation="3dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_horizontal"
-                    android:orientation="vertical"
-                    android:padding="22dp">
-
-                    <TextView
-                        android:layout_width="56dp"
-                        android:layout_height="56dp"
-                        android:background="@drawable/bg_bot_bubble"
-                        android:gravity="center"
-                        android:text="💬"
-                        android:textSize="26sp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        android:text="Begin Today's Reflection"
-                        android:textColor="@color/text_primary"
-                        android:textSize="20sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:gravity="center"
-                        android:text="A confidential, safe space to reflect at your own pace."
-                        android:textColor="@color/text_secondary"
-                        android:textSize="13sp" />
-
-                    <!-- Duration Selection -->
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="18dp"
-                        android:text="⏱️ Session Time"
-                        android:textColor="@color/text_primary"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-
-                    <Spinner
-                        android:id="@+id/spn_duration"
-                        android:layout_width="match_parent"
-                        android:layout_height="48dp"
-                        android:layout_marginTop="6dp"
-                        android:background="@drawable/bg_input"
-                        android:paddingStart="12dp" />
-
-                    <!-- Topic Selection -->
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="14dp"
-                        android:text="🎯 Focus Topic"
-                        android:textColor="@color/text_primary"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-
-                    <Spinner
-                        android:id="@+id/spn_category"
-                        android:layout_width="match_parent"
-                        android:layout_height="48dp"
-                        android:layout_marginTop="6dp"
-                        android:background="@drawable/bg_input"
-                        android:paddingStart="12dp" />
-
-                    <!-- Start Button -->
-                    <Button
-                        android:id="@+id/btn_start_session"
-                        android:layout_width="match_parent"
-                        android:layout_height="54dp"
-                        android:layout_marginTop="22dp"
-                        android:backgroundTint="@color/primary"
-                        android:text="Start Reflection 🌷"
-                        android:textAllCaps="false"
-                        android:textColor="@android:color/white"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
-
-                </LinearLayout>
-
-            </androidx.cardview.widget.CardView>
-
-            <!-- Menstrual Cycle & Music Support Card -->
-            <androidx.cardview.widget.CardView
-                android:id="@+id/card_cycle_support"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="18dp"
-                app:cardBackgroundColor="@color/surface"
-                app:cardCornerRadius="20dp"
-                app:cardElevation="2dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
-                    <TextView
-                        android:id="@+id/tv_cycle_home_title"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="🌸 Cycle Rhythm &amp; Soothing"
-                        android:textColor="@color/primary"
-                        android:textSize="15sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:id="@+id/tv_cycle_home_tip"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="6dp"
-                        android:lineSpacingExtra="2dp"
-                        android:text="Tracking your cycle helps Antara tailor compassion and somatic comfort to your hormones."
-                        android:textColor="@color/text_primary"
-                        android:textSize="13sp" />
-
-                    <Button
-                        android:id="@+id/btn_open_music_home"
-                        android:layout_width="match_parent"
-                        android:layout_height="44dp"
-                        android:layout_marginTop="10dp"
-                        android:backgroundTint="@color/primary"
-                        android:text="🎵 Listen to Calming Music for Regulation"
-                        android:textAllCaps="false"
-                        android:textColor="@android:color/white"
-                        android:textSize="13sp"
-                        android:textStyle="bold" />
-
-                </LinearLayout>
-
-            </androidx.cardview.widget.CardView>
-
-            <!-- Evidence-Based Psychology Fact -->
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="18dp"
-                app:cardBackgroundColor="@color/surface"
-                app:cardCornerRadius="20dp"
-                app:cardElevation="2dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="💡 Evidence-Based Insight"
-                        android:textColor="#0984E3"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:id="@+id/tv_fact_text"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="6dp"
-                        android:lineSpacingExtra="2dp"
-                        android:text="Putting feelings into words (affect labeling) reduces amygdala reactivity by up to 40% and activates prefrontal regions that restore emotional regulation."
-                        android:textColor="@color/text_primary"
-                        android:textSize="13sp" />
-
-                </LinearLayout>
-
-            </androidx.cardview.widget.CardView>
-
-            <!-- Peer Testimonial Card -->
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="18dp"
-                app:cardBackgroundColor="@color/bot_bubble"
-                app:cardCornerRadius="20dp"
-                app:cardElevation="0dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="💬 You Are Not Alone"
-                        android:textColor="@color/primary"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:id="@+id/tv_testimonial_quote"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="6dp"
-                        android:lineSpacingExtra="2dp"
-                        android:text="&quot;I used to feel so guilty for taking time to rest. Reflecting here reminded me that taking a pause isn't falling behind—it is survival.&quot;"
-                        android:textColor="@color/text_primary"
-                        android:textSize="13sp"
-                        android:textStyle="italic" />
-
-                    <TextView
-                        android:id="@+id/tv_testimonial_author"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="6dp"
-                        android:text="— A student peer navigating exam anxiety"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="12sp" />
-
-                </LinearLayout>
-
-            </androidx.cardview.widget.CardView>
-
-            <!-- Community Supporter / Antara Patron Card -->
-            <androidx.cardview.widget.CardView
-                android:id="@+id/card_supporter_preview"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="18dp"
-                android:visibility="gone"
-                app:cardBackgroundColor="@color/surface"
-                app:cardCornerRadius="20dp"
-                app:cardElevation="2dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="✨ Antara Patron • 100% Free Forever"
-                        android:textColor="#6C5CE7"
-                        android:textSize="15sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="6dp"
-                        android:lineSpacingExtra="2dp"
-                        android:text="You've been checking in regularly! Antara is completely free, private, and offline forever for students. Support our mental health mission or sponsor a friend's reflection journey."
-                        android:textColor="@color/text_primary"
-                        android:textSize="13sp" />
-
-                    <Button
-                        android:id="@+id/btn_supporter_learn"
-                        android:layout_width="match_parent"
-                        android:layout_height="44dp"
-                        android:layout_marginTop="10dp"
-                        android:backgroundTint="#6C5CE7"
-                        android:text="Learn About Community Support 🌷"
-                        android:textAllCaps="false"
-                        android:textColor="@android:color/white"
-                        android:textSize="13sp"
-                        android:textStyle="bold" />
-
-                </LinearLayout>
-
-            </androidx.cardview.widget.CardView>
-
-            <!-- Confidentiality Notice -->
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:layout_marginBottom="24dp"
-                app:cardBackgroundColor="@color/bot_bubble"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="0dp">
+                android:layout_marginTop="@dimen/space_section"
+                android:orientation="vertical">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:padding="16dp">
+                    android:orientation="horizontal">
 
                     <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="🛡️"
-                        android:textSize="20sp" />
-
-                    <TextView
+                        android:id="@+id/tv_streak_title"
+                        style="@style/Antara.Text.Subtitle"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="12dp"
                         android:layout_weight="1"
-                        android:lineSpacingExtra="3dp"
-                        android:text="100% Offline &amp; Confidential: All your personal reflections are processed and saved securely right on your phone."
-                        android:textColor="@color/text_primary"
-                        android:textSize="13sp" />
+                        android:text="One day at a time" />
 
+                    <TextView
+                        android:id="@+id/tv_streak_level"
+                        style="@style/Antara.Text.Accent"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Sprout level" />
                 </LinearLayout>
 
-            </androidx.cardview.widget.CardView>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_group"
+                    android:orientation="horizontal">
+
+                    <TextView android:id="@+id/dot_mon" style="@style/Antara.DayCircle" android:text="M" />
+                    <Space android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1" />
+                    <TextView android:id="@+id/dot_tue" style="@style/Antara.DayCircle" android:text="T" />
+                    <Space android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1" />
+                    <TextView android:id="@+id/dot_wed" style="@style/Antara.DayCircle" android:text="W" />
+                    <Space android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1" />
+                    <TextView android:id="@+id/dot_thu" style="@style/Antara.DayCircle" android:text="T" />
+                    <Space android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1" />
+                    <TextView android:id="@+id/dot_fri" style="@style/Antara.DayCircle" android:text="F" />
+                    <Space android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1" />
+                    <TextView android:id="@+id/dot_sat" style="@style/Antara.DayCircle" android:text="S" />
+                    <Space android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1" />
+                    <TextView android:id="@+id/dot_sun" style="@style/Antara.DayCircle" android:text="S" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tv_streak_sub"
+                    style="@style/Antara.Text.Caption"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_group"
+                    android:text="Your first reflection is a fresh beginning." />
+            </LinearLayout>
+
+            <!-- Resume an unfinished reflection (shown only when a draft exists) -->
+            <LinearLayout
+                android:id="@+id/card_resume_session"
+                style="@style/Antara.Panel.Sage"
+                android:layout_marginTop="@dimen/space_section"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        style="@style/Antara.Text.Label"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Waiting for you" />
+
+                    <TextView
+                        android:id="@+id/tv_resume_time_ago"
+                        style="@style/Antara.Text.Caption"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Paused earlier" />
+                </LinearLayout>
+
+                <TextView
+                    style="@style/Antara.Text.Subtitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_group"
+                    android:text="Pick up where you left off" />
+
+                <TextView
+                    android:id="@+id/tv_resume_details"
+                    style="@style/Antara.Text.Body"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_xs"
+                    android:text="You stepped away during your reflection. You can continue whenever you like." />
+
+                <Button
+                    android:id="@+id/btn_resume_session"
+                    style="@style/Antara.Button.Primary"
+                    android:layout_marginTop="@dimen/space_m"
+                    android:text="Continue reflection" />
+            </LinearLayout>
+
+            <!-- A moment just for you: primary action -->
+            <LinearLayout
+                style="@style/Antara.Card"
+                android:layout_marginTop="@dimen/space_section">
+
+                <View
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:background="@drawable/motif_ring" />
+
+                <TextView
+                    style="@style/Antara.Text.Title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_m"
+                    android:text="A moment just for you" />
+
+                <TextView
+                    style="@style/Antara.Text.Body"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_xs"
+                    android:text="Check in, untangle your thoughts, and take a softer next step." />
+
+                <TextView
+                    style="@style/Antara.Text.FieldLabel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_m"
+                    android:labelFor="@id/spn_duration"
+                    android:text="Session time" />
+
+                <Spinner
+                    android:id="@+id/spn_duration"
+                    style="@style/Antara.Spinner"
+                    android:layout_marginTop="@dimen/space_s" />
+
+                <TextView
+                    style="@style/Antara.Text.FieldLabel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_group"
+                    android:labelFor="@id/spn_category"
+                    android:text="Focus topic" />
+
+                <Spinner
+                    android:id="@+id/spn_category"
+                    style="@style/Antara.Spinner"
+                    android:layout_marginTop="@dimen/space_s" />
+
+                <Button
+                    android:id="@+id/btn_start_session"
+                    style="@style/Antara.Button.Primary"
+                    android:layout_marginTop="@dimen/space_section"
+                    android:text="Begin my reflection" />
+
+                <TextView
+                    style="@style/Antara.Text.Caption"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_group"
+                    android:gravity="center"
+                    android:text="No pressure. No right answers. Just you." />
+            </LinearLayout>
+
+            <!-- Slow down and tune in -->
+            <LinearLayout
+                android:id="@+id/card_cycle_support"
+                style="@style/Antara.Panel.Warm"
+                android:layout_marginTop="@dimen/space_section">
+
+                <TextView
+                    style="@style/Antara.Text.Label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Slow down and tune in" />
+
+                <TextView
+                    android:id="@+id/tv_cycle_home_title"
+                    style="@style/Antara.Text.Title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_group"
+                    android:text="Find your softer rhythm" />
+
+                <TextView
+                    android:id="@+id/tv_cycle_home_tip"
+                    style="@style/Antara.Text.Body"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_s"
+                    android:text="Make room for rest with calming sounds, and support that moves with your cycle." />
+
+                <LinearLayout
+                    android:id="@+id/btn_open_music_home"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_m"
+                    android:background="@drawable/bg_list_row"
+                    android:clickable="true"
+                    android:contentDescription="Open your music app"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingTop="@dimen/space_xs"
+                    android:paddingBottom="@dimen/space_xs">
+
+                    <View
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="@drawable/motif_ring_filled" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/space_group"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/nunito_bold"
+                            android:text="Listen to calming music"
+                            android:textColor="@color/text_primary"
+                            android:textSize="14sp" />
+
+                        <TextView
+                            style="@style/Antara.Text.Caption"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Opens your music app" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:importantForAccessibility="no"
+                        android:src="@drawable/ic_chevron_right" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- A small insight -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_section"
+                android:orientation="vertical">
+
+                <TextView
+                    style="@style/Antara.Text.Label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="A small insight" />
+
+                <TextView
+                    android:id="@+id/tv_fact_title"
+                    style="@style/Antara.Text.Subtitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_group"
+                    android:text="Rest is part of moving forward." />
+
+                <TextView
+                    android:id="@+id/tv_fact_text"
+                    style="@style/Antara.Text.Body"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_s"
+                    android:text="Giving yourself permission to pause can ease the weight a little and make space for what comes next." />
+            </LinearLayout>
+
+            <!-- You're not alone -->
+            <LinearLayout
+                style="@style/Antara.Card"
+                android:layout_marginTop="@dimen/space_section">
+
+                <TextView
+                    style="@style/Antara.Text.Label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="You're not alone" />
+
+                <TextView
+                    android:id="@+id/tv_testimonial_quote"
+                    style="@style/Antara.Text.BodyStrong"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_group"
+                    android:textSize="16sp"
+                    android:text="&#8220;When things feel like a tidal wave, taking it one breath at a time can help.&#8221;" />
+
+                <TextView
+                    android:id="@+id/tv_testimonial_author"
+                    style="@style/Antara.Text.Caption"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_group"
+                    android:text="Something many students feel" />
+            </LinearLayout>
+
+            <!-- A note from the makers (shown after a few check-ins) -->
+            <LinearLayout
+                android:id="@+id/card_supporter_preview"
+                style="@style/Antara.Card"
+                android:layout_marginTop="@dimen/space_section"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <TextView
+                    style="@style/Antara.Text.Subtitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Help shape Antara" />
+
+                <TextView
+                    style="@style/Antara.Text.Body"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_xs"
+                    android:text="Antara is a student project and free to use. If something feels helpful, or not quite right, we'd love to hear it." />
+
+                <Button
+                    android:id="@+id/btn_supporter_learn"
+                    style="@style/Antara.Button.Pill.Soft"
+                    android:layout_marginTop="@dimen/space_m"
+                    android:text="Share feedback" />
+            </LinearLayout>
+
+            <!-- Footer -->
+            <TextView
+                style="@style/Antara.Text.Small"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_xl"
+                android:fontFamily="@font/nunito_bold"
+                android:gravity="center"
+                android:text="Your space. Your thoughts."
+                android:textColor="@color/text_primary" />
+
+            <TextView
+                style="@style/Antara.Text.Caption"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_xs"
+                android:gravity="center"
+                android:text="Your reflections are saved on this device." />
 
         </LinearLayout>
-
     </ScrollView>
 
 </RelativeLayout>

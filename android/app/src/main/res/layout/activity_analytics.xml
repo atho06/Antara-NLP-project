@@ -1,405 +1,372 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/background"
-    android:clipToPadding="false"
-    android:fillViewport="true">
+    style="@style/Antara.Screen.Scroll"
+    android:background="@color/background">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="20dp"
-        android:paddingBottom="40dp">
+        android:orientation="vertical">
+
+        <!-- Top bar -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageButton
+                android:id="@+id/btn_analytics_back"
+                style="@style/Antara.IconButton"
+                android:contentDescription="@string/cd_back"
+                android:src="@drawable/ic_arrow_back" />
+
+        </LinearLayout>
 
         <!-- Header -->
         <TextView
-            android:layout_width="wrap_content"
+            style="@style/Antara.Text.Display"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="Emotional Analytics 📊"
-            android:textColor="@color/text_primary"
-            android:textSize="24sp"
-            android:textStyle="bold" />
+            android:layout_marginTop="@dimen/space_section"
+            android:text="What you've noticed lately" />
 
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="Real-time mood patterns and wellness trends"
-            android:textColor="@color/text_secondary"
-            android:textSize="13sp" />
-
-        <!-- Filter Timeframe Tabs -->
-        <LinearLayout
+            style="@style/Antara.Text.Body"
             android:layout_width="match_parent"
-            android:layout_height="42dp"
-            android:layout_marginTop="18dp"
-            android:background="@drawable/bg_option_button"
-            android:gravity="center"
-            android:orientation="horizontal"
-            android:padding="4dp">
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_s"
+            android:text="A quiet look at the moods and moments you've shared." />
 
-            <Button
-                android:id="@+id/btn_filter_all"
-                style="?android:attr/borderlessButtonStyle"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:text="All Time"
-                android:textAllCaps="false"
-                android:textColor="@color/primary"
-                android:textSize="12sp"
-                android:textStyle="bold" />
-
-            <Button
-                android:id="@+id/btn_filter_week"
-                style="?android:attr/borderlessButtonStyle"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:text="Past 7 Days"
-                android:textAllCaps="false"
-                android:textColor="@color/text_secondary"
-                android:textSize="12sp" />
-
-            <Button
-                android:id="@+id/btn_filter_today"
-                style="?android:attr/borderlessButtonStyle"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:text="Today"
-                android:textAllCaps="false"
-                android:textColor="@color/text_secondary"
-                android:textSize="12sp" />
-
-        </LinearLayout>
-
-        <!-- KPI Stats Cards Row -->
+        <!-- Timeframe Filter Chips -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="@dimen/space_section"
             android:orientation="horizontal">
 
-            <androidx.cardview.widget.CardView
+            <TextView
+                android:id="@+id/btn_filter_all"
+                style="@style/Antara.Chip"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="8dp"
+                android:layout_marginEnd="@dimen/space_s"
                 android:layout_weight="1"
-                app:cardBackgroundColor="@color/surface"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="2dp">
+                android:background="@drawable/bg_option_selected"
+                android:text="All time"
+                android:textColor="@color/primary_dark" />
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="⏱️ Total Time"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="11sp" />
-
-                    <TextView
-                        android:id="@+id/tv_stat_minutes"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:text="0 min"
-                        android:textColor="@color/primary"
-                        android:textSize="20sp"
-                        android:textStyle="bold" />
-
-                </LinearLayout>
-
-            </androidx.cardview.widget.CardView>
-
-            <androidx.cardview.widget.CardView
+            <TextView
+                android:id="@+id/btn_filter_week"
+                style="@style/Antara.Chip"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
+                android:layout_marginEnd="@dimen/space_s"
                 android:layout_weight="1"
-                app:cardBackgroundColor="@color/surface"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="2dp">
+                android:text="Past 7 days"
+                android:textColor="@color/text_secondary" />
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="🔥 Active Streak"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="11sp" />
-
-                    <TextView
-                        android:id="@+id/tv_stat_streak"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:text="0 Days"
-                        android:textColor="@color/primary"
-                        android:textSize="20sp"
-                        android:textStyle="bold" />
-
-                </LinearLayout>
-
-            </androidx.cardview.widget.CardView>
+            <TextView
+                android:id="@+id/btn_filter_today"
+                style="@style/Antara.Chip"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Today"
+                android:textColor="@color/text_secondary" />
 
         </LinearLayout>
 
-        <!-- Emotional Distribution Card -->
-        <androidx.cardview.widget.CardView
+        <!-- Gentle Reflection Summary Row -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            app:cardBackgroundColor="@color/surface"
-            app:cardCornerRadius="18dp"
-            app:cardElevation="2dp">
+            android:layout_marginTop="@dimen/space_section"
+            android:orientation="horizontal">
 
             <LinearLayout
-                android:layout_width="match_parent"
+                style="@style/Antara.Card"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="18dp">
+                android:layout_marginEnd="6dp"
+                android:layout_weight="1">
 
                 <TextView
+                    style="@style/Antara.Text.Small"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="✨ Emotion Breakdown"
-                    android:textColor="@color/text_primary"
-                    android:textSize="16sp"
-                    android:textStyle="bold" />
+                    android:text="Time reflecting" />
 
                 <TextView
+                    android:id="@+id/tv_stat_minutes"
+                    style="@style/Antara.Text.Title"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:text="Distribution of tones recognized across reflections"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="12sp" />
-
-                <!-- Calm -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="14dp"
-                    android:orientation="vertical">
-
-                    <RelativeLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content">
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="🌿 Calm &amp; Grounded"
-                            android:textColor="@color/text_primary"
-                            android:textSize="13sp" />
-                        <TextView
-                            android:id="@+id/tv_pct_calm"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_alignParentEnd="true"
-                            android:text="0%"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="12sp"
-                            android:textStyle="bold" />
-                    </RelativeLayout>
-
-                    <ProgressBar
-                        android:id="@+id/pb_calm"
-                        style="?android:attr/progressBarStyleHorizontal"
-                        android:layout_width="match_parent"
-                        android:layout_height="8dp"
-                        android:layout_marginTop="6dp"
-                        android:max="100"
-                        android:progress="0"
-                        android:progressTint="#00B894" />
-
-                </LinearLayout>
-
-                <!-- Joy -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:orientation="vertical">
-
-                    <RelativeLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content">
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="✨ Joy &amp; Humor"
-                            android:textColor="@color/text_primary"
-                            android:textSize="13sp" />
-                        <TextView
-                            android:id="@+id/tv_pct_joy"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_alignParentEnd="true"
-                            android:text="0%"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="12sp"
-                            android:textStyle="bold" />
-                    </RelativeLayout>
-
-                    <ProgressBar
-                        android:id="@+id/pb_joy"
-                        style="?android:attr/progressBarStyleHorizontal"
-                        android:layout_width="match_parent"
-                        android:layout_height="8dp"
-                        android:layout_marginTop="6dp"
-                        android:max="100"
-                        android:progress="0"
-                        android:progressTint="#FDCB6E" />
-
-                </LinearLayout>
-
-                <!-- Sadness -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:orientation="vertical">
-
-                    <RelativeLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content">
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="🌧️ Tender / Sadness"
-                            android:textColor="@color/text_primary"
-                            android:textSize="13sp" />
-                        <TextView
-                            android:id="@+id/tv_pct_sad"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_alignParentEnd="true"
-                            android:text="0%"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="12sp"
-                            android:textStyle="bold" />
-                    </RelativeLayout>
-
-                    <ProgressBar
-                        android:id="@+id/pb_sad"
-                        style="?android:attr/progressBarStyleHorizontal"
-                        android:layout_width="match_parent"
-                        android:layout_height="8dp"
-                        android:layout_marginTop="6dp"
-                        android:max="100"
-                        android:progress="0"
-                        android:progressTint="#6C5CE7" />
-
-                </LinearLayout>
-
-                <!-- Stress -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:orientation="vertical">
-
-                    <RelativeLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content">
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="⚡ Stress &amp; Overwhelm"
-                            android:textColor="@color/text_primary"
-                            android:textSize="13sp" />
-                        <TextView
-                            android:id="@+id/tv_pct_stress"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_alignParentEnd="true"
-                            android:text="0%"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="12sp"
-                            android:textStyle="bold" />
-                    </RelativeLayout>
-
-                    <ProgressBar
-                        android:id="@+id/pb_stress"
-                        style="?android:attr/progressBarStyleHorizontal"
-                        android:layout_width="match_parent"
-                        android:layout_height="8dp"
-                        android:layout_marginTop="6dp"
-                        android:max="100"
-                        android:progress="0"
-                        android:progressTint="#FF7675" />
-
-                </LinearLayout>
+                    android:layout_marginTop="@dimen/space_xs"
+                    android:text="0 min"
+                    android:textColor="@color/primary" />
 
             </LinearLayout>
 
-        </androidx.cardview.widget.CardView>
+            <LinearLayout
+                style="@style/Antara.Card"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:layout_weight="1">
 
-        <!-- Hormone & Cycle Insights Card -->
-        <androidx.cardview.widget.CardView
+                <TextView
+                    style="@style/Antara.Text.Small"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Days showing up" />
+
+                <TextView
+                    android:id="@+id/tv_stat_streak"
+                    style="@style/Antara.Text.Title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_xs"
+                    android:text="0 days"
+                    android:textColor="@color/primary" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Emotional Tones Card -->
+        <LinearLayout
+            style="@style/Antara.Card"
+            android:layout_marginTop="@dimen/space_section">
+
+            <TextView
+                style="@style/Antara.Text.Label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Tones noticed" />
+
+            <TextView
+                style="@style/Antara.Text.Title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_xs"
+                android:text="How your reflections felt" />
+
+            <TextView
+                style="@style/Antara.Text.Body"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_xs"
+                android:text="A gentle mix of the feelings recognized across your sessions." />
+
+            <TextView
+                android:id="@+id/tv_analytics_empty_note"
+                style="@style/Antara.Text.Caption"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_group"
+                android:text="Your mix of tones will appear here once you save a reflection in this timeframe."
+                android:visibility="gone" />
+
+            <!-- Calm -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_m"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        style="@style/Antara.Text.FieldLabel"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Calm and grounded" />
+
+                    <TextView
+                        android:id="@+id/tv_pct_calm"
+                        style="@style/Antara.Text.Small"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/nunito_bold"
+                        android:text="0%" />
+                </LinearLayout>
+
+                <ProgressBar
+                    android:id="@+id/pb_calm"
+                    style="@style/Antara.Progress"
+                    android:layout_height="8dp"
+                    android:layout_marginTop="@dimen/space_s"
+                    android:max="100"
+                    android:progress="0"
+                    android:progressTint="@color/primary" />
+
+            </LinearLayout>
+
+            <!-- Joy -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_group"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        style="@style/Antara.Text.FieldLabel"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Joy and lightness" />
+
+                    <TextView
+                        android:id="@+id/tv_pct_joy"
+                        style="@style/Antara.Text.Small"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/nunito_bold"
+                        android:text="0%" />
+                </LinearLayout>
+
+                <ProgressBar
+                    android:id="@+id/pb_joy"
+                    style="@style/Antara.Progress"
+                    android:layout_height="8dp"
+                    android:layout_marginTop="@dimen/space_s"
+                    android:max="100"
+                    android:progress="0"
+                    android:progressTint="@color/primary_light" />
+
+            </LinearLayout>
+
+            <!-- Tender / Sadness -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_group"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        style="@style/Antara.Text.FieldLabel"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Tender or low" />
+
+                    <TextView
+                        android:id="@+id/tv_pct_sad"
+                        style="@style/Antara.Text.Small"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/nunito_bold"
+                        android:text="0%" />
+                </LinearLayout>
+
+                <ProgressBar
+                    android:id="@+id/pb_sad"
+                    style="@style/Antara.Progress"
+                    android:layout_height="8dp"
+                    android:layout_marginTop="@dimen/space_s"
+                    android:max="100"
+                    android:progress="0"
+                    android:progressTint="@color/label" />
+
+            </LinearLayout>
+
+            <!-- Stress -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_group"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        style="@style/Antara.Text.FieldLabel"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Stress and overwhelm" />
+
+                    <TextView
+                        android:id="@+id/tv_pct_stress"
+                        style="@style/Antara.Text.Small"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/nunito_bold"
+                        android:text="0%" />
+                </LinearLayout>
+
+                <ProgressBar
+                    android:id="@+id/pb_stress"
+                    style="@style/Antara.Progress"
+                    android:layout_height="8dp"
+                    android:layout_marginTop="@dimen/space_s"
+                    android:max="100"
+                    android:progress="0"
+                    android:progressTint="@color/text_secondary" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Cycle & Rhythm Panel -->
+        <LinearLayout
             android:id="@+id/card_cycle_insight"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            app:cardBackgroundColor="@color/bot_bubble"
-            app:cardCornerRadius="18dp"
-            app:cardElevation="0dp">
+            style="@style/Antara.Panel.Sage"
+            android:layout_marginTop="@dimen/space_section">
 
-            <LinearLayout
+            <TextView
+                style="@style/Antara.Text.Label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Cycle and rhythm" />
+
+            <TextView
+                style="@style/Antara.Text.Subtitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="18dp">
+                android:layout_marginTop="@dimen/space_xs"
+                android:text="Moving with your cycle" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="🌸 Cycle &amp; Mood Sync"
-                    android:textColor="@color/primary"
-                    android:textSize="15sp"
-                    android:textStyle="bold" />
+            <TextView
+                android:id="@+id/tv_cycle_insight_text"
+                style="@style/Antara.Text.Body"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_s"
+                android:text="If you'd like, you can optionally note your cycle phase in Settings to tailor your reflection context." />
 
-                <TextView
-                    android:id="@+id/tv_cycle_insight_text"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:lineSpacingExtra="2dp"
-                    android:text="Tracking your menstrual cycle helps you understand how hormonal shifts influence energy and mood. You can set your cycle phase in Settings."
-                    android:textColor="@color/text_primary"
-                    android:textSize="13sp" />
+        </LinearLayout>
 
-            </LinearLayout>
-
-        </androidx.cardview.widget.CardView>
-
-        <!-- Back to Home Button -->
-        <Button
-            android:id="@+id/btn_analytics_back"
+        <!-- Footer reassurance -->
+        <TextView
+            style="@style/Antara.Text.Caption"
             android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:layout_marginTop="24dp"
-            android:backgroundTint="@color/primary"
-            android:text="Back to Home 🏠"
-            android:textAllCaps="false"
-            android:textColor="@android:color/white"
-            android:textSize="15sp"
-            android:textStyle="bold" />
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_xl"
+            android:gravity="center"
+            android:text="Your reflections are stored on this device." />
 
     </LinearLayout>
 

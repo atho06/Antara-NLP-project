@@ -1,19 +1,15 @@
 package com.antara.app;
 
-import android.Manifest;
 import android.app.AlarmManager;
-import android.app.AlertDialog;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.telephony.SmsManager;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
@@ -25,10 +21,10 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.res.ResourcesCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -37,10 +33,10 @@ import com.antara.app.data.AntaraDatabaseHelper;
 import com.antara.app.data.DraftSessionManager;
 import com.antara.app.data.SessionManager;
 import com.antara.app.models.ChatMessage;
+import com.antara.app.nlp.ConversationalEngine;
 import com.antara.app.nlp.CrisisClassifier;
 import com.antara.app.nlp.NLPEmotionAnalyzer;
 import com.antara.app.nlp.QuestionBank;
-import com.antara.app.nlp.ConversationalEngine;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -53,11 +49,12 @@ import java.util.regex.Pattern;
 
 public class ChatActivity extends AppCompatActivity {
 
-    private TextView tvTimer;
+    private TextView tvTimer, tvCategory, tvOptionsLabel;
     private Button btnFinish, btnSend;
     private ProgressBar pbTimer;
     private RecyclerView rvChat;
     private EditText etInput;
+    private View layoutOptionsContainer;
     private HorizontalScrollView scrollOptions;
     private LinearLayout layoutOptions;
 
@@ -83,7 +80,7 @@ public class ChatActivity extends AppCompatActivity {
     private int secondsElapsed = 0;
     private boolean isTimeUpPrompted = false;
 
-    private Handler timerHandler = new Handler(Looper.getMainLooper());
+    private final Handler timerHandler = new Handler(Looper.getMainLooper());
     private Runnable timerRunnable;
 
     private AntaraDatabaseHelper dbHelper;
@@ -98,11 +95,14 @@ public class ChatActivity extends AppCompatActivity {
         sessionManager = new SessionManager(this);
 
         tvTimer = findViewById(R.id.tv_chat_timer);
+        tvCategory = findViewById(R.id.tv_chat_category);
+        tvOptionsLabel = findViewById(R.id.tv_options_label);
         btnFinish = findViewById(R.id.btn_chat_finish);
         btnSend = findViewById(R.id.btn_chat_send);
         pbTimer = findViewById(R.id.pb_chat_time);
         rvChat = findViewById(R.id.rv_chat);
         etInput = findViewById(R.id.et_chat_input);
+        layoutOptionsContainer = findViewById(R.id.layout_options_container);
         scrollOptions = findViewById(R.id.scroll_options);
         layoutOptions = findViewById(R.id.layout_options);
 
@@ -114,7 +114,6 @@ public class ChatActivity extends AppCompatActivity {
 
         chatAdapter = new ChatAdapter(messageList);
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
-        layoutManager.setStackFromEnd(true);
         rvChat.setLayoutManager(layoutManager);
         rvChat.setAdapter(chatAdapter);
 
@@ -122,7 +121,6 @@ public class ChatActivity extends AppCompatActivity {
         DraftSessionManager.DraftSession draft = isResume ? DraftSessionManager.getDraft(this, sessionManager.getUserId()) : null;
 
         if (isResume && draft != null) {
-            // Restore previous conversation state
             category = draft.category;
             durationMinutes = draft.durationMinutes;
             secondsElapsed = draft.secondsElapsed;
@@ -130,47 +128,46 @@ public class ChatActivity extends AppCompatActivity {
             messageList.addAll(draft.messages);
             turnCount = messageList.size() / 2;
 
-            // Cancel any pending 1-hour alarm notification
             cancelInactivityAlarm();
-
-            // Set resumption check-in flag
             isResumingInterruptionCheckIn = true;
 
-            // Antara asks why they left abruptly & if anything was wrong
             messageList.add(new ChatMessage(
-                    "Welcome back 🌷. I noticed you had to step away from our conversation earlier. Was everything okay, or did the conversation feel overwhelming or heavy?",
+                    "Welcome back. I noticed you stepped away earlier. Was everything okay, or did the conversation start to feel a little heavy?",
                     false
             ));
             chatAdapter.notifyDataSetChanged();
+            rvChat.scrollToPosition(chatAdapter.getLastAdapterPosition());
 
-            // Options for resumption
             displayOptionButtons(Arrays.asList(
-                    "I got interrupted / busy",
+                    "I got interrupted",
                     "It felt a bit overwhelming",
                     "I lost my train of thought",
                     "I just needed a breather",
-                    "I'm ready to continue now"
+                    "I'm ready to continue"
             ));
         } else {
-            // New conversation session
             durationMinutes = getIntent().getIntExtra("duration_minutes", 5);
             category = getIntent().getStringExtra("category");
             if (category == null) category = "daily_routine";
             targetSeconds = durationMinutes * 60;
 
-            // Initial welcome message
-            messageList.add(new ChatMessage("Hello, I am Antara 🌷. I am here to listen with full care, without any judgment. Let's begin whenever you are ready.", false));
+            messageList.add(new ChatMessage(
+                    "Hello, I'm Antara. I'm here to listen with care, without judgment. We can begin whenever you're ready.",
+                    false
+            ));
 
-            // Fetch first question with options
             QuestionBank.QuestionItem firstQ = QuestionBank.getNextQuestion(category, askedQuestions);
             messageList.add(new ChatMessage(firstQ.text, false));
             chatAdapter.notifyDataSetChanged();
 
-            // Display choice buttons for first question
             displayOptionButtons(firstQ.options);
         }
 
-        // Send Button for custom typed input
+        if (tvCategory != null) {
+            tvCategory.setText(formatCategoryLabel(category));
+        }
+        updateTimerUI();
+
         btnSend.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -182,7 +179,6 @@ public class ChatActivity extends AppCompatActivity {
             }
         });
 
-        // Finish Button
         btnFinish.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -193,29 +189,54 @@ public class ChatActivity extends AppCompatActivity {
         startTimer();
     }
 
+    private String formatCategoryLabel(String cat) {
+        if (cat == null) return "Daily routine";
+        switch (cat) {
+            case "stress":
+                return "Stress & overwhelm";
+            case "sadness":
+                return "Low energy";
+            case "relationships":
+                return "Relationships";
+            case "general":
+                return "General reflection";
+            case "daily_routine":
+            default:
+                return "Daily routine";
+        }
+    }
+
     private void displayOptionButtons(List<String> options) {
         layoutOptions.removeAllViews();
         if (options == null || options.isEmpty()) {
-            scrollOptions.setVisibility(View.GONE);
+            layoutOptionsContainer.setVisibility(View.GONE);
             return;
         }
 
-        scrollOptions.setVisibility(View.VISIBLE);
+        layoutOptionsContainer.setVisibility(View.VISIBLE);
+        if (tvOptionsLabel != null) {
+            tvOptionsLabel.setText(turnCount == 0 ? "A place to start" : "Suggested replies");
+        }
+
+        int padH = dpToPx(16);
+        int padV = dpToPx(10);
+        int marginEnd = dpToPx(8);
 
         for (final String option : options) {
             TextView btn = new TextView(this);
             btn.setText(option);
             btn.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
+            btn.setTypeface(ResourcesCompat.getFont(this, R.font.nunito_semibold));
             btn.setTextColor(ContextCompat.getColor(this, R.color.text_primary));
             btn.setBackgroundResource(R.drawable.bg_option_button);
             btn.setGravity(Gravity.CENTER);
-            btn.setPadding(32, 18, 32, 18);
+            btn.setPadding(padH, padV, padH, padV);
 
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT
             );
-            params.setMargins(8, 4, 8, 4);
+            params.setMargins(0, dpToPx(2), marginEnd, dpToPx(2));
             btn.setLayoutParams(params);
 
             btn.setOnClickListener(new View.OnClickListener() {
@@ -228,7 +249,6 @@ public class ChatActivity extends AppCompatActivity {
             layoutOptions.addView(btn);
         }
 
-        // Scroll back to start
         scrollOptions.post(new Runnable() {
             @Override
             public void run() {
@@ -237,50 +257,56 @@ public class ChatActivity extends AppCompatActivity {
         });
     }
 
+    private int dpToPx(int dp) {
+        return (int) TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP, dp, getResources().getDisplayMetrics());
+    }
+
     private void handleOptionClick(String option) {
         if (isProcessingMessage) return;
         isProcessingMessage = true;
 
-        // Immediately remove and hide option buttons to prevent double-clicks
         layoutOptions.removeAllViews();
-        scrollOptions.setVisibility(View.GONE);
+        layoutOptionsContainer.setVisibility(View.GONE);
 
-        if ("➕ Add Emergency Contact".equals(option)) {
+        String lower = option.toLowerCase(Locale.ROOT).trim();
+
+        if ("add emergency contact".equals(lower)) {
             isProcessingMessage = false;
             showAddEmergencyContactDialog();
             return;
         }
 
-        if (option.contains("Open Music App") || option.contains("Listen to Music") || option.contains("Music Player")) {
+        if (lower.contains("open music app") || lower.contains("listen to music") || lower.contains("music player")) {
             isProcessingMessage = false;
             openMusicApp();
             return;
         }
 
-        if (option.startsWith("💬 Send Check-in")) {
+        if (lower.startsWith("send check-in")) {
             long userId = sessionManager.getUserId();
             AntaraDatabaseHelper.UserProfile profile = dbHelper.getUserProfile(userId);
             if (profile != null && profile.trustedContactPhone != null && !profile.trustedContactPhone.trim().isEmpty()) {
                 String contactName = profile.trustedContactName.isEmpty() ? "Trusted Contact" : profile.trustedContactName;
                 String userName = profile.fullName.isEmpty() ? "Your friend" : profile.fullName;
-                String smsText = "Hello " + contactName + ", this is a gentle note from Antara. " 
-                        + userName + " is going through a very heavy moment today. Please reach out to have a friendly check-in with them.";
+                String smsText = "Hello " + contactName + ", this is a gentle note from Antara. "
+                        + userName + " is going through a heavy moment today. Please reach out for a friendly check-in when you can.";
                 sendSmsViaIntent(profile.trustedContactPhone.trim(), smsText);
                 isProcessingMessage = false;
                 return;
             }
         }
 
-        if (option.startsWith("📞 Call ")) {
+        if (lower.startsWith("call ")) {
             if (option.contains("14416")) {
                 isProcessingMessage = false;
                 dialPhoneNumber("14416");
                 return;
-            } else if (option.contains("1800-599-0019") || option.contains("KIRAN")) {
+            } else if (option.contains("1800-599-0019") || lower.contains("kiran")) {
                 isProcessingMessage = false;
                 dialPhoneNumber("18005990019");
                 return;
-            } else if (option.contains("9999 666 555") || option.contains("Vandrevala")) {
+            } else if (option.contains("9999 666 555") || lower.contains("vandrevala")) {
                 isProcessingMessage = false;
                 dialPhoneNumber("9999666555");
                 return;
@@ -294,7 +320,7 @@ public class ChatActivity extends AppCompatActivity {
             }
         }
 
-        if (option.contains("Ready to finish") || option.contains("finish session") || option.contains("Finish Reflection")) {
+        if (lower.contains("ready to finish") || lower.contains("finish session") || lower.contains("finish reflection")) {
             isProcessingMessage = false;
             finishSession();
             return;
@@ -314,7 +340,7 @@ public class ChatActivity extends AppCompatActivity {
                 Intent web = new Intent(Intent.ACTION_VIEW, Uri.parse("https://open.spotify.com/genre/wellness-page"));
                 startActivity(web);
             } catch (Exception ex) {
-                Toast.makeText(this, "Could not open music app", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Could not open a music app", Toast.LENGTH_SHORT).show();
             }
         }
     }
@@ -349,16 +375,15 @@ public class ChatActivity extends AppCompatActivity {
     private void processUserMessage(String userText) {
         if (userText == null || userText.trim().isEmpty()) return;
 
-        // Check if user clicked or typed add emergency contact command
-        if ("➕ Add Emergency Contact".equals(userText.trim())) {
+        if ("add emergency contact".equalsIgnoreCase(userText.trim())) {
             showAddEmergencyContactDialog();
             return;
         }
 
         // 1. Add User Message
         messageList.add(new ChatMessage(userText, true));
-        chatAdapter.notifyItemInserted(messageList.size() - 1);
-        rvChat.smoothScrollToPosition(messageList.size() - 1);
+        chatAdapter.notifyLastMessageInserted();
+        rvChat.smoothScrollToPosition(chatAdapter.getLastAdapterPosition());
 
         // 2. If already in Safe Space Hold Mode, handle de-escalation
         if (inSafetyHoldMode) {
@@ -368,12 +393,12 @@ public class ChatActivity extends AppCompatActivity {
 
         // Check if user requested to talk to a real person / human helpline
         String lower = userText.toLowerCase(Locale.ROOT);
-        if (lower.contains("talk to a real person") || lower.contains("real person") || 
-            lower.contains("talk to a human") || lower.contains("speak to a human") || 
-            lower.contains("counselor") || lower.contains("therapist") || 
-            lower.contains("talk to someone real") || lower.contains("call someone") || 
-            lower.contains("real counselor") || lower.contains("human support") || 
-            lower.contains("speak to someone")) {
+        if (lower.contains("talk to a real person") || lower.contains("real person")
+                || lower.contains("talk to a human") || lower.contains("speak to a human")
+                || lower.contains("counselor") || lower.contains("therapist")
+                || lower.contains("talk to someone real") || lower.contains("call someone")
+                || lower.contains("real counselor") || lower.contains("human support")
+                || lower.contains("speak to someone")) {
             handleTalkToRealPersonRequest();
             return;
         }
@@ -396,7 +421,7 @@ public class ChatActivity extends AppCompatActivity {
 
         // 6. Generate Connected, Contextual Dialogue using ConversationalEngine
         turnCount++;
-        ConversationalEngine.DialogueResponse dialogResponse = 
+        ConversationalEngine.DialogueResponse dialogResponse =
                 ConversationalEngine.generateContextualResponse(userText, turnCount, category, askedQuestions, previousTopics);
 
         int addedCount = 0;
@@ -407,10 +432,9 @@ public class ChatActivity extends AppCompatActivity {
         messageList.add(new ChatMessage(dialogResponse.followUpQuestion, false));
         addedCount++;
 
-        chatAdapter.notifyItemRangeInserted(messageList.size() - addedCount, addedCount);
-        rvChat.smoothScrollToPosition(messageList.size() - 1);
+        chatAdapter.notifyMessagesAppended(addedCount);
+        rvChat.smoothScrollToPosition(chatAdapter.getLastAdapterPosition());
 
-        // Update option buttons for the new contextual question
         displayOptionButtons(dialogResponse.options);
     }
 
@@ -420,21 +444,20 @@ public class ChatActivity extends AppCompatActivity {
 
         String acknowledgement;
         if (lower.contains("overwhelm") || lower.contains("heavy") || lower.contains("too much") || lower.contains("stress") || lower.contains("hard")) {
-            acknowledgement = "Thank you so much for being honest with me. Stepping away when things feel heavy or overwhelming is actually a very healthy and kind act of self-care. There is zero pressure here—we can take everything as gently and slowly as you like.";
+            acknowledgement = "Thank you for being honest. Stepping away when things feel heavy is a kind way to look after yourself. There's no pressure here—we can take things slowly.";
         } else if (lower.contains("interrupt") || lower.contains("busy") || lower.contains("call") || lower.contains("work") || lower.contains("distract")) {
-            acknowledgement = "Life and interruptions happen all the time! I'm really glad you were able to carve out a moment to come back to this space for yourself.";
+            acknowledgement = "Interruptions happen all the time. I'm glad you could take a quiet moment to come back.";
         } else if (lower.contains("breather") || lower.contains("break") || lower.contains("pause") || lower.contains("rest") || lower.contains("train of thought")) {
-            acknowledgement = "Taking a breather or pausing to gather your thoughts is always completely welcome here. You are in full control of this conversation.";
+            acknowledgement = "Taking a breather is always welcome here. You're in control of the pace.";
         } else {
-            acknowledgement = "Thank you for letting me know. I'm right here with you, and there is never any rush.";
+            acknowledgement = "Thank you for letting me know. I'm here whenever you're ready, with no rush.";
         }
 
         QuestionBank.QuestionItem nextQ = QuestionBank.getNextQuestion(category, askedQuestions);
-        String continuationPrompt = acknowledgement + "\n\nWhenever you feel ready to continue: " + nextQ.text;
-
-        messageList.add(new ChatMessage(continuationPrompt, false));
-        chatAdapter.notifyItemInserted(messageList.size() - 1);
-        rvChat.smoothScrollToPosition(messageList.size() - 1);
+        messageList.add(new ChatMessage(acknowledgement, false));
+        messageList.add(new ChatMessage(nextQ.text, false));
+        chatAdapter.notifyMessagesAppended(2);
+        rvChat.smoothScrollToPosition(chatAdapter.getLastAdapterPosition());
 
         displayOptionButtons(nextQ.options);
     }
@@ -448,48 +471,43 @@ public class ChatActivity extends AppCompatActivity {
         long userId = sessionManager.getUserId();
         AntaraDatabaseHelper.UserProfile profile = dbHelper.getUserProfile(userId);
 
-        boolean hasContact = (profile != null 
-                && profile.trustedContactPhone != null 
+        boolean hasContact = (profile != null
+                && profile.trustedContactPhone != null
                 && !profile.trustedContactPhone.trim().isEmpty());
 
-        // 1. Post Crisis / Safety Message (Emergency contact FIRST, bigger)
         if (hasContact) {
             String crisisMsg = CrisisClassifier.buildCrisisMessageWithContact(
-                    profile.trustedContactName, 
-                    profile.trustedContactPhone, 
+                    profile.trustedContactName,
+                    profile.trustedContactPhone,
                     profile.trustedContactEmail);
             messageList.add(new ChatMessage(crisisMsg, false, "crisis", true));
-
-            // Dispatch Friendly Check-in Reminder SMS to Trusted Contact
             dispatchEmergencyContactAlert();
         } else {
             String crisisMsg = CrisisClassifier.buildCrisisMessageWithoutContact();
             messageList.add(new ChatMessage(crisisMsg, false, "crisis", true));
         }
 
-        // 2. Post Immediate Holding Check-in
         messageList.add(new ChatMessage(
-                "I am staying right here with you. Take all the time you need—there is no rush at all.\n\n"
-                + "How are you feeling in this exact moment? Are you somewhere safe right now?",
+                "I'm staying right here with you. Take all the time you need—there is no rush.\n\n"
+                        + "How are you feeling in this moment? Are you somewhere safe right now?",
                 false
         ));
 
         chatAdapter.notifyDataSetChanged();
-        rvChat.smoothScrollToPosition(messageList.size() - 1);
+        rvChat.smoothScrollToPosition(chatAdapter.getLastAdapterPosition());
 
-        // 3. Dynamic options based on contact availability
         List<String> options = new ArrayList<>();
         if (!hasContact) {
-            options.add("➕ Add Emergency Contact");
-            options.add("📞 Call Tele-MANAS (14416)");
-            options.add("I am reaching out to someone I trust");
+            options.add("Add emergency contact");
+            options.add("Call Tele-MANAS (14416)");
+            options.add("I'm reaching out to someone I trust");
         } else {
-            String callBtn = "📞 Call " + (profile.trustedContactName.isEmpty() ? "Contact" : profile.trustedContactName);
+            String callBtn = "Call " + (profile.trustedContactName.isEmpty() ? "contact" : profile.trustedContactName);
             options.add(callBtn);
-            options.add("💬 Send Check-in SMS");
-            options.add("📞 Call Tele-MANAS (14416)");
+            options.add("Send check-in SMS");
+            options.add("Call Tele-MANAS (14416)");
         }
-        options.add("I am in a safe space");
+        options.add("I'm in a safe space");
         options.add("Can we do a breathing exercise?");
         options.add("Still feeling overwhelmed");
         options.add("Feeling a little calmer now");
@@ -499,49 +517,55 @@ public class ChatActivity extends AppCompatActivity {
 
     private void showAddEmergencyContactDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("➕ Add Emergency Contact");
-        builder.setMessage("Please provide someone you trust who Antara can contact during heavy or overwhelming moments:");
+        builder.setTitle("Add emergency contact");
+        builder.setMessage("Add someone you trust so you can reach out to them quickly during heavy moments.");
 
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL);
-        int pad = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20, getResources().getDisplayMetrics());
+        int pad = dpToPx(20);
         layout.setPadding(pad, pad / 2, pad, pad / 2);
 
         final EditText etName = new EditText(this);
-        etName.setHint("Contact Name (e.g. Mom, Best Friend, Partner)");
+        etName.setHint("Name (e.g. Mom, Best friend)");
+        etName.setBackgroundResource(R.drawable.bg_input);
+        etName.setPadding(dpToPx(14), dpToPx(12), dpToPx(14), dpToPx(12));
         etName.setTextColor(ContextCompat.getColor(this, R.color.text_primary));
         layout.addView(etName);
 
         final EditText etPhone = new EditText(this);
-        etPhone.setHint("Phone Number (e.g. +91 9876543210)");
+        etPhone.setHint("Phone number");
         etPhone.setInputType(android.text.InputType.TYPE_CLASS_PHONE);
+        etPhone.setBackgroundResource(R.drawable.bg_input);
+        etPhone.setPadding(dpToPx(14), dpToPx(12), dpToPx(14), dpToPx(12));
         etPhone.setTextColor(ContextCompat.getColor(this, R.color.text_primary));
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        lp.topMargin = pad / 2;
+        lp.topMargin = dpToPx(12);
         etPhone.setLayoutParams(lp);
         layout.addView(etPhone);
 
         final EditText etEmail = new EditText(this);
-        etEmail.setHint("Contact Email Address (Optional)");
+        etEmail.setHint("Email address (optional)");
         etEmail.setInputType(android.text.InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
+        etEmail.setBackgroundResource(R.drawable.bg_input);
+        etEmail.setPadding(dpToPx(14), dpToPx(12), dpToPx(14), dpToPx(12));
         etEmail.setTextColor(ContextCompat.getColor(this, R.color.text_primary));
         LinearLayout.LayoutParams lpEmail = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        lpEmail.topMargin = pad / 2;
+        lpEmail.topMargin = dpToPx(12);
         etEmail.setLayoutParams(lpEmail);
         layout.addView(etEmail);
 
         builder.setView(layout);
 
-        builder.setPositiveButton("Save Contact", new DialogInterface.OnClickListener() {
+        builder.setPositiveButton("Save contact", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 String name = etName.getText().toString().trim();
                 String phone = etPhone.getText().toString().trim();
                 String email = etEmail.getText().toString().trim();
                 if (phone.isEmpty()) {
-                    Toast.makeText(ChatActivity.this, "Please enter a valid phone number", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(ChatActivity.this, "Please enter a phone number", Toast.LENGTH_SHORT).show();
                     return;
                 }
                 if (name.isEmpty()) name = "Trusted Contact";
@@ -558,28 +582,25 @@ public class ChatActivity extends AppCompatActivity {
         dbHelper.updateEmergencyContact(userId, name, phone, email);
 
         StringBuilder sb = new StringBuilder();
-        sb.append("✅ Emergency contact successfully saved:\n");
-        sb.append("👤 ").append(name).append("\n");
-        sb.append("📞 ").append(phone).append("\n");
+        sb.append("Emergency contact saved on this device:\n");
+        sb.append("• Name: ").append(name).append("\n");
+        sb.append("• Phone: ").append(phone).append("\n");
         if (email != null && !email.trim().isEmpty()) {
-            sb.append("✉️ ").append(email.trim()).append("\n");
+            sb.append("• Email: ").append(email.trim()).append("\n");
         }
-        sb.append("\nA gentle check-in reminder is ready for them. Thank you for taking this important step for your safety.");
+        sb.append("\nYou can call or open a check-in text for them below.");
 
-        // Notify in chat
         messageList.add(new ChatMessage(sb.toString(), false));
-        chatAdapter.notifyItemInserted(messageList.size() - 1);
-        rvChat.smoothScrollToPosition(messageList.size() - 1);
+        chatAdapter.notifyLastMessageInserted();
+        rvChat.smoothScrollToPosition(chatAdapter.getLastAdapterPosition());
 
-        // Dispatch SMS
         dispatchEmergencyContactAlert();
 
-        // Update option buttons
         displayOptionButtons(Arrays.asList(
-                "📞 Call " + name,
-                "💬 Send Check-in SMS",
-                "📞 Call Tele-MANAS (14416)",
-                "I am in a safe space",
+                "Call " + name,
+                "Send check-in SMS",
+                "Call Tele-MANAS (14416)",
+                "I'm in a safe space",
                 "Can we do a breathing exercise?",
                 "Feeling a little calmer now"
         ));
@@ -591,23 +612,21 @@ public class ChatActivity extends AppCompatActivity {
 
         if (profile != null && profile.trustedContactPhone != null && !profile.trustedContactPhone.trim().isEmpty()) {
             String contactName = profile.trustedContactName.isEmpty() ? "Trusted Contact" : profile.trustedContactName;
-            String contactEmail = profile.trustedContactEmail != null ? profile.trustedContactEmail.trim() : "";
-
-            String emailSuffix = !contactEmail.isEmpty() ? " (and email alert prepared for " + contactEmail + ")" : "";
-            messageList.add(new ChatMessage("✉️ A friendly check-in reminder is ready for your trusted contact (" + contactName + ")" + emailSuffix + ". Tap '💬 Send Check-in SMS' below to dispatch it.", false));
+            messageList.add(new ChatMessage(
+                    "A check-in message is ready for " + contactName + ". Tap 'Send check-in SMS' below to open your messaging app with it.",
+                    false
+            ));
         }
     }
 
     private void handleSafetySupportModeUserReply(String userText) {
         String lower = userText.toLowerCase(Locale.ROOT);
 
-        // Check if user is asking to add emergency contact via text
         if (lower.contains("add emergency contact") || lower.contains("add contact") || lower.contains("set contact")) {
             showAddEmergencyContactDialog();
             return;
         }
 
-        // Check if user typed phone number in safety mode to save as contact
         Pattern phonePat = Pattern.compile("(\\+?\\d{1,3}[- ]?)?(\\d{10})");
         Matcher m = phonePat.matcher(userText);
         if (m.find() && (!hasSavedEmergencyContact() || lower.contains("contact") || lower.contains("phone") || lower.contains("mom") || lower.contains("dad") || lower.contains("friend") || lower.contains("number") || userText.length() < 30)) {
@@ -618,15 +637,14 @@ public class ChatActivity extends AppCompatActivity {
             return;
         }
 
-        // Check if user said they reached out to someone they trust
         if (lower.contains("reaching out") || lower.contains("someone i trust") || lower.contains("called a friend") || lower.contains("talking to family")) {
             messageList.add(new ChatMessage(
-                    "I am so proud of you for reaching out to someone you trust. Having human connection right now makes all the difference.\n\n"
-                    + "I will stay right here quietly with you. Whenever you feel ready, would you like to take a few slow breaths together or rest?",
+                    "I'm really glad you're reaching out to someone you trust. Connecting with a real person can help a lot right now.\n\n"
+                            + "I'll stay right here. Whenever you're ready, we can take a few slow breaths together or wrap up so you can rest.",
                     false
             ));
-            chatAdapter.notifyItemInserted(messageList.size() - 1);
-            rvChat.smoothScrollToPosition(messageList.size() - 1);
+            chatAdapter.notifyLastMessageInserted();
+            rvChat.smoothScrollToPosition(chatAdapter.getLastAdapterPosition());
 
             displayOptionButtons(Arrays.asList(
                     "Can we do a breathing exercise?",
@@ -636,7 +654,6 @@ public class ChatActivity extends AppCompatActivity {
             return;
         }
 
-        // Check if user confirmed they want to wrap up or resume after calming down
         if (safetySupportStep == 99) {
             if (lower.contains("wrap up") || lower.contains("rest today") || lower.contains("finish")) {
                 finishSession();
@@ -644,20 +661,16 @@ public class ChatActivity extends AppCompatActivity {
             } else if (lower.contains("continue") || lower.contains("ready") || lower.contains("gently")) {
                 inSafetyHoldMode = false;
                 safetySupportStep = 0;
-                // Resume with a warm, gentle reflection
                 QuestionBank.QuestionItem nextQ = QuestionBank.getNextQuestion("general", askedQuestions);
-                messageList.add(new ChatMessage(
-                        "I am so glad we took that gentle pause together. Whenever you feel comfortable, we can gently explore: " + nextQ.text,
-                        false
-                ));
-                chatAdapter.notifyItemInserted(messageList.size() - 1);
-                rvChat.smoothScrollToPosition(messageList.size() - 1);
+                messageList.add(new ChatMessage("I'm glad we took that pause together. Whenever you're ready:", false));
+                messageList.add(new ChatMessage(nextQ.text, false));
+                chatAdapter.notifyMessagesAppended(2);
+                rvChat.smoothScrollToPosition(chatAdapter.getLastAdapterPosition());
                 displayOptionButtons(nextQ.options);
                 return;
             }
         }
 
-        // Check if user is feeling calmer / distress is subsiding
         boolean feelingCalmer = (lower.contains("calm") || lower.contains("better") || lower.contains("safe space") || lower.contains("okay now") || lower.contains("lighter") || lower.contains("grounded"))
                 && !lower.contains("not safe") && !lower.contains("still") && !lower.contains("worse");
 
@@ -665,12 +678,12 @@ public class ChatActivity extends AppCompatActivity {
 
         if (feelingCalmer) {
             messageList.add(new ChatMessage(
-                    "I am so deeply glad you are feeling a little calmer and grounded now. That took so much courage to breathe through.\n\n"
-                    + "We can take everything very slowly from here. Would you like to gently resume a light reflection, or would you prefer to wrap up and rest for today?",
+                    "I'm glad you're feeling a little steadier now. We can take things slowly from here.\n\n"
+                            + "Would you like to gently continue reflecting, or wrap up and rest for today?",
                     false
             ));
-            chatAdapter.notifyItemInserted(messageList.size() - 1);
-            rvChat.smoothScrollToPosition(messageList.size() - 1);
+            chatAdapter.notifyLastMessageInserted();
+            rvChat.smoothScrollToPosition(chatAdapter.getLastAdapterPosition());
 
             displayOptionButtons(Arrays.asList(
                     "Let's wrap up and rest today",
@@ -678,73 +691,69 @@ public class ChatActivity extends AppCompatActivity {
                     "I want to sit quietly for a bit"
             ));
 
-            safetySupportStep = 99; // ready for decision
+            safetySupportStep = 99;
             return;
         }
 
-        // If distress still retains: Step 2 Breathing & Somatic Anchor
         if (wantsBreathing || safetySupportStep == 1) {
             safetySupportStep = 2;
             messageList.add(new ChatMessage(
-                    "Let's anchor your body right now. You do not have to carry everything in this moment.\n\n"
-                    + "Can you feel your feet resting on the floor, or place one hand gently over your chest?\n\n"
-                    + "Let's breathe in slowly for 4 seconds... gently hold for 2... and let it out for 4.\n\n"
-                    + "How does your chest and heart feel right now?",
+                    "Let's slow down for a moment. You don't have to carry everything at once.\n\n"
+                            + "Notice your feet resting on the floor, or place a hand gently over your chest. Breathe in slowly for 4 seconds, pause for 2, and breathe out for 4.\n\n"
+                            + "How does your body feel right now?",
                     false
             ));
-            chatAdapter.notifyItemInserted(messageList.size() - 1);
-            rvChat.smoothScrollToPosition(messageList.size() - 1);
+            chatAdapter.notifyLastMessageInserted();
+            rvChat.smoothScrollToPosition(chatAdapter.getLastAdapterPosition());
 
             List<String> opts = new ArrayList<>();
             opts.add("Breathing slowly with you");
             opts.add("Feeling a little calmer now");
             opts.add("Still feeling very shaky");
             if (!hasSavedEmergencyContact()) {
-                opts.add("➕ Add Emergency Contact");
+                opts.add("Add emergency contact");
             }
             opts.add("Can you stay with me?");
             displayOptionButtons(opts);
             return;
         }
 
-        // If distress still retains: Step 3 Permission to Rest & Self-Compassion
         if (safetySupportStep == 2) {
             safetySupportStep = 3;
             messageList.add(new ChatMessage(
-                    "There is zero pressure to 'fix' this right now. Whatever tears or heavy emotions are here, you are allowed to just let them exist.\n\n"
-                    + "You are not a burden, and this pain will pass. Can you take a sip of cool water, or wrap yourself in a warm blanket right now?",
+                    "There is no pressure to fix anything right now. Whatever heavy feelings are here, you're allowed to let them be.\n\n"
+                            + "If you can, take a sip of cool water or get comfortable somewhere warm.",
                     false
             ));
-            chatAdapter.notifyItemInserted(messageList.size() - 1);
-            rvChat.smoothScrollToPosition(messageList.size() - 1);
+            chatAdapter.notifyLastMessageInserted();
+            rvChat.smoothScrollToPosition(chatAdapter.getLastAdapterPosition());
 
             List<String> opts = new ArrayList<>();
             opts.add("Took a sip of water");
             opts.add("Feeling a little calmer now");
             opts.add("Still feeling very heavy");
             if (!hasSavedEmergencyContact()) {
-                opts.add("➕ Add Emergency Contact");
+                opts.add("Add emergency contact");
             }
             opts.add("I just needed someone to listen");
             displayOptionButtons(opts);
             return;
         }
 
-        // Fallback Holding Space & Helpline Reassurance
         messageList.add(new ChatMessage(
-                "I am right here with you, and remember you never have to be alone in this pain. You can also call Tele-MANAS toll-free at 14416 anytime—they are kind, trained people who will listen without judgment.\n\n"
-                + "Take it one breath at a time. What would feel most gentle for you right now?",
+                "I'm right here with you. You can also call Tele-MANAS toll-free at 14416 anytime to speak with a trained person who will listen without judgment.\n\n"
+                        + "Take it one breath at a time. What would feel gentlest right now?",
                 false
         ));
-        chatAdapter.notifyItemInserted(messageList.size() - 1);
-        rvChat.smoothScrollToPosition(messageList.size() - 1);
+        chatAdapter.notifyLastMessageInserted();
+        rvChat.smoothScrollToPosition(chatAdapter.getLastAdapterPosition());
 
         List<String> fallbackOpts = new ArrayList<>();
         fallbackOpts.add("Feeling a little calmer now");
-        fallbackOpts.add("I am going to lie down and rest");
-        fallbackOpts.add("📞 Call Tele-MANAS (14416)");
+        fallbackOpts.add("I'm going to lie down and rest");
+        fallbackOpts.add("Call Tele-MANAS (14416)");
         if (!hasSavedEmergencyContact()) {
-            fallbackOpts.add("➕ Add Emergency Contact");
+            fallbackOpts.add("Add emergency contact");
         }
         fallbackOpts.add("Still feeling overwhelmed");
         displayOptionButtons(fallbackOpts);
@@ -761,7 +770,6 @@ public class ChatActivity extends AppCompatActivity {
             long userId = sessionManager.getUserId();
             DraftSessionManager.saveDraft(this, userId, category, durationMinutes, secondsElapsed, messageList);
 
-            // Schedule notification if away for > 1 hour (3,600,000 ms)
             AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
             if (alarmManager != null) {
                 Intent notifyIntent = new Intent(this, NotificationReceiver.class);
@@ -771,7 +779,7 @@ public class ChatActivity extends AppCompatActivity {
                         notifyIntent,
                         PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE : 0)
                 );
-                long triggerAt = System.currentTimeMillis() + (60 * 60 * 1000L); // 1 hour
+                long triggerAt = System.currentTimeMillis() + (60 * 60 * 1000L);
                 alarmManager.set(AlarmManager.RTC_WAKEUP, triggerAt, pi);
             }
         }
@@ -798,10 +806,9 @@ public class ChatActivity extends AppCompatActivity {
                 secondsElapsed++;
                 updateTimerUI();
 
-                // If clock-time duration reached
                 if (targetSeconds > 0 && secondsElapsed >= targetSeconds && !isTimeUpPrompted && !inSafetyHoldMode) {
                     isTimeUpPrompted = true;
-                    showContinuationDialog("We have reached your chosen " + durationMinutes + "-minute mark. You did great today. Would you like to wrap up or continue talking?");
+                    showContinuationDialog("We've reached your " + durationMinutes + "-minute mark. Would you like to wrap up or take a little more time?");
                 }
 
                 timerHandler.postDelayed(this, 1000);
@@ -814,57 +821,57 @@ public class ChatActivity extends AppCompatActivity {
         if (targetSeconds == 0) {
             int m = secondsElapsed / 60;
             int s = secondsElapsed % 60;
-            tvTimer.setText(String.format(Locale.getDefault(), "⏱️ %02d:%02d (Open)", m, s));
+            tvTimer.setText(String.format(Locale.getDefault(), "%02d:%02d · Open", m, s));
             pbTimer.setProgress(0);
         } else {
             int remaining = Math.max(0, targetSeconds - secondsElapsed);
             int m = remaining / 60;
             int s = remaining % 60;
-            tvTimer.setText(String.format(Locale.getDefault(), "⏱️ %02d:%02d remaining", m, s));
+            tvTimer.setText(String.format(Locale.getDefault(), "%d:%02d left", m, s));
             int percent = (int) (((float) secondsElapsed / targetSeconds) * 100);
             pbTimer.setProgress(Math.min(100, percent));
         }
     }
 
     private void handleTalkToRealPersonRequest() {
-        String botMsg = "I completely understand. While I am here as an AI companion, speaking with a real, compassionate person can make all the difference.\n\n"
-                + "Here are free, confidential helplines available 24/7 to listen and support you without judgment:\n"
-                + "• Tele-MANAS (Govt. of India): 14416 (Toll-Free)\n"
-                + "• KIRAN Mental Health: 1800-599-0019 (Toll-Free)\n"
-                + "• Vandrevala Foundation: +91 9999 666 555 (24/7 Free)";
+        String botMsg = "I completely understand. While I'm here as a reflection companion, speaking with a real person can make a big difference.\n\n"
+                + "These external helplines are free and available 24/7:\n"
+                + "• Tele-MANAS (Govt. of India): 14416 (toll-free)\n"
+                + "• KIRAN Mental Health: 1800-599-0019 (toll-free)\n"
+                + "• Vandrevala Foundation: +91 9999 666 555";
 
         messageList.add(new ChatMessage(botMsg, false));
-        chatAdapter.notifyItemInserted(messageList.size() - 1);
-        rvChat.smoothScrollToPosition(messageList.size() - 1);
+        chatAdapter.notifyLastMessageInserted();
+        rvChat.smoothScrollToPosition(chatAdapter.getLastAdapterPosition());
 
         List<String> options = new ArrayList<>();
-        options.add("📞 Call Tele-MANAS (14416)");
-        options.add("📞 Call KIRAN (1800-599-0019)");
-        options.add("📞 Call Vandrevala (+91 9999 666 555)");
+        options.add("Call Tele-MANAS (14416)");
+        options.add("Call KIRAN (1800-599-0019)");
+        options.add("Call Vandrevala (+91 9999 666 555)");
 
         long userId = sessionManager.getUserId();
         AntaraDatabaseHelper.UserProfile profile = dbHelper.getUserProfile(userId);
         if (profile != null && profile.trustedContactPhone != null && !profile.trustedContactPhone.trim().isEmpty()) {
-            options.add("📞 Call " + (profile.trustedContactName.isEmpty() ? "Emergency Contact" : profile.trustedContactName));
+            options.add("Call " + (profile.trustedContactName.isEmpty() ? "emergency contact" : profile.trustedContactName));
         }
 
         options.add("I'd like to continue reflecting here");
-        options.add("I am going to call now");
+        options.add("I'm going to call now");
         displayOptionButtons(options);
     }
 
     private void showContinuationDialog(String message) {
         final String[] choices = new String[]{
-                "+2 Minutes (Brief pause)",
-                "+5 Minutes (Gentle reflection)",
-                "+10 Minutes (Deeper dive)",
-                "Open Reflection (No time limit)",
-                "Wrap Up & View Summary 🌷"
+                "+2 minutes (brief pause)",
+                "+5 minutes (gentle reflection)",
+                "+10 minutes (unhurried space)",
+                "Open reflection (no timer)",
+                "Wrap up and view summary"
         };
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("⏱️ Reflection Time Check-in");
-        builder.setMessage(message + "\n\nWould you like more time to reflect?");
+        builder.setTitle("Time check-in");
+        builder.setMessage(message);
         builder.setItems(choices, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
@@ -873,24 +880,24 @@ public class ChatActivity extends AppCompatActivity {
                         targetSeconds += 120;
                         durationMinutes += 2;
                         isTimeUpPrompted = false;
-                        Toast.makeText(ChatActivity.this, "Added +2 minutes. Take your time 🌸", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(ChatActivity.this, "Added 2 minutes. Take your time.", Toast.LENGTH_SHORT).show();
                         break;
                     case 1:
                         targetSeconds += 300;
                         durationMinutes += 5;
                         isTimeUpPrompted = false;
-                        Toast.makeText(ChatActivity.this, "Added +5 minutes. Take your time 🌸", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(ChatActivity.this, "Added 5 minutes. Take your time.", Toast.LENGTH_SHORT).show();
                         break;
                     case 2:
                         targetSeconds += 600;
                         durationMinutes += 10;
                         isTimeUpPrompted = false;
-                        Toast.makeText(ChatActivity.this, "Added +10 minutes. Take your time 🌸", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(ChatActivity.this, "Added 10 minutes. Take your time.", Toast.LENGTH_SHORT).show();
                         break;
                     case 3:
                         targetSeconds = 0;
                         isTimeUpPrompted = false;
-                        Toast.makeText(ChatActivity.this, "Timer set to Open Reflection 🌸", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(ChatActivity.this, "Switched to open reflection.", Toast.LENGTH_SHORT).show();
                         break;
                     case 4:
                         finishSession();
@@ -909,24 +916,25 @@ public class ChatActivity extends AppCompatActivity {
 
         timerHandler.removeCallbacks(timerRunnable);
 
-        // Calculate Dominant Emotion
         String dominant = "calm_grounded";
         if (!emotionsLog.isEmpty()) {
             dominant = emotionsLog.get(0);
         }
 
         int reflectionsCount = messageList.size() / 2;
-        String summary = "In today's " + durationMinutes + "-minute session, you explored " 
-                + reflectionsCount + " thoughtful reflections. Your emotional tone centered around " 
-                + dominant.replace('_', ' ') + ". Thank you for showing up for yourself and taking this time to listen inward.";
+        String durationPhrase = durationMinutes > 0
+                ? durationMinutes + "-minute reflection"
+                : "open reflection";
+        String summary = "In today's " + durationPhrase + ", you shared "
+                + reflectionsCount + (reflectionsCount == 1 ? " reflection" : " reflections")
+                + ". Your tone leaned toward " + dominant.replace('_', ' ')
+                + ". Thank you for taking a quiet moment for yourself.";
 
-        // Save into local SQLite with emotions log and update streak
         long userId = sessionManager.getUserId();
         String emotionsJoined = android.text.TextUtils.join(",", emotionsLog);
         dbHelper.saveSession(userId, durationMinutes, category, dominant, summary, reflectionsCount, emotionsJoined);
         dbHelper.updateUserStreak(userId);
 
-        // Open Summary Activity
         Intent intent = new Intent(ChatActivity.this, SessionSummaryActivity.class);
         intent.putExtra("duration_minutes", durationMinutes);
         intent.putExtra("reflections_count", reflectionsCount);

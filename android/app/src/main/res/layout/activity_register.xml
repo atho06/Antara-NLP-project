@@ -1,157 +1,195 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/background"
-    android:fillViewport="true">
+    style="@style/Antara.Screen.Scroll"
+    android:background="@color/background">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="24dp">
+        android:orientation="vertical">
+
+        <View
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:background="@drawable/motif_breath"
+            android:importantForAccessibility="no" />
 
         <TextView
-            android:layout_width="wrap_content"
+            style="@style/Antara.Text.Display"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="Join Antara"
-            android:textColor="@color/text_primary"
-            android:textSize="26sp"
-            android:textStyle="bold" />
+            android:layout_marginTop="@dimen/space_m"
+            android:text="Create your space" />
 
         <TextView
-            android:layout_width="wrap_content"
+            style="@style/Antara.Text.Body"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="Create your confidential space for emotional reflection"
-            android:textColor="@color/text_secondary"
-            android:textSize="14sp" />
+            android:layout_marginTop="@dimen/space_s"
+            android:text="Set up a profile to begin. Your account is stored on this device." />
 
-        <EditText
-            android:id="@+id/et_reg_name"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:layout_marginTop="24dp"
-            android:background="@drawable/bg_input"
-            android:hint="Full Name"
-            android:inputType="textPersonName"
-            android:paddingStart="20dp"
-            android:paddingEnd="20dp"
-            android:textSize="15sp" />
+        <LinearLayout
+            style="@style/Antara.Card"
+            android:layout_marginTop="@dimen/space_section">
 
-        <EditText
-            android:id="@+id/et_reg_email"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:layout_marginTop="14dp"
-            android:background="@drawable/bg_input"
-            android:hint="Email Address"
-            android:inputType="textEmailAddress"
-            android:paddingStart="20dp"
-            android:paddingEnd="20dp"
-            android:textSize="15sp" />
+            <TextView
+                style="@style/Antara.Text.Label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Your details" />
 
-        <EditText
-            android:id="@+id/et_reg_password"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:layout_marginTop="14dp"
-            android:background="@drawable/bg_input"
-            android:hint="Password (min. 6 chars)"
-            android:inputType="textPassword"
-            android:paddingStart="20dp"
-            android:paddingEnd="20dp"
-            android:textSize="15sp" />
+            <TextView
+                style="@style/Antara.Text.FieldLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_group"
+                android:labelFor="@id/et_reg_name"
+                android:text="Full name" />
 
-        <EditText
-            android:id="@+id/et_reg_phone"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:layout_marginTop="14dp"
-            android:background="@drawable/bg_input"
-            android:hint="Your Phone Number (Optional)"
-            android:inputType="phone"
-            android:paddingStart="20dp"
-            android:paddingEnd="20dp"
-            android:textSize="15sp" />
+            <EditText
+                android:id="@+id/et_reg_name"
+                style="@style/Antara.Input"
+                android:layout_marginTop="@dimen/space_s"
+                android:autofillHints="name"
+                android:hint="How should Antara greet you?"
+                android:inputType="textPersonName|textCapWords" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:text="🆘 Emergency Contact (Optional)"
-            android:textColor="@color/text_primary"
-            android:textSize="16sp"
-            android:textStyle="bold" />
+            <TextView
+                style="@style/Antara.Text.FieldLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_group"
+                android:labelFor="@id/et_reg_email"
+                android:text="Email" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            android:text="A trusted person to contact if crisis signs appear"
-            android:textColor="@color/text_secondary"
-            android:textSize="13sp" />
+            <EditText
+                android:id="@+id/et_reg_email"
+                style="@style/Antara.Input"
+                android:layout_marginTop="@dimen/space_s"
+                android:autofillHints="emailAddress"
+                android:hint="you@example.com"
+                android:inputType="textEmailAddress" />
 
-        <EditText
-            android:id="@+id/et_reg_contact_name"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:layout_marginTop="12dp"
-            android:background="@drawable/bg_input"
-            android:hint="Trusted Contact Name"
-            android:inputType="textPersonName"
-            android:paddingStart="20dp"
-            android:paddingEnd="20dp"
-            android:textSize="15sp" />
+            <TextView
+                style="@style/Antara.Text.FieldLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_group"
+                android:labelFor="@id/et_reg_password"
+                android:text="Password" />
 
-        <EditText
-            android:id="@+id/et_reg_contact_phone"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:layout_marginTop="14dp"
-            android:background="@drawable/bg_input"
-            android:hint="Trusted Contact Phone"
-            android:inputType="phone"
-            android:paddingStart="20dp"
-            android:paddingEnd="20dp"
-            android:textSize="15sp" />
+            <EditText
+                android:id="@+id/et_reg_password"
+                style="@style/Antara.Input"
+                android:layout_marginTop="@dimen/space_s"
+                android:autofillHints="newPassword"
+                android:hint="At least 6 characters"
+                android:inputType="textPassword" />
 
-        <EditText
-            android:id="@+id/et_reg_contact_email"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:layout_marginTop="14dp"
-            android:background="@drawable/bg_input"
-            android:hint="Trusted Contact Email"
-            android:inputType="textEmailAddress"
-            android:paddingStart="20dp"
-            android:paddingEnd="20dp"
-            android:textSize="15sp" />
+            <TextView
+                style="@style/Antara.Text.FieldLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_group"
+                android:labelFor="@id/et_reg_phone"
+                android:text="Phone number (optional)" />
+
+            <EditText
+                android:id="@+id/et_reg_phone"
+                style="@style/Antara.Input"
+                android:layout_marginTop="@dimen/space_s"
+                android:autofillHints="phone"
+                android:hint="Optional"
+                android:inputType="phone" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            style="@style/Antara.Card"
+            android:layout_marginTop="@dimen/space_section">
+
+            <TextView
+                style="@style/Antara.Text.Label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Trusted contact (optional)" />
+
+            <TextView
+                style="@style/Antara.Text.Small"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_s"
+                android:text="Someone you trust to keep handy in the app if you want to reach out. You can add or change this later in Settings." />
+
+            <TextView
+                style="@style/Antara.Text.FieldLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_group"
+                android:labelFor="@id/et_reg_contact_name"
+                android:text="Contact name" />
+
+            <EditText
+                android:id="@+id/et_reg_contact_name"
+                style="@style/Antara.Input"
+                android:layout_marginTop="@dimen/space_s"
+                android:hint="Name"
+                android:inputType="textPersonName|textCapWords" />
+
+            <TextView
+                style="@style/Antara.Text.FieldLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_group"
+                android:labelFor="@id/et_reg_contact_phone"
+                android:text="Contact phone" />
+
+            <EditText
+                android:id="@+id/et_reg_contact_phone"
+                style="@style/Antara.Input"
+                android:layout_marginTop="@dimen/space_s"
+                android:hint="Phone number"
+                android:inputType="phone" />
+
+            <TextView
+                style="@style/Antara.Text.FieldLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_group"
+                android:labelFor="@id/et_reg_contact_email"
+                android:text="Contact email" />
+
+            <EditText
+                android:id="@+id/et_reg_contact_email"
+                style="@style/Antara.Input"
+                android:layout_marginTop="@dimen/space_s"
+                android:hint="Email address"
+                android:inputType="textEmailAddress" />
+
+        </LinearLayout>
 
         <Button
             android:id="@+id/btn_reg_submit"
-            android:layout_width="match_parent"
-            android:layout_height="54dp"
-            android:layout_marginTop="28dp"
-            android:backgroundTint="@color/primary"
-            android:text="Complete Registration"
-            android:textAllCaps="false"
-            android:textColor="@android:color/white"
-            android:textSize="16sp"
-            android:textStyle="bold" />
+            style="@style/Antara.Button.Primary"
+            android:layout_marginTop="@dimen/space_section"
+            android:text="Create account" />
 
-        <TextView
+        <Button
             android:id="@+id/tv_reg_login"
+            style="@style/Antara.Button.Text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_marginTop="20dp"
-            android:layout_marginBottom="24dp"
-            android:text="Already have an account? Sign In"
-            android:textColor="@color/primary"
-            android:textSize="14sp"
-            android:textStyle="bold" />
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="@dimen/space_m"
+            android:text="Already have an account? Sign in" />
+
+        <TextView
+            style="@style/Antara.Text.Caption"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_group"
+            android:gravity="center"
+            android:text="Your account and reflections stay in a local database on this device." />
 
     </LinearLayout>
 

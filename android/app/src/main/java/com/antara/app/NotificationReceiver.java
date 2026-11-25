@@ -39,7 +39,7 @@ public class NotificationReceiver extends BroadcastReceiver {
                     "Antara Reflection Reminders",
                     NotificationManager.IMPORTANCE_HIGH
             );
-            channel.setDescription("Gentle reminders to check in if you step away from a session");
+            channel.setDescription("Gentle reminders when you pause a reflection");
             nm.createNotificationChannel(channel);
         }
 
@@ -52,10 +52,10 @@ public class NotificationReceiver extends BroadcastReceiver {
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_launcher)
-                .setContentTitle("Antara 🌷")
-                .setContentText("We noticed you stepped away earlier. Are you okay? Tap to continue.")
+                .setContentTitle("Antara")
+                .setContentText("Your reflection is waiting whenever you feel ready. No rush.")
                 .setStyle(new NotificationCompat.BigTextStyle()
-                        .bigText("We noticed you stepped away from your reflection earlier. Are you doing okay? Whenever you feel ready, Antara is here to continue listening."))
+                        .bigText("You paused your reflection earlier. Whenever you have a quiet moment, you can pick up where you left off or leave it for another time."))
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setAutoCancel(true)
                 .setContentIntent(pi);

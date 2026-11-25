@@ -1,190 +1,138 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/background"
-    android:fillViewport="true">
+    style="@style/Antara.Screen.Scroll"
+    android:background="@color/background">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="20dp">
+        android:orientation="vertical">
 
-        <!-- Header Row -->
-        <RelativeLayout
+        <!-- Top bar -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp">
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageButton
+                android:id="@+id/btn_feedback_back"
+                style="@style/Antara.IconButton"
+                android:contentDescription="@string/cd_back"
+                android:src="@drawable/ic_arrow_back" />
 
             <TextView
-                android:id="@+id/btn_feedback_back"
+                style="@style/Antara.Text.Label"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="← Back"
-                android:textColor="@color/primary"
-                android:textSize="16sp"
-                android:textStyle="bold" />
+                android:layout_marginStart="@dimen/space_group"
+                android:text="Feedback" />
 
-        </RelativeLayout>
+        </LinearLayout>
 
         <TextView
-            android:layout_width="wrap_content"
+            style="@style/Antara.Text.Display"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="Your Voice Matters 📝"
-            android:textColor="@color/text_primary"
-            android:textSize="24sp"
-            android:textStyle="bold" />
+            android:layout_marginTop="@dimen/space_section"
+            android:text="Share your thoughts" />
 
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:lineSpacingExtra="2dp"
-            android:text="Help us shape Antara into a more supportive, empathetic, and comforting space for everyone."
-            android:textColor="@color/text_secondary"
-            android:textSize="14sp" />
-
-        <!-- Category Selector Card -->
-        <androidx.cardview.widget.CardView
+            style="@style/Antara.Text.Body"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            app:cardBackgroundColor="@color/surface"
-            app:cardCornerRadius="18dp"
-            app:cardElevation="2dp">
+            android:layout_marginTop="@dimen/space_s"
+            android:text="Note what feels supportive and what could be calmer or clearer. Feedback is saved locally on this device." />
 
-            <LinearLayout
+        <!-- Category and rating card -->
+        <LinearLayout
+            style="@style/Antara.Card"
+            android:layout_marginTop="@dimen/space_section">
+
+            <TextView
+                style="@style/Antara.Text.FieldLabel"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
+                android:labelFor="@id/spn_feedback_category"
+                android:text="Topic" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="What is your feedback about?"
-                    android:textColor="@color/text_primary"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
+            <Spinner
+                android:id="@+id/spn_feedback_category"
+                style="@style/Antara.Spinner"
+                android:layout_marginTop="@dimen/space_s" />
 
-                <Spinner
-                    android:id="@+id/spn_feedback_category"
-                    android:layout_width="match_parent"
-                    android:layout_height="48dp"
-                    android:layout_marginTop="8dp"
-                    android:background="@drawable/bg_input"
-                    android:paddingStart="12dp"
-                    android:paddingEnd="12dp" />
+            <View
+                style="@style/Antara.Divider"
+                android:layout_marginTop="@dimen/space_m"
+                android:layout_marginBottom="@dimen/space_m" />
 
-            </LinearLayout>
-
-        </androidx.cardview.widget.CardView>
-
-        <!-- Rating Card -->
-        <androidx.cardview.widget.CardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            app:cardBackgroundColor="@color/surface"
-            app:cardCornerRadius="18dp"
-            app:cardElevation="2dp">
-
-            <LinearLayout
+            <TextView
+                style="@style/Antara.Text.FieldLabel"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
+                android:text="How has your experience been?" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="How has your experience been?"
-                    android:textColor="@color/text_primary"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
+            <RatingBar
+                android:id="@+id/rb_feedback_rating"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="@dimen/space_group"
+                android:numStars="5"
+                android:progressBackgroundTint="@color/border_strong"
+                android:progressTint="@color/primary"
+                android:rating="5"
+                android:secondaryProgressTint="@color/primary_light"
+                android:stepSize="1" />
 
-                <RatingBar
-                    android:id="@+id/rb_feedback_rating"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_horizontal"
-                    android:layout_marginTop="12dp"
-                    android:numStars="5"
-                    android:rating="5"
-                    android:stepSize="1" />
+            <TextView
+                android:id="@+id/tv_rating_description"
+                style="@style/Antara.Text.Accent"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="@dimen/space_s"
+                android:text="5 of 5 • Very supportive" />
 
-                <TextView
-                    android:id="@+id/tv_rating_description"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_horizontal"
-                    android:layout_marginTop="6dp"
-                    android:text="⭐⭐⭐⭐⭐ Very Supportive"
-                    android:textColor="@color/primary"
-                    android:textSize="13sp"
-                    android:textStyle="bold" />
+        </LinearLayout>
 
-            </LinearLayout>
+        <!-- Written note card -->
+        <LinearLayout
+            style="@style/Antara.Card"
+            android:layout_marginTop="@dimen/space_section">
 
-        </androidx.cardview.widget.CardView>
-
-        <!-- Written Feedback Card -->
-        <androidx.cardview.widget.CardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            app:cardBackgroundColor="@color/surface"
-            app:cardCornerRadius="18dp"
-            app:cardElevation="2dp">
-
-            <LinearLayout
+            <TextView
+                style="@style/Antara.Text.FieldLabel"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
+                android:labelFor="@id/et_feedback_content"
+                android:text="Your note" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="What and all can be improved?"
-                    android:textColor="@color/text_primary"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
+            <EditText
+                android:id="@+id/et_feedback_content"
+                style="@style/Antara.Input"
+                android:layout_height="140dp"
+                android:layout_marginTop="@dimen/space_s"
+                android:gravity="top|start"
+                android:hint="What felt helpful, or what would you change?"
+                android:inputType="textMultiLine|textCapSentences"
+                android:lineSpacingExtra="3dp" />
 
-                <EditText
-                    android:id="@+id/et_feedback_content"
-                    android:layout_width="match_parent"
-                    android:layout_height="140dp"
-                    android:layout_marginTop="10dp"
-                    android:background="@drawable/bg_input"
-                    android:gravity="top|start"
-                    android:hint="Tell us what you liked, what questions felt disconnected, or what features you'd like to see..."
-                    android:inputType="textMultiLine"
-                    android:lineSpacingExtra="3dp"
-                    android:padding="14dp"
-                    android:textColor="@color/text_primary"
-                    android:textSize="14sp" />
+        </LinearLayout>
 
-            </LinearLayout>
-
-        </androidx.cardview.widget.CardView>
-
-        <!-- Submit Button -->
         <Button
             android:id="@+id/btn_feedback_submit"
+            style="@style/Antara.Button.Primary"
+            android:layout_marginTop="@dimen/space_section"
+            android:text="Save feedback" />
+
+        <TextView
+            style="@style/Antara.Text.Caption"
             android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:layout_marginTop="24dp"
-            android:layout_marginBottom="32dp"
-            android:backgroundTint="@color/primary"
-            android:text="Submit Feedback 🌷"
-            android:textAllCaps="false"
-            android:textColor="@android:color/white"
-            android:textSize="16sp"
-            android:textStyle="bold" />
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_group"
+            android:gravity="center"
+            android:text="Saved in this device's local database. Nothing is uploaded." />
 
     </LinearLayout>
 

@@ -54,15 +54,15 @@ public class CrisisClassifier {
         String email = (contactEmail != null && !contactEmail.trim().isEmpty()) ? contactEmail.trim() : "";
 
         StringBuilder sb = new StringBuilder();
-        sb.append("🚨 PRIMARY EMERGENCY CONTACT (CALL FIRST):\n");
-        sb.append("👤 ").append(name).append("\n");
-        sb.append("📞 ").append(phone).append("\n");
+        sb.append("PRIMARY EMERGENCY CONTACT (CALL FIRST):\n");
+        sb.append("Name: ").append(name).append("\n");
+        sb.append("Phone: ").append(phone).append("\n");
         if (!email.isEmpty()) {
-            sb.append("✉️ ").append(email).append("\n");
+            sb.append("Email: ").append(email).append("\n");
         }
-        sb.append("\nI hear how much pain you are carrying right now. Your life and safety are the absolute priority.\n");
-        sb.append("Please reach out to ").append(name).append(" immediately—they care about you deeply.\n\n");
-        sb.append("🆘 24/7 Professional Helplines:\n");
+        sb.append("\nI hear how much pain you are carrying right now. Your safety is the top priority.\n");
+        sb.append("Please reach out to ").append(name).append(" right away—you don't have to face this alone.\n\n");
+        sb.append("24/7 Professional Helplines:\n");
         sb.append("• Tele-MANAS (Govt. of India): 14416 (Toll-Free)\n");
         sb.append("• KIRAN Mental Health: 1800-599-0019 (Toll-Free)\n");
         sb.append("• Vandrevala Foundation: +91 9999 666 555 (24/7 Free)");
@@ -70,14 +70,14 @@ public class CrisisClassifier {
     }
 
     public static String buildCrisisMessageWithoutContact() {
-        return "⚠️ NO EMERGENCY CONTACT CONFIGURED\n\n"
+        return "NO EMERGENCY CONTACT CONFIGURED\n\n"
                 + "You haven't set up an emergency contact in Antara yet.\n\n"
-                + "Please reach out right now to someone you trust in your life—a family member, close friend, or doctor.\n\n"
+                + "Please reach out right now to someone you trust—a family member, close friend, or doctor.\n\n"
                 + "Or call one of these free, confidential 24/7 crisis helplines immediately:\n"
                 + "• Tele-MANAS (Govt. of India): 14416 (Toll-Free)\n"
                 + "• KIRAN Mental Health: 1800-599-0019 (Toll-Free)\n"
                 + "• Vandrevala Foundation: +91 9999 666 555 (24/7 Free)\n\n"
-                + "👉 Please add an emergency contact now so Antara can alert them with a gentle check-in if you ever need support.";
+                + "Please add an emergency contact now so you can reach out to them quickly with a check-in if you ever need support.";
     }
 
     public static boolean checkCrisis(String text) {

@@ -2,6 +2,7 @@ package com.antara.app;
 
 import android.os.Bundle;
 import android.view.View;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -20,7 +21,7 @@ public class AboutActivity extends AppCompatActivity {
 
         dbHelper = new AntaraDatabaseHelper(this);
 
-        TextView btnBack = findViewById(R.id.btn_about_back);
+        ImageButton btnBack = findViewById(R.id.btn_about_back);
         btnBack.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

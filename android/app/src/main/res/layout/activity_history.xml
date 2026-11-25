@@ -4,45 +4,86 @@
     android:layout_height="match_parent"
     android:background="@color/background"
     android:orientation="vertical"
-    android:padding="20dp">
+    android:paddingStart="@dimen/screen_margin"
+    android:paddingTop="@dimen/space_section"
+    android:paddingEnd="@dimen/screen_margin">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="Past Reflections 📖"
-        android:textColor="@color/text_primary"
-        android:textSize="24sp"
-        android:textStyle="bold" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:text="Your saved reflections and emotional takeaways"
-        android:textColor="@color/text_secondary"
-        android:textSize="13sp" />
-
-    <!-- Empty State -->
-    <TextView
-        android:id="@+id/tv_history_empty"
+    <!-- Top bar -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="64dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <ImageButton
+            android:id="@+id/btn_history_back"
+            style="@style/Antara.IconButton"
+            android:contentDescription="@string/cd_back"
+            android:src="@drawable/ic_arrow_back" />
+
+    </LinearLayout>
+
+    <!-- Header -->
+    <TextView
+        style="@style/Antara.Text.Display"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_section"
+        android:text="Past reflections" />
+
+    <TextView
+        style="@style/Antara.Text.Body"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_s"
+        android:text="A quiet archive of the thoughts and feelings you've saved on this device." />
+
+    <!-- Calm Empty State -->
+    <LinearLayout
+        android:id="@+id/layout_history_empty"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         android:gravity="center"
-        android:lineSpacingExtra="4dp"
-        android:text="No past reflections yet.\nStart your first session on the home screen! 🌷"
-        android:textColor="@color/text_secondary"
-        android:textSize="15sp"
-        android:visibility="gone" />
+        android:orientation="vertical"
+        android:paddingStart="@dimen/space_m"
+        android:paddingEnd="@dimen/space_m"
+        android:paddingBottom="@dimen/space_xl"
+        android:visibility="gone">
+
+        <View
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:background="@drawable/motif_ring" />
+
+        <TextView
+            android:id="@+id/tv_history_empty"
+            style="@style/Antara.Text.Subtitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_m"
+            android:gravity="center"
+            android:text="Your reflections will appear here" />
+
+        <TextView
+            style="@style/Antara.Text.Caption"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_s"
+            android:gravity="center"
+            android:text="Start a reflection from Home whenever you feel ready. Everything stays on this device." />
+
+    </LinearLayout>
 
     <!-- History List -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_history"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginTop="16dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="@dimen/space_section"
+        android:layout_weight="1"
         android:clipToPadding="false"
-        android:paddingBottom="16dp" />
+        android:paddingBottom="@dimen/space_xl"
+        android:scrollbars="none" />
 
 </LinearLayout>

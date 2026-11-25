@@ -1,25 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Antara wellbeing palette (dark): deep forest tones, same sage character. -->
 <resources>
-    <color name="primary">#9C88FF</color>
-    <color name="primary_dark">#7158E2</color>
-    <color name="primary_light">#B8A9FD</color>
-    <color name="primary_soft">#252238</color>
-    
-    <color name="background">#13121D</color>
-    <color name="surface">#1E1B2C</color>
-    <color name="border">#2E2A42</color>
-    
-    <color name="text_primary">#F5F6FA</color>
-    <color name="text_secondary">#CBD3DE</color>
-    <color name="text_muted">#8A94A6</color>
-    
-    <color name="success">#2ED573</color>
-    <color name="warning">#FFA502</color>
-    <color name="error">#FF4757</color>
-    <color name="sos_red">#FF4757</color>
-    
-    <color name="bot_bubble">#241F38</color>
-    <color name="bot_bubble_text">#FFFFFF</color>
-    <color name="user_bubble">#6C5CE7</color>
+    <color name="primary">#8DB194</color>
+    <color name="primary_dark">#6F957A</color>
+    <color name="primary_light">#A9C6AE</color>
+    <color name="primary_soft">#27332B</color>
+    <color name="on_primary">#14211A</color>
+
+    <color name="background">#141A16</color>
+    <color name="surface">#1C241F</color>
+    <color name="panel_sage">#243029</color>
+    <color name="panel_warm">#2A2A24</color>
+    <color name="input_bg">#18201B</color>
+    <color name="border">#2C3830</color>
+    <color name="border_strong">#3A483E</color>
+    <color name="ripple">#338DB194</color>
+
+    <color name="text_primary">#E6EEE7</color>
+    <color name="text_secondary">#A8B7AC</color>
+    <color name="text_muted">#7D8D82</color>
+    <color name="label">#9DB0A2</color>
+
+    <color name="success">#8DB194</color>
+    <color name="warning">#D2B07C</color>
+    <color name="error">#E0907F</color>
+    <color name="sos_red">#E0907F</color>
+    <color name="sos_soft">#3A2723</color>
+    <color name="sos_text">#F0B5A8</color>
+    <color name="crisis_bg">#2E2220</color>
+    <color name="crisis_stroke">#5A3A33</color>
+    <color name="crisis_text">#F3C4B9</color>
+
+    <color name="bot_bubble">#1C241F</color>
+    <color name="bot_bubble_text">#E6EEE7</color>
+    <color name="user_bubble">#567A5F</color>
     <color name="user_bubble_text">#FFFFFF</color>
 </resources>

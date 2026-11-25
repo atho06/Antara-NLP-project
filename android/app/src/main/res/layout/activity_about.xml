@@ -1,310 +1,222 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/background"
-    android:fillViewport="true">
+    style="@style/Antara.Screen.Scroll"
+    android:background="@color/background">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="20dp">
+        android:orientation="vertical">
 
-        <!-- Back Button -->
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp">
-
-            <TextView
-                android:id="@+id/btn_about_back"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="← Back"
-                android:textColor="@color/primary"
-                android:textSize="16sp"
-                android:textStyle="bold" />
-
-        </RelativeLayout>
-
-        <!-- Brand Banner -->
+        <!-- Top bar -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:gravity="center_horizontal"
-            android:orientation="vertical">
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageButton
+                android:id="@+id/btn_about_back"
+                style="@style/Antara.IconButton"
+                android:contentDescription="@string/cd_back"
+                android:src="@drawable/ic_arrow_back" />
 
             <TextView
-                android:layout_width="72dp"
-                android:layout_height="72dp"
-                android:background="@drawable/bg_bot_bubble"
-                android:gravity="center"
-                android:text="🌷"
-                android:textSize="36sp" />
-
-            <TextView
+                style="@style/Antara.Text.Label"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:text="Antara"
-                android:textColor="@color/text_primary"
-                android:textSize="28sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
-                android:text="Your Confidential Space for Inward Reflection"
-                android:textColor="@color/primary"
-                android:textSize="14sp"
-                android:textStyle="bold" />
+                android:layout_marginStart="@dimen/space_group"
+                android:text="About" />
 
         </LinearLayout>
 
-        <!-- What is Antara Card -->
-        <androidx.cardview.widget.CardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            app:cardBackgroundColor="@color/surface"
-            app:cardCornerRadius="20dp"
-            app:cardElevation="2dp">
+        <!-- Brand intro -->
+        <View
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_marginTop="@dimen/space_section"
+            android:background="@drawable/motif_breath"
+            android:importantForAccessibility="no" />
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="20dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="🌿 What is Antara?"
-                    android:textColor="@color/text_primary"
-                    android:textSize="17sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:lineSpacingExtra="4dp"
-                    android:text="The name Antara comes from the Sanskrit word for &quot;the inner self&quot; or &quot;the internal space within&quot;.\n\nIn our fast-paced lives, we rarely get a quiet moment to simply check in with how we are doing. Antara was created as a peaceful, private sanctuary where you can step away from noise and expectations, explore what is on your mind, and be met with patience and care."
-                    android:textColor="@color/text_secondary"
-                    android:textSize="14sp" />
-
-            </LinearLayout>
-
-        </androidx.cardview.widget.CardView>
-
-        <!-- How Antara Helps You -->
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:text="💡 How Antara Helps You"
-            android:textColor="@color/text_primary"
-            android:textSize="17sp"
-            android:textStyle="bold" />
-
-        <!-- Benefit 1 -->
-        <androidx.cardview.widget.CardView
+            style="@style/Antara.Text.Display"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            app:cardBackgroundColor="@color/surface"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="1dp">
+            android:layout_marginTop="@dimen/space_m"
+            android:text="Antara" />
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="🌸 A Gentle Space to Pause"
-                    android:textColor="@color/primary"
-                    android:textSize="15sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:lineSpacingExtra="3dp"
-                    android:text="Take 5 to 20 quiet minutes to unpack your day. Antara asks open, caring questions that help untangle overwhelming thoughts without any judgment or pressure."
-                    android:textColor="@color/text_secondary"
-                    android:textSize="13sp" />
-
-            </LinearLayout>
-
-        </androidx.cardview.widget.CardView>
-
-        <!-- Benefit 2 -->
-        <androidx.cardview.widget.CardView
+        <TextView
+            style="@style/Antara.Text.Body"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            app:cardBackgroundColor="@color/surface"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="1dp">
+            android:layout_marginTop="@dimen/space_s"
+            android:text="A little space to be yourself. Antara comes from the Sanskrit word for the inner space within." />
 
-            <LinearLayout
+        <!-- What Antara is -->
+        <LinearLayout
+            style="@style/Antara.Card"
+            android:layout_marginTop="@dimen/space_section">
+
+            <TextView
+                style="@style/Antara.Text.Label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="What Antara is" />
+
+            <TextView
+                style="@style/Antara.Text.Title"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
+                android:layout_marginTop="@dimen/space_s"
+                android:text="An on-device reflection companion" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="💬 Reflect Your Own Way"
-                    android:textColor="@color/primary"
-                    android:textSize="15sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:lineSpacingExtra="3dp"
-                    android:text="You can choose from thoughtful response options or freely type your thoughts in your own words. Antara adapts to your pace and respects where you are."
-                    android:textColor="@color/text_secondary"
-                    android:textSize="13sp" />
-
-            </LinearLayout>
-
-        </androidx.cardview.widget.CardView>
-
-        <!-- Benefit 3 -->
-        <androidx.cardview.widget.CardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            app:cardBackgroundColor="@color/surface"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="1dp">
-
-            <LinearLayout
+            <TextView
+                style="@style/Antara.Text.Body"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
+                android:layout_marginTop="@dimen/space_group"
+                android:text="Antara offers short, unhurried check-ins where you can choose from suggested responses or write in your own words. It uses on-device natural language processing (NLP) to respond to what you share and reflect general emotional tone." />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="🧘 Grounding &amp; Somatic Support"
-                    android:textColor="@color/primary"
-                    android:textSize="15sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:lineSpacingExtra="3dp"
-                    android:text="When emotions become intense or distressing, Antara slows everything down. You are guided through slow box breathing, somatic anchoring, and gentle pauses to help your nervous system feel safe."
-                    android:textColor="@color/text_secondary"
-                    android:textSize="13sp" />
-
-            </LinearLayout>
-
-        </androidx.cardview.widget.CardView>
-
-        <!-- Benefit 4 -->
-        <androidx.cardview.widget.CardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            app:cardBackgroundColor="@color/surface"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="1dp">
-
-            <LinearLayout
+            <TextView
+                style="@style/Antara.Text.Body"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
+                android:layout_marginTop="@dimen/space_group"
+                android:text="Your account, reflections, and journal history are stored in a local database on this device." />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="🛡️ A Caring Safety Net"
-                    android:textColor="@color/primary"
-                    android:textSize="15sp"
-                    android:textStyle="bold" />
+        </LinearLayout>
 
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:lineSpacingExtra="3dp"
-                    android:text="You never have to carry extreme burdens alone. Antara puts your emergency contact first, sends gentle check-in reminders to someone you trust, and provides direct access to 24/7 free professional helplines."
-                    android:textColor="@color/text_secondary"
-                    android:textSize="13sp" />
+        <!-- What Antara is not -->
+        <LinearLayout
+            style="@style/Antara.Panel.Warm"
+            android:layout_marginTop="@dimen/space_section">
 
-            </LinearLayout>
+            <TextView
+                style="@style/Antara.Text.Label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Important to know" />
 
-        </androidx.cardview.widget.CardView>
-
-        <!-- Philosophy Card -->
-        <androidx.cardview.widget.CardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            app:cardBackgroundColor="@color/bot_bubble"
-            app:cardCornerRadius="20dp"
-            app:cardElevation="0dp">
-
-            <LinearLayout
+            <TextView
+                style="@style/Antara.Text.Title"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="18dp">
+                android:layout_marginTop="@dimen/space_s"
+                android:text="What Antara is not" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="🌸 Our Daily Philosophy"
-                    android:textColor="@color/primary"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
+            <TextView
+                style="@style/Antara.Text.BodyStrong"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_group"
+                android:text="Antara is not therapy, medical advice, or a substitute for professional care. It is not an emergency service and cannot respond to crises in real time." />
 
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:lineSpacingExtra="3dp"
-                    android:text="&quot;You don't have to have everything figured out today. Just taking 5 quiet minutes to check in with yourself is enough.&quot;"
-                    android:textColor="@color/text_primary"
-                    android:textSize="14sp"
-                    android:textStyle="italic" />
+        </LinearLayout>
 
-            </LinearLayout>
+        <!-- External helplines -->
+        <LinearLayout
+            style="@style/Antara.Card"
+            android:layout_marginTop="@dimen/space_section">
 
-        </androidx.cardview.widget.CardView>
+            <TextView
+                style="@style/Antara.Text.Label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="External helplines" />
 
-        <!-- Footer / Version (Tap 5 times for Evaluator Dashboard) -->
+            <TextView
+                style="@style/Antara.Text.Title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_s"
+                android:text="If you need someone to talk to" />
+
+            <TextView
+                style="@style/Antara.Text.Small"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_s"
+                android:text="These helplines are external services operated independently of Antara." />
+
+            <View
+                style="@style/Antara.Divider"
+                android:layout_marginTop="@dimen/space_m"
+                android:layout_marginBottom="@dimen/space_m" />
+
+            <TextView
+                style="@style/Antara.Text.FieldLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Tele-MANAS" />
+
+            <TextView
+                style="@style/Antara.Text.Small"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_xs"
+                android:text="14416" />
+
+            <TextView
+                style="@style/Antara.Text.FieldLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_group"
+                android:text="KIRAN Mental Health Helpline" />
+
+            <TextView
+                style="@style/Antara.Text.Small"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_xs"
+                android:text="1800-599-0019" />
+
+            <TextView
+                style="@style/Antara.Text.FieldLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_group"
+                android:text="Vandrevala Foundation" />
+
+            <TextView
+                style="@style/Antara.Text.Small"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_xs"
+                android:text="+91 9999 666 555" />
+
+        </LinearLayout>
+
+        <!-- Gentle note -->
+        <LinearLayout
+            style="@style/Antara.Panel.Sage"
+            android:layout_marginTop="@dimen/space_section">
+
+            <TextView
+                style="@style/Antara.Text.Label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="A gentle reminder" />
+
+            <TextView
+                style="@style/Antara.Text.BodyStrong"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_s"
+                android:text="You don't have to have everything figured out today. Taking a few quiet minutes to check in with yourself is enough." />
+
+        </LinearLayout>
+
+        <!-- Version footer (tap 5 times for Evaluator Dashboard) -->
         <TextView
             android:id="@+id/tv_about_version"
+            style="@style/Antara.Text.Caption"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
-            android:layout_marginTop="28dp"
-            android:layout_marginBottom="32dp"
-            android:padding="8dp"
-            android:text="Antara Mobile App • Version 1.0.0\nCrafted with compassion &amp; care 🌷"
-            android:textAlignment="center"
-            android:textColor="@color/text_secondary"
-            android:textSize="12sp" />
+            android:layout_marginTop="@dimen/space_xl"
+            android:gravity="center"
+            android:padding="@dimen/space_s"
+            android:text="Antara • Version 1.0.0\nOn-device reflection companion" />
 
     </LinearLayout>
 
