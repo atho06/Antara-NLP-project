@@ -1,17 +1,18 @@
 package com.antara.app;
 
-import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.RatingBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.antara.app.data.AntaraDatabaseHelper;
@@ -19,7 +20,8 @@ import com.antara.app.data.SessionManager;
 
 public class FeedbackActivity extends AppCompatActivity {
 
-    private TextView btnBack, tvRatingDescription;
+    private ImageButton btnBack;
+    private TextView tvRatingDescription;
     private Spinner spnCategory;
     private RatingBar rbRating;
     private EditText etContent;
@@ -53,13 +55,14 @@ public class FeedbackActivity extends AppCompatActivity {
 
         // Category dropdown
         String[] categories = new String[]{
-                "General Experience & Thoughts",
-                "Conversational Questions & Flow",
-                "Feature Request / Suggestion",
-                "Safety & Emergency Support",
-                "Bug or Technical Glitch"
+                "General experience",
+                "Reflection prompts and flow",
+                "Feature suggestion",
+                "Safety and support options",
+                "Bug or technical issue"
         };
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, categories);
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.item_spinner_selected, categories);
+        adapter.setDropDownViewResource(R.layout.item_spinner_dropdown);
         spnCategory.setAdapter(adapter);
 
         // Rating change updates description
@@ -69,32 +72,32 @@ public class FeedbackActivity extends AppCompatActivity {
                 int r = (int) rating;
                 switch (r) {
                     case 1:
-                        tvRatingDescription.setText("⭐ Needs Significant Improvement");
+                        tvRatingDescription.setText("1 of 5 • Needs improvement");
                         break;
                     case 2:
-                        tvRatingDescription.setText("⭐⭐ Somewhat Helpful");
+                        tvRatingDescription.setText("2 of 5 • Somewhat helpful");
                         break;
                     case 3:
-                        tvRatingDescription.setText("⭐⭐⭐ Good & Meaningful");
+                        tvRatingDescription.setText("3 of 5 • Steady and helpful");
                         break;
                     case 4:
-                        tvRatingDescription.setText("⭐⭐⭐⭐ Very Helpful");
+                        tvRatingDescription.setText("4 of 5 • Very helpful");
                         break;
                     case 5:
                     default:
-                        tvRatingDescription.setText("⭐⭐⭐⭐⭐ Extremely Supportive 🌸");
+                        tvRatingDescription.setText("5 of 5 • Very supportive");
                         break;
                 }
             }
         });
 
-        // Submit Button
+        // Save button
         btnSubmit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 String feedbackText = etContent.getText().toString().trim();
                 if (feedbackText.isEmpty()) {
-                    Toast.makeText(FeedbackActivity.this, "Please tell us your thoughts or suggestions", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(FeedbackActivity.this, "Please add a short note before saving.", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
@@ -105,8 +108,8 @@ public class FeedbackActivity extends AppCompatActivity {
                 dbHelper.saveFeedback(userId, category, rating, feedbackText);
 
                 new AlertDialog.Builder(FeedbackActivity.this)
-                        .setTitle("Thank You 🌸")
-                        .setMessage("Your thoughts and suggestions have been received with care. Every piece of feedback helps us make Antara a gentler, more supportive space for you.")
+                        .setTitle("Feedback saved")
+                        .setMessage("Your note has been saved to this device's local database. It is not sent over the internet.")
                         .setPositiveButton("Done", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {

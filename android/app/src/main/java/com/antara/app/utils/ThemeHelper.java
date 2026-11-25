@@ -35,16 +35,16 @@ public class ThemeHelper {
     public static String getThemeName(int mode) {
         switch (mode) {
             case THEME_LIGHT:
-                return "🌸 Light Mode (Blossom)";
+                return "Light";
             case THEME_DARK:
-                return "🌙 Dark Mode (Midnight)";
+                return "Dark";
             case THEME_AMBER:
-                return "🌅 Amber Sunrise (Mood Uplift)";
+                return "Warm light (uses standard light)";
             case THEME_MINT:
-                return "🌿 Serene Sage (Stress Relief)";
+                return "Sage light (uses standard light)";
             case THEME_SYSTEM:
             default:
-                return "⚙️ Follow System Default";
+                return "Match system";
         }
     }
 

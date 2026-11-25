@@ -34,19 +34,19 @@ public class SessionSummaryActivity extends AppCompatActivity {
         if (summary == null) summary = "Thank you for taking this quiet moment for yourself.";
 
         tvDuration.setText(duration + " min");
-        tvAnswers.setText(answers + " reflections");
+        tvAnswers.setText(answers == 1 ? "1 reflection" : answers + " reflections");
         String rawEmotion = emotion.toLowerCase(Locale.ROOT);
         String displayEmotion;
         if (rawEmotion.contains("joy") || rawEmotion.contains("humor") || rawEmotion.contains("laugh")) {
-            displayEmotion = "Joyful & Uplifted";
+            displayEmotion = "Joyful and uplifted";
         } else if (rawEmotion.contains("sad") || rawEmotion.contains("low")) {
-            displayEmotion = "Gently Reflective";
+            displayEmotion = "Gently reflective";
         } else if (rawEmotion.contains("stress") || rawEmotion.contains("anxi")) {
-            displayEmotion = "Unburdening Stress";
+            displayEmotion = "Working through stress";
         } else if (rawEmotion.contains("anger") || rawEmotion.contains("frustrat")) {
-            displayEmotion = "Releasing Tension";
+            displayEmotion = "Releasing tension";
         } else {
-            displayEmotion = "Calm & Grounded";
+            displayEmotion = "Calm and grounded";
         }
         tvEmotion.setText(displayEmotion);
         tvSummaryText.setText(summary);

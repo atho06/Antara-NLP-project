@@ -5,7 +5,6 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -17,7 +16,7 @@ public class LoginActivity extends AppCompatActivity {
 
     private EditText etEmail, etPassword;
     private Button btnSubmit;
-    private TextView tvRegister;
+    private Button tvRegister;
     private AntaraDatabaseHelper dbHelper;
     private SessionManager sessionManager;
 
@@ -54,7 +53,7 @@ public class LoginActivity extends AppCompatActivity {
         String password = etPassword.getText().toString().trim();
 
         if (email.isEmpty() || password.isEmpty()) {
-            Toast.makeText(this, "Please enter email and password", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Please enter your email and password.", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -65,12 +64,12 @@ public class LoginActivity extends AppCompatActivity {
                     ? profile.fullName.trim()
                     : "Friend";
             sessionManager.setLogin(userId, userName, email);
-            Toast.makeText(this, "Welcome back, " + userName + "! 🌷", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Welcome back, " + userName + ".", Toast.LENGTH_SHORT).show();
             Intent intent = new Intent(LoginActivity.this, MainActivity.class);
             startActivity(intent);
             finish();
         } else {
-            Toast.makeText(this, "Invalid email or password", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Email or password did not match.", Toast.LENGTH_SHORT).show();
         }
     }
 }

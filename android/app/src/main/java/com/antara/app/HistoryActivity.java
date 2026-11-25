@@ -2,7 +2,8 @@ package com.antara.app;
 
 import android.os.Bundle;
 import android.view.View;
-import android.widget.TextView;
+import android.widget.ImageButton;
+import android.widget.LinearLayout;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -18,7 +19,8 @@ import java.util.List;
 public class HistoryActivity extends AppCompatActivity {
 
     private RecyclerView rvHistory;
-    private TextView tvEmpty;
+    private LinearLayout layoutEmpty;
+    private ImageButton btnBack;
     private AntaraDatabaseHelper dbHelper;
     private SessionManager sessionManager;
 
@@ -30,8 +32,11 @@ public class HistoryActivity extends AppCompatActivity {
         dbHelper = new AntaraDatabaseHelper(this);
         sessionManager = new SessionManager(this);
 
+        btnBack = findViewById(R.id.btn_history_back);
         rvHistory = findViewById(R.id.rv_history);
-        tvEmpty = findViewById(R.id.tv_history_empty);
+        layoutEmpty = findViewById(R.id.layout_history_empty);
+
+        btnBack.setOnClickListener(v -> finish());
 
         rvHistory.setLayoutManager(new LinearLayoutManager(this));
 
@@ -39,10 +44,10 @@ public class HistoryActivity extends AppCompatActivity {
         List<SessionRecord> records = dbHelper.getUserSessions(userId);
 
         if (records.isEmpty()) {
-            tvEmpty.setVisibility(View.VISIBLE);
+            layoutEmpty.setVisibility(View.VISIBLE);
             rvHistory.setVisibility(View.GONE);
         } else {
-            tvEmpty.setVisibility(View.GONE);
+            layoutEmpty.setVisibility(View.GONE);
             rvHistory.setVisibility(View.VISIBLE);
             HistoryAdapter adapter = new HistoryAdapter(records);
             rvHistory.setAdapter(adapter);

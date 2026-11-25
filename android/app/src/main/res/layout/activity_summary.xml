@@ -1,220 +1,160 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/background"
-    android:clipToPadding="false"
-    android:fillViewport="true">
+    style="@style/Antara.Screen.Scroll"
+    android:background="@color/background">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_horizontal"
-        android:orientation="vertical"
-        android:padding="28dp">
+        android:orientation="vertical">
+
+        <View
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:layout_marginTop="@dimen/space_m"
+            android:background="@drawable/motif_breath"
+            android:importantForAccessibility="no" />
 
         <TextView
-            android:layout_width="80dp"
-            android:layout_height="80dp"
-            android:layout_marginTop="16dp"
-            android:background="@drawable/bg_bot_bubble"
-            android:gravity="center"
-            android:text="🌿"
-            android:textSize="40sp" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="Well Done!"
-            android:textColor="@color/text_primary"
-            android:textSize="26sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="You took time to show up for yourself today"
-            android:textColor="@color/text_secondary"
-            android:textSize="14sp" />
-
-        <!-- Stats Card -->
-        <androidx.cardview.widget.CardView
+            style="@style/Antara.Text.Display"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="28dp"
-            app:cardBackgroundColor="@color/surface"
-            app:cardCornerRadius="20dp"
-            app:cardElevation="3dp">
+            android:layout_marginTop="@dimen/space_section"
+            android:gravity="center"
+            android:text="Thank you for showing up for yourself" />
+
+        <TextView
+            style="@style/Antara.Text.Body"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_s"
+            android:gravity="center"
+            android:text="Take a breath. There's no rush here." />
+
+        <!-- Summary Card -->
+        <LinearLayout
+            style="@style/Antara.Card"
+            android:layout_marginTop="@dimen/space_section">
+
+            <TextView
+                style="@style/Antara.Text.Label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Session reflection" />
+
+            <TextView
+                android:id="@+id/tv_sum_emotion"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_group"
+                android:background="@drawable/bg_emotion_bubble"
+                android:fontFamily="@font/nunito_semibold"
+                android:text="Calm and grounded"
+                android:textColor="@color/primary_dark"
+                android:textSize="12sp" />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="20dp">
+                android:layout_marginTop="@dimen/space_m"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
                 <LinearLayout
-                    android:layout_width="match_parent"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:orientation="horizontal">
+                    android:layout_weight="1"
+                    android:orientation="vertical">
 
-                    <LinearLayout
-                        android:layout_width="0dp"
+                    <TextView
+                        style="@style/Antara.Text.Caption"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:gravity="center"
-                        android:orientation="vertical">
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="⏱️ Time"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="12sp" />
-                        <TextView
-                            android:id="@+id/tv_sum_duration"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="4dp"
-                            android:text="5 min"
-                            android:textColor="@color/primary"
-                            android:textSize="14sp"
-                            android:textStyle="bold" />
-                    </LinearLayout>
+                        android:text="Time taken" />
 
-                    <View
-                        android:layout_width="1dp"
-                        android:layout_height="36dp"
-                        android:background="#E0E0E0" />
-
-                    <LinearLayout
-                        android:layout_width="0dp"
+                    <TextView
+                        android:id="@+id/tv_sum_duration"
+                        style="@style/Antara.Text.Subtitle"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:gravity="center"
-                        android:orientation="vertical">
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="💬 Answers"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="12sp" />
-                        <TextView
-                            android:id="@+id/tv_sum_answers"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="4dp"
-                            android:text="3 reflections"
-                            android:textColor="@color/primary"
-                            android:textSize="14sp"
-                            android:textStyle="bold" />
-                    </LinearLayout>
-
-                    <View
-                        android:layout_width="1dp"
-                        android:layout_height="36dp"
-                        android:background="#E0E0E0" />
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:gravity="center"
-                        android:orientation="vertical">
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="✨ Tone"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="12sp" />
-                        <TextView
-                            android:id="@+id/tv_sum_emotion"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="4dp"
-                            android:text="CALM"
-                            android:textColor="@color/primary"
-                            android:textSize="14sp"
-                            android:textStyle="bold" />
-                    </LinearLayout>
+                        android:layout_marginTop="@dimen/space_xs"
+                        android:text="5 min" />
 
                 </LinearLayout>
 
                 <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_marginTop="18dp"
-                    android:layout_marginBottom="14dp"
-                    android:background="#E0E0E0" />
+                    android:layout_width="1dp"
+                    android:layout_height="32dp"
+                    android:layout_marginStart="@dimen/space_group"
+                    android:layout_marginEnd="@dimen/space_group"
+                    android:background="@color/border" />
 
-                <TextView
-                    android:id="@+id/tv_sum_text"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:lineSpacingExtra="3dp"
-                    android:text="Thank you for taking this quiet moment to listen inward."
-                    android:textColor="@color/text_primary"
-                    android:textSize="14sp" />
-
-            </LinearLayout>
-
-        </androidx.cardview.widget.CardView>
-
-        <!-- Affirmation Card -->
-        <androidx.cardview.widget.CardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            app:cardBackgroundColor="@color/bot_bubble"
-            app:cardCornerRadius="18dp"
-            app:cardElevation="0dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:paddingStart="18dp"
-                android:paddingEnd="18dp"
-                android:paddingTop="20dp"
-                android:paddingBottom="20dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="🌸"
-                    android:textSize="22sp" />
-
-                <TextView
+                <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="12dp"
                     android:layout_weight="1"
-                    android:lineSpacingMultiplier="1.2"
-                    android:text="Be gentle with yourself today. Every small moment of self-reflection matters."
-                    android:textColor="@color/text_primary"
-                    android:textSize="13sp"
-                    android:textStyle="italic" />
+                    android:orientation="vertical">
+
+                    <TextView
+                        style="@style/Antara.Text.Caption"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Reflections" />
+
+                    <TextView
+                        android:id="@+id/tv_sum_answers"
+                        style="@style/Antara.Text.Subtitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_xs"
+                        android:text="3 reflections" />
+
+                </LinearLayout>
 
             </LinearLayout>
 
-        </androidx.cardview.widget.CardView>
+            <View
+                style="@style/Antara.Divider"
+                android:layout_marginTop="@dimen/space_m"
+                android:layout_marginBottom="@dimen/space_m" />
 
-        <!-- Home Button -->
+            <TextView
+                android:id="@+id/tv_sum_text"
+                style="@style/Antara.Text.BodyStrong"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Thank you for taking this quiet moment to listen inward." />
+
+        </LinearLayout>
+
+        <!-- Gentle closing panel -->
+        <LinearLayout
+            style="@style/Antara.Panel.Sage"
+            android:layout_marginTop="@dimen/space_section">
+
+            <TextView
+                style="@style/Antara.Text.BodyStrong"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Be gentle with yourself today. Even a few quiet minutes of reflection matter." />
+
+        </LinearLayout>
+
+        <!-- Primary action -->
         <Button
             android:id="@+id/btn_sum_home"
+            style="@style/Antara.Button.Primary"
+            android:layout_marginTop="@dimen/space_section"
+            android:text="Back to home" />
+
+        <TextView
+            style="@style/Antara.Text.Caption"
             android:layout_width="match_parent"
-            android:layout_height="54dp"
-            android:layout_marginTop="32dp"
-            android:layout_marginBottom="24dp"
-            android:backgroundTint="@color/primary"
-            android:text="Back to Home"
-            android:textAllCaps="false"
-            android:textColor="@android:color/white"
-            android:textSize="16sp"
-            android:textStyle="bold" />
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_group"
+            android:gravity="center"
+            android:text="This reflection is saved on this device." />
 
     </LinearLayout>
 

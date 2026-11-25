@@ -1,69 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:layout_marginBottom="14dp"
-    app:cardBackgroundColor="@color/surface"
-    app:cardCornerRadius="18dp"
-    app:cardElevation="2dp">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/Antara.Card"
+    android:layout_marginBottom="@dimen/space_group">
 
-    <LinearLayout
+    <TextView
+        android:id="@+id/tv_history_category"
+        style="@style/Antara.Text.Subtitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="18dp">
+        android:text="Daily reflection" />
 
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+    <TextView
+        android:id="@+id/tv_history_date"
+        style="@style/Antara.Text.Caption"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_xs"
+        android:text="2026-11-23 11:30" />
 
-            <TextView
-                android:id="@+id/tv_history_category"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Daily Reflection"
-                android:textColor="@color/text_primary"
-                android:textSize="16sp"
-                android:textStyle="bold" />
+    <!-- Dynamic Emotion Tags Container -->
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_group"
+        android:scrollbars="none">
 
-            <TextView
-                android:id="@+id/tv_history_date"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentEnd="true"
-                android:text="2026-11-23 11:30"
-                android:textColor="@color/text_secondary"
-                android:textSize="12sp" />
-
-        </RelativeLayout>
-
-        <!-- Dynamic Emotion Bubbles Container -->
-        <HorizontalScrollView
-            android:layout_width="match_parent"
+        <LinearLayout
+            android:id="@+id/layout_history_bubbles"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:scrollbars="none">
+            android:gravity="center_vertical"
+            android:orientation="horizontal" />
 
-            <LinearLayout
-                android:id="@+id/layout_history_bubbles"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:orientation="horizontal" />
+    </HorizontalScrollView>
 
-        </HorizontalScrollView>
+    <TextView
+        android:id="@+id/tv_history_summary"
+        style="@style/Antara.Text.Body"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_group"
+        android:text="Explored thoughtful reflections with a calm emotional tone." />
 
-        <TextView
-            android:id="@+id/tv_history_summary"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:lineSpacingExtra="3dp"
-            android:text="Explored thoughtful reflections with a calm emotional tone."
-            android:textColor="@color/text_primary"
-            android:textSize="14sp" />
-
-    </LinearLayout>
-
-</androidx.cardview.widget.CardView>
+</LinearLayout>

@@ -1,108 +1,94 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/background"
-    android:fillViewport="true">
+    style="@style/Antara.Screen.Scroll"
+    android:background="@color/background">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center"
-        android:orientation="vertical"
-        android:padding="28dp">
+        android:gravity="center_vertical"
+        android:orientation="vertical">
+
+        <View
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_marginTop="@dimen/space_m"
+            android:background="@drawable/motif_breath"
+            android:importantForAccessibility="no" />
 
         <TextView
-            android:layout_width="72dp"
-            android:layout_height="72dp"
-            android:background="@drawable/bg_bot_bubble"
-            android:gravity="center"
-            android:text="🌷"
-            android:textSize="36sp" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="Welcome to Antara"
-            android:textColor="@color/text_primary"
-            android:textSize="26sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="Sign in to your personal reflection companion"
-            android:textColor="@color/text_secondary"
-            android:textSize="14sp" />
-
-        <LinearLayout
+            style="@style/Antara.Text.Display"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
-            android:orientation="vertical">
+            android:layout_marginTop="@dimen/space_m"
+            android:text="Welcome back" />
+
+        <TextView
+            style="@style/Antara.Text.Body"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_s"
+            android:text="Take a breath. Sign in to your space on this device." />
+
+        <LinearLayout
+            style="@style/Antara.Card"
+            android:layout_marginTop="@dimen/space_section">
+
+            <TextView
+                style="@style/Antara.Text.FieldLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:labelFor="@id/et_login_email"
+                android:text="Email" />
 
             <EditText
                 android:id="@+id/et_login_email"
+                style="@style/Antara.Input"
+                android:layout_marginTop="@dimen/space_s"
+                android:autofillHints="emailAddress"
+                android:hint="you@example.com"
+                android:inputType="textEmailAddress" />
+
+            <TextView
+                style="@style/Antara.Text.FieldLabel"
                 android:layout_width="match_parent"
-                android:layout_height="52dp"
-                android:background="@drawable/bg_input"
-                android:hint="Email Address"
-                android:inputType="textEmailAddress"
-                android:paddingStart="20dp"
-                android:paddingEnd="20dp"
-                android:textSize="15sp" />
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_group"
+                android:labelFor="@id/et_login_password"
+                android:text="Password" />
 
             <EditText
                 android:id="@+id/et_login_password"
-                android:layout_width="match_parent"
-                android:layout_height="52dp"
-                android:layout_marginTop="16dp"
-                android:background="@drawable/bg_input"
-                android:hint="Password"
-                android:inputType="textPassword"
-                android:paddingStart="20dp"
-                android:paddingEnd="20dp"
-                android:textSize="15sp" />
+                style="@style/Antara.Input"
+                android:layout_marginTop="@dimen/space_s"
+                android:autofillHints="password"
+                android:hint="Enter your password"
+                android:inputType="textPassword" />
 
             <Button
                 android:id="@+id/btn_login_submit"
-                android:layout_width="match_parent"
-                android:layout_height="54dp"
-                android:layout_marginTop="24dp"
-                android:backgroundTint="@color/primary"
-                android:text="Sign In"
-                android:textAllCaps="false"
-                android:textColor="@android:color/white"
-                android:textSize="16sp"
-                android:textStyle="bold" />
+                style="@style/Antara.Button.Primary"
+                android:layout_marginTop="@dimen/space_section"
+                android:text="Sign in" />
 
         </LinearLayout>
 
-        <LinearLayout
+        <Button
+            android:id="@+id/tv_login_register"
+            style="@style/Antara.Button.Text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="28dp"
-            android:orientation="horizontal">
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="@dimen/space_m"
+            android:text="New here? Create an account" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Don't have an account? "
-                android:textColor="@color/text_secondary"
-                android:textSize="14sp" />
-
-            <TextView
-                android:id="@+id/tv_login_register"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Create Account"
-                android:textColor="@color/primary"
-                android:textSize="14sp"
-                android:textStyle="bold" />
-
-        </LinearLayout>
+        <TextView
+            style="@style/Antara.Text.Caption"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_section"
+            android:gravity="center"
+            android:text="Your account is stored on this device." />
 
     </LinearLayout>
 

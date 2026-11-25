@@ -10,6 +10,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.res.ResourcesCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.antara.app.R;
@@ -22,7 +23,7 @@ import java.util.Set;
 
 public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.ViewHolder> {
 
-    private List<SessionRecord> records;
+    private final List<SessionRecord> records;
 
     public HistoryAdapter(List<SessionRecord> records) {
         this.records = records;
@@ -40,11 +41,15 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.ViewHold
         SessionRecord s = records.get(position);
         Context ctx = holder.itemView.getContext();
 
-        holder.tvCategory.setText(s.getDurationMinutes() + " Min Reflection (" + s.getCategory().replace('_', ' ') + ")");
+        String categoryLabel = formatCategoryLabel(s.getCategory());
+        String title = categoryLabel.isEmpty()
+                ? s.getDurationMinutes() + " min reflection"
+                : s.getDurationMinutes() + " min reflection • " + categoryLabel;
+        holder.tvCategory.setText(title);
         holder.tvDate.setText(s.getCompletedAt());
         holder.tvSummary.setText(s.getSummary());
 
-        // Populate Emotion Bubbles
+        // Populate Emotion Tags
         holder.layoutBubbles.removeAllViews();
         Set<String> uniqueEmotions = new LinkedHashSet<>();
 
@@ -67,38 +72,48 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.ViewHold
             uniqueEmotions.add("calm_grounded");
         }
 
+        int marginEnd = (int) TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP, 8, ctx.getResources().getDisplayMetrics());
+
         for (String em : uniqueEmotions) {
             TextView bubble = new TextView(ctx);
             bubble.setText(formatEmotionBubbleText(em));
             bubble.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
-            bubble.setTextColor(ContextCompat.getColor(ctx, R.color.text_primary));
+            bubble.setTypeface(ResourcesCompat.getFont(ctx, R.font.nunito_semibold));
+            bubble.setTextColor(ContextCompat.getColor(ctx, R.color.primary_dark));
             bubble.setBackgroundResource(R.drawable.bg_emotion_bubble);
-            bubble.setPadding(24, 10, 24, 10);
 
             LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT
             );
-            lp.setMargins(0, 0, 16, 0);
+            lp.setMarginEnd(marginEnd);
             bubble.setLayoutParams(lp);
 
             holder.layoutBubbles.addView(bubble);
         }
     }
 
+    private String formatCategoryLabel(String category) {
+        if (category == null) return "";
+        String cleaned = category.replace('_', ' ').trim();
+        if (cleaned.isEmpty()) return "";
+        return cleaned.substring(0, 1).toUpperCase(Locale.ROOT) + cleaned.substring(1).toLowerCase(Locale.ROOT);
+    }
+
     private String formatEmotionBubbleText(String emotion) {
         if (emotion.contains("joy") || emotion.contains("humor") || emotion.contains("laugh")) {
-            return "✨ Joyful / Light";
+            return "Joyful and light";
         } else if (emotion.contains("sad") || emotion.contains("low") || emotion.contains("exhaust")) {
-            return "🌧️ Tender / Sadness";
+            return "Tender or low";
         } else if (emotion.contains("stress") || emotion.contains("anxi")) {
-            return "⚡ Stress & Overwhelm";
+            return "Stress and overwhelm";
         } else if (emotion.contains("anger") || emotion.contains("frustrat")) {
-            return "🔥 Frustration";
+            return "Frustration";
         } else if (emotion.contains("reflective")) {
-            return "💜 Reflective";
+            return "Reflective";
         } else {
-            return "🌿 Calm Grounded";
+            return "Calm and grounded";
         }
     }
 

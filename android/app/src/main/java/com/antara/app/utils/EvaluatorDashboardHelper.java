@@ -1,20 +1,18 @@
 package com.antara.app.utils;
 
 import android.app.Activity;
-import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
-import android.graphics.Color;
 import android.graphics.Typeface;
 import android.util.TypedValue;
-import android.view.Gravity;
-import android.view.View;
-import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.res.ResourcesCompat;
 
 import com.antara.app.R;
 import com.antara.app.data.AntaraDatabaseHelper;
@@ -40,12 +38,12 @@ public class EvaluatorDashboardHelper {
         lastEasterEggTapTime = currentTime;
 
         if (easterEggTapCount == 3) {
-            Toast.makeText(activity, "2 more taps to open Evaluator Dashboard...", Toast.LENGTH_SHORT).show();
+            Toast.makeText(activity, "2 more taps to open evaluator dashboard", Toast.LENGTH_SHORT).show();
         } else if (easterEggTapCount == 4) {
-            Toast.makeText(activity, "1 more tap to open Evaluator Dashboard...", Toast.LENGTH_SHORT).show();
+            Toast.makeText(activity, "1 more tap to open evaluator dashboard", Toast.LENGTH_SHORT).show();
         } else if (easterEggTapCount >= 5) {
             easterEggTapCount = 0;
-            Toast.makeText(activity, "🔓 Evaluator Dashboard Unlocked!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(activity, "Evaluator dashboard unlocked", Toast.LENGTH_SHORT).show();
             showDashboardDialog(activity, dbHelper);
         }
     }
@@ -60,111 +58,142 @@ public class EvaluatorDashboardHelper {
         int totalSessions = dbHelper.getTotalSessionsCount();
         List<AntaraDatabaseHelper.AdminUserSummary> users = dbHelper.getAllUsersSummary();
 
+        Typeface nunitoRegular = ResourcesCompat.getFont(activity, R.font.nunito_regular);
+        Typeface nunitoSemiBold = ResourcesCompat.getFont(activity, R.font.nunito_semibold);
+        Typeface nunitoBold = ResourcesCompat.getFont(activity, R.font.nunito_bold);
+
+        int pad20 = dp(activity, 20);
+        int pad16 = dp(activity, 16);
+        int pad12 = dp(activity, 12);
+        int pad8 = dp(activity, 8);
+        int pad6 = dp(activity, 6);
+
         AlertDialog.Builder builder = new AlertDialog.Builder(activity);
-        builder.setTitle("🎓 Evaluator & Teacher Dashboard");
+        builder.setTitle("Evaluator dashboard");
 
         ScrollView scrollView = new ScrollView(activity);
+        scrollView.setVerticalScrollBarEnabled(false);
+
         LinearLayout container = new LinearLayout(activity);
         container.setOrientation(LinearLayout.VERTICAL);
-        int pad = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 18, activity.getResources().getDisplayMetrics());
-        container.setPadding(pad, pad / 2, pad, pad / 2);
+        container.setPadding(pad20, pad8, pad20, pad12);
 
         // Header Description
         TextView tvSub = new TextView(activity);
-        tvSub.setText("Project Analytics & Multi-User Verification\n(Visible only to project developers)");
+        tvSub.setText("Project summary and local multi-user verification. Accounts and reflections are stored on this device.");
+        tvSub.setTypeface(nunitoRegular);
         tvSub.setTextColor(ContextCompat.getColor(activity, R.color.text_secondary));
-        tvSub.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+        tvSub.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
         container.addView(tvSub);
 
-        // KPI Banner (Users + Sessions)
-        LinearLayout kpiRow = new LinearLayout(activity);
-        kpiRow.setOrientation(LinearLayout.HORIZONTAL);
-        kpiRow.setPadding(0, pad / 2, 0, pad / 2);
+        // Summary Row (Users + Sessions)
+        LinearLayout summaryRow = new LinearLayout(activity);
+        summaryRow.setOrientation(LinearLayout.HORIZONTAL);
+        LinearLayout.LayoutParams lpSummaryRow = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        lpSummaryRow.topMargin = pad16;
+        summaryRow.setLayoutParams(lpSummaryRow);
 
         // Box 1: Users
         LinearLayout boxUsers = new LinearLayout(activity);
         boxUsers.setOrientation(LinearLayout.VERTICAL);
-        boxUsers.setBackgroundResource(R.drawable.bg_option_button);
-        boxUsers.setPadding(pad, pad / 2, pad, pad / 2);
+        boxUsers.setBackgroundResource(R.drawable.bg_panel_sage);
+        boxUsers.setPadding(pad16, pad12, pad16, pad12);
         LinearLayout.LayoutParams lpBox1 = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.0f);
-        lpBox1.setMargins(0, 0, pad / 3, 0);
+        lpBox1.setMarginEnd(pad6);
         boxUsers.setLayoutParams(lpBox1);
 
         TextView tvUsersLabel = new TextView(activity);
-        tvUsersLabel.setText("👥 Registered Users");
+        tvUsersLabel.setText("Registered users");
+        tvUsersLabel.setTypeface(nunitoRegular);
         tvUsersLabel.setTextColor(ContextCompat.getColor(activity, R.color.text_secondary));
-        tvUsersLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11);
+        tvUsersLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+
         TextView tvUsersVal = new TextView(activity);
         tvUsersVal.setText(String.valueOf(totalUsers));
+        tvUsersVal.setTypeface(nunitoBold);
         tvUsersVal.setTextColor(ContextCompat.getColor(activity, R.color.primary));
-        tvUsersVal.setTextSize(TypedValue.COMPLEX_UNIT_SP, 22);
-        tvUsersVal.setTypeface(null, Typeface.BOLD);
+        tvUsersVal.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20);
+        tvUsersVal.setPadding(0, dp(activity, 2), 0, 0);
+
         boxUsers.addView(tvUsersLabel);
         boxUsers.addView(tvUsersVal);
-        kpiRow.addView(boxUsers);
+        summaryRow.addView(boxUsers);
 
         // Box 2: Sessions
         LinearLayout boxSessions = new LinearLayout(activity);
         boxSessions.setOrientation(LinearLayout.VERTICAL);
-        boxSessions.setBackgroundResource(R.drawable.bg_option_button);
-        boxSessions.setPadding(pad, pad / 2, pad, pad / 2);
+        boxSessions.setBackgroundResource(R.drawable.bg_panel_sage);
+        boxSessions.setPadding(pad16, pad12, pad16, pad12);
         LinearLayout.LayoutParams lpBox2 = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.0f);
-        lpBox2.setMargins(pad / 3, 0, 0, 0);
+        lpBox2.setMarginStart(pad6);
         boxSessions.setLayoutParams(lpBox2);
 
         TextView tvSessLabel = new TextView(activity);
-        tvSessLabel.setText("🧘 Total Reflections");
+        tvSessLabel.setText("Saved reflections");
+        tvSessLabel.setTypeface(nunitoRegular);
         tvSessLabel.setTextColor(ContextCompat.getColor(activity, R.color.text_secondary));
-        tvSessLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11);
+        tvSessLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+
         TextView tvSessVal = new TextView(activity);
         tvSessVal.setText(String.valueOf(totalSessions));
-        tvSessVal.setTextColor(Color.parseColor("#00B894"));
-        tvSessVal.setTextSize(TypedValue.COMPLEX_UNIT_SP, 22);
-        tvSessVal.setTypeface(null, Typeface.BOLD);
+        tvSessVal.setTypeface(nunitoBold);
+        tvSessVal.setTextColor(ContextCompat.getColor(activity, R.color.primary));
+        tvSessVal.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20);
+        tvSessVal.setPadding(0, dp(activity, 2), 0, 0);
+
         boxSessions.addView(tvSessLabel);
         boxSessions.addView(tvSessVal);
-        kpiRow.addView(boxSessions);
+        summaryRow.addView(boxSessions);
 
-        container.addView(kpiRow);
+        container.addView(summaryRow);
 
         // User Directory Header
         TextView tvDirHeader = new TextView(activity);
-        tvDirHeader.setText("📋 Registered User Directory:");
+        tvDirHeader.setText("User directory");
+        tvDirHeader.setTypeface(nunitoBold);
         tvDirHeader.setTextColor(ContextCompat.getColor(activity, R.color.text_primary));
-        tvDirHeader.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
-        tvDirHeader.setTypeface(null, Typeface.BOLD);
-        tvDirHeader.setPadding(0, pad / 2, 0, pad / 3);
+        tvDirHeader.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15);
+        LinearLayout.LayoutParams lpDirHeader = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        lpDirHeader.topMargin = pad20;
+        lpDirHeader.bottomMargin = pad8;
+        tvDirHeader.setLayoutParams(lpDirHeader);
         container.addView(tvDirHeader);
 
         // User Directory List
         if (users.isEmpty()) {
             TextView tvEmpty = new TextView(activity);
             tvEmpty.setText("No users registered yet.");
+            tvEmpty.setTypeface(nunitoRegular);
             tvEmpty.setTextColor(ContextCompat.getColor(activity, R.color.text_muted));
+            tvEmpty.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
             container.addView(tvEmpty);
         } else {
             for (int i = 0; i < users.size(); i++) {
                 AntaraDatabaseHelper.AdminUserSummary u = users.get(i);
                 LinearLayout uCard = new LinearLayout(activity);
                 uCard.setOrientation(LinearLayout.VERTICAL);
-                uCard.setBackgroundResource(R.drawable.bg_option_button);
-                uCard.setPadding(pad / 2, pad / 3, pad / 2, pad / 3);
+                uCard.setBackgroundResource(R.drawable.bg_card);
+                uCard.setPadding(pad16, pad12, pad16, pad12);
                 LinearLayout.LayoutParams lpCard = new LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-                lpCard.setMargins(0, 0, 0, pad / 3);
+                lpCard.bottomMargin = pad8;
                 uCard.setLayoutParams(lpCard);
 
                 TextView tvName = new TextView(activity);
                 tvName.setText((i + 1) + ". " + u.name + " (" + u.email + ")");
+                tvName.setTypeface(nunitoSemiBold);
                 tvName.setTextColor(ContextCompat.getColor(activity, R.color.text_primary));
-                tvName.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
-                tvName.setTypeface(null, Typeface.BOLD);
+                tvName.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
                 uCard.addView(tvName);
 
                 TextView tvStats = new TextView(activity);
-                tvStats.setText("   • " + u.sessionCount + " reflections logged  •  🔥 " + u.streak + "-day streak  •  Joined: " + u.createdAt);
+                tvStats.setText(u.sessionCount + " reflections  •  " + u.streak + "-day streak  •  Joined " + u.createdAt);
+                tvStats.setTypeface(nunitoRegular);
                 tvStats.setTextColor(ContextCompat.getColor(activity, R.color.text_secondary));
-                tvStats.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11);
+                tvStats.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+                tvStats.setPadding(0, dp(activity, 4), 0, 0);
                 uCard.addView(tvStats);
 
                 container.addView(uCard);
@@ -175,14 +204,14 @@ public class EvaluatorDashboardHelper {
         builder.setView(scrollView);
 
         // Add Demo User button for live viva demonstration
-        builder.setPositiveButton("➕ Add Demo User", new DialogInterface.OnClickListener() {
+        builder.setPositiveButton("Add demo user", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 int nextNum = dbHelper.getTotalUserCount() + 1;
                 String demoName = "Student Peer " + nextNum;
                 String demoEmail = "peer" + nextNum + "@college.edu";
                 dbHelper.createDemoUser(demoName, demoEmail);
-                Toast.makeText(activity, "Added " + demoName + "! 👥", Toast.LENGTH_SHORT).show();
+                Toast.makeText(activity, "Added " + demoName, Toast.LENGTH_SHORT).show();
                 // Re-open updated dialog
                 showDashboardDialog(activity, dbHelper);
             }
@@ -190,5 +219,10 @@ public class EvaluatorDashboardHelper {
 
         builder.setNegativeButton("Close", null);
         builder.show();
+    }
+
+    private static int dp(Context context, int value) {
+        return (int) TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP, value, context.getResources().getDisplayMetrics());
     }
 }

@@ -1,25 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    Antara wellbeing palette (light).
+    Warm off-white backgrounds, white cards, soft sage panels,
+    muted green actions, dark forest-green text, gray-green support text.
+-->
 <resources>
-    <color name="primary">#6C5CE7</color>
-    <color name="primary_dark">#5647D0</color>
-    <color name="primary_light">#A29BFE</color>
-    <color name="primary_soft">#EDE7F6</color>
-    
-    <color name="background">#F8F7FF</color>
+    <!-- Primary: muted green -->
+    <color name="primary">#567A5F</color>
+    <color name="primary_dark">#46664E</color>
+    <color name="primary_light">#8FAE95</color>
+    <color name="primary_soft">#E4EBDF</color>
+    <color name="on_primary">#FFFFFF</color>
+
+    <!-- Surfaces -->
+    <color name="background">#F6F5EF</color>
     <color name="surface">#FFFFFF</color>
-    <color name="border">#E0E0E0</color>
-    
-    <color name="text_primary">#2D3436</color>
-    <color name="text_secondary">#636E72</color>
-    <color name="text_muted">#B2BEC3</color>
-    
-    <color name="success">#00B894</color>
-    <color name="warning">#FDCB6E</color>
-    <color name="error">#FF7675</color>
-    <color name="sos_red">#D63031</color>
-    
-    <color name="bot_bubble">#EDE8F8</color>
-    <color name="bot_bubble_text">#1F1646</color>
-    <color name="user_bubble">#6C5CE7</color>
+    <color name="panel_sage">#E6ECDF</color>
+    <color name="panel_warm">#EFEBE1</color>
+    <color name="input_bg">#FAFAF6</color>
+    <color name="border">#E5E7DE</color>
+    <color name="border_strong">#D3D9CC</color>
+    <color name="ripple">#1F567A5F</color>
+
+    <!-- Text -->
+    <color name="text_primary">#1F3A2B</color>
+    <color name="text_secondary">#66776B</color>
+    <color name="text_muted">#93A096</color>
+    <color name="label">#5E7062</color>
+
+    <!-- Restrained status accents -->
+    <color name="success">#567A5F</color>
+    <color name="warning">#B8925A</color>
+    <color name="error">#B4584C</color>
+    <color name="sos_red">#B4584C</color>
+    <color name="sos_soft">#F4E4DF</color>
+    <color name="sos_text">#9A4B40</color>
+    <color name="crisis_bg">#FBF2EE</color>
+    <color name="crisis_stroke">#E6C3B9</color>
+    <color name="crisis_text">#7E3A30</color>
+
+    <!-- Reflection bubbles -->
+    <color name="bot_bubble">#FFFFFF</color>
+    <color name="bot_bubble_text">#1F3A2B</color>
+    <color name="user_bubble">#567A5F</color>
     <color name="user_bubble_text">#FFFFFF</color>
 </resources>
